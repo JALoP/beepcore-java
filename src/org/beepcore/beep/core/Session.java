@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.23 $ $Date: 2002/05/07 05:00:33 $
+ * Session.java  $Revision: 1.24 $ $Date: 2002/05/08 02:56:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,7 +59,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.23 $, $Date: 2002/05/07 05:00:33 $
+ * @version $Revision: 1.24 $, $Date: 2002/05/08 02:56:32 $
  *
  * @see Channel
  */
@@ -586,12 +586,9 @@ public abstract class Session {
         }
 
         // check the channel state and return the appropriate exception
-        if (ch.getState() == Channel.STATE_ERROR) {
-            BEEPError e = ch.getErrorMessage();
-
-            e.fillInStackTrace();
-
-            throw e;
+        if (reply.isError()) {
+            reply.getError().fillInStackTrace();
+            throw reply.getError();
         }
 
         if (ch.getState() != Channel.STATE_OK) {
@@ -914,12 +911,9 @@ public abstract class Session {
         }
 
         // check the channel state and return the appropriate exception
-        if (channel.getState() == Channel.STATE_ERROR) {
-            BEEPError e = channel.getErrorMessage();
-
-            e.fillInStackTrace();
-
-            throw e;
+        if (reply.isError()) {
+            reply.getError().fillInStackTrace();
+            throw reply.getError();
         }
 
         if (channel.getState() != Channel.STATE_CLOSED) {
@@ -1556,11 +1550,21 @@ public abstract class Session {
 
         Channel channel;
         boolean disableIO;
+        BEEPError error;
 
         StartReplyListener(Channel channel, boolean disableIO)
         {
             this.channel = channel;
             this.disableIO = disableIO;
+            this.error = null;
+        }
+
+        boolean isError() {
+            return this.error != null;
+        }
+
+        BEEPError getError() {
+            return this.error;
         }
 
         public void receiveRPY(Message message)
@@ -1611,7 +1615,6 @@ public abstract class Session {
                         channel.setEncoding(encoding);
                         channel.setProfile(uri);
                         channel.setStartData(data);
-                        channel.setErrorMessage(null);
 
                         // set the state
                         channel.setState(Channel.STATE_OK);
@@ -1661,10 +1664,8 @@ public abstract class Session {
                          + err.getCode() + " diagnostic="
                          + err.getDiagnostic());
 
-            // @todo slop
-            channel.setErrorMessage(err);
+            this.error = err;
 
-            // set the state
             channel.setState(Channel.STATE_ERROR);
             channels.remove(channel.getNumberAsString());
 
@@ -1688,10 +1689,20 @@ public abstract class Session {
     private class CloseReplyListener implements ReplyListener {
 
         Channel channel;
+        BEEPError error;
 
         CloseReplyListener(Channel channel)
         {
             this.channel = channel;
+            this.error = null;
+        }
+
+        boolean isError() {
+            return this.error != null;
+        }
+
+        BEEPError getError() {
+            return this.error;
         }
 
         public void receiveRPY(Message message)
@@ -1708,7 +1719,6 @@ public abstract class Session {
                 } else if (elementName.equals("ok")) {
                     Log.logEntry(Log.SEV_DEBUG, CORE,
                                  "Received an OK for channel close");
-                    channel.setErrorMessage(null);
 
                     // @todo we should fire an event instead.
                     // set the state
@@ -1746,8 +1756,7 @@ public abstract class Session {
                          + err.getCode() + " diagnostic="
                          + err.getDiagnostic());
 
-            // @todo slop
-            channel.setErrorMessage(err);
+            this.error = err;
 
             // set the state
             channel.setState(Channel.STATE_ERROR);
