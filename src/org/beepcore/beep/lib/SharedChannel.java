@@ -1,8 +1,8 @@
 /*
- * SharedChannel.java            $Revision: 1.8 $ $Date: 2002/09/07 15:06:45 $
+ * SharedChannel.java            $Revision: 1.9 $ $Date: 2003/04/21 15:09:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2002, 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -44,9 +44,9 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2002/09/07 15:06:45 $
+ * @version $Revision: 1.9 $, $Date: 2003/04/21 15:09:11 $
  */
-public class SharedChannel extends Channel {
+public class SharedChannel implements Channel {
 
     private Channel channel = null;    // Channel this SharedChannel references
     private ChannelPool pool =
@@ -63,9 +63,6 @@ public class SharedChannel extends Channel {
      */
     SharedChannel(Channel channel, ChannelPool pool)
     {
-        super(channel.getProfile(), String.valueOf(channel.getNumber()),
-              channel.getMessageListener(), true, channel.getSession());
-
         this.channel = channel;
         this.pool = pool;
     }
@@ -120,21 +117,6 @@ public class SharedChannel extends Channel {
         return channel.setMessageListener(dl);
     }
 
-    public void setReceiveBufferSize( int size ) throws BEEPException
-    {
-        channel.setReceiveBufferSize( size );
-    }
-
-    public int getBufferSize()
-    {
-        return channel.getBufferSize();
-    }
-
-    public int getBufferUsed()
-    {
-        return channel.getBufferUsed();
-    }
-
     public MessageListener getMessageListener()
     {
         return channel.getMessageListener();
@@ -185,5 +167,25 @@ public class SharedChannel extends Channel {
         Reply r = new Reply();
         channel.sendMSG(ds, r);
         return r;
+    }
+
+    public void setStartData(String data)
+    {
+        channel.setStartData(data);
+    }
+
+    public String getStartData()
+    {
+        return channel.getStartData();
+    }
+
+    public Object getAppData()
+    {
+        return channel.getAppData();
+    }
+
+    public void setAppData(Object applicationData)
+    {
+        channel.setAppData(applicationData);
     }
 }

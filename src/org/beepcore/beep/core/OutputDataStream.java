@@ -1,5 +1,5 @@
 /*
- * OutputDataStream.java  $Revision: 1.4 $ $Date: 2002/09/02 13:44:42 $
+ * OutputDataStream.java  $Revision: 1.5 $ $Date: 2003/04/21 15:09:11 $
  *
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
@@ -26,7 +26,7 @@ import org.beepcore.beep.util.BufferSegment;
  * stream.
  *
  * @author Huston Franklin
- * @version $Revision: 1.4 $, $Date: 2002/09/02 13:44:42 $
+ * @version $Revision: 1.5 $, $Date: 2003/04/21 15:09:11 $
  */
 public class OutputDataStream {
 
@@ -135,7 +135,7 @@ public class OutputDataStream {
         return b;
     }
     
-    void setChannel(Channel channel) {
+    void setChannel(ChannelImpl channel) {
         this.channel = channel;
     }
 
@@ -145,5 +145,5 @@ public class OutputDataStream {
     private boolean complete = false;
     private boolean headersSent = false;
     private int curOffset = 0;
-    private Channel channel = null;
+    private ChannelImpl channel = null;
 }
