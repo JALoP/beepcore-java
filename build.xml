@@ -97,6 +97,7 @@
 	       optimize="${optimize}"
 	       deprecation="${deprecation}">
             <include name="**/core/*.java"/>
+            <include name="**/core/event/*.java"/>
             <include name="**/lib/*.java"/>
             <include name="**/profile/*.java"/>
             <include name="**/profile/echo/*.java"/>
