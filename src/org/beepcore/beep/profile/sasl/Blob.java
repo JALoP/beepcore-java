@@ -1,5 +1,5 @@
 /*
- * Blob.java            $Revision: 1.8 $ $Date: 2003/04/23 15:23:02 $
+ * Blob.java            $Revision: 1.9 $ $Date: 2003/10/30 14:29:55 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2003/04/23 15:23:02 $
+ * @version $Revision: 1.9 $, $Date: 2003/10/30 14:29:55 $
  *
  */
 public class Blob
@@ -292,7 +292,7 @@ public class Blob
         // Parse out the status if there is any
         String statusString = extractStatusFromBlob(blob);
         this.status = STATUS_NONE;
-        if (statusString != null) {
+        if (statusString != null) { /// @TODO && statusString.equals("") == false
             for (int i=0; i<STATUS_LIMIT; i++) {
                 if (statusMappings[i].equals(statusString)) {
                     status = i;
