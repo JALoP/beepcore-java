@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.7 $ $Date: 2002/10/05 15:45:56 $
+ * TLSProfileJSSE.java  $Revision: 1.8 $ $Date: 2003/06/03 02:43:43 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -25,15 +25,8 @@ import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.tls.TLSProfile;
 import org.beepcore.beep.transport.tcp.*;
-import org.beepcore.beep.util.*;
 
 import javax.net.ssl.*;
-
-import com.sun.net.ssl.KeyManagerFactory;
-import com.sun.net.ssl.TrustManagerFactory;
-import com.sun.net.ssl.SSLContext;
-import com.sun.net.ssl.KeyManager;
-import com.sun.net.ssl.TrustManager;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.KeyManagementException;
