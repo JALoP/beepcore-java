@@ -1,6 +1,6 @@
 
 /*
- * TLSProfilePureTLSHandshakeCompletedListener.java  $Revision: 1.2 $ $Date: 2001/11/08 05:51:35 $
+ * TLSProfilePureTLSHandshakeCompletedListener.java  $Revision: 1.3 $ $Date: 2003/06/03 02:51:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,8 +21,6 @@ package org.beepcore.beep.profile.tls.ptls;
 import org.beepcore.beep.core.*;
 
 import java.util.Vector;
-
-import COM.claymoresystems.cert.X509Cert;
 
 
 /**
