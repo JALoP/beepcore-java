@@ -1,8 +1,5 @@
 - Make startChannel asynchronous and remove timeout
 - Make session initiate asynchronous
-- Support hostname on channel start
 - Remove closeChannel from StartChannelListener
-- Map piggybacked request into regular message exchanges
 - Create a sample reliablity/checksum/signature module
-- Add threading for Listeners
 - Add method to ReplyListener to call with updates to MessageStatus
