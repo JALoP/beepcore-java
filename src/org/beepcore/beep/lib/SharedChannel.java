@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.9 $ $Date: 2003/04/21 15:09:11 $
+ * SharedChannel.java            $Revision: 1.10 $ $Date: 2003/04/23 15:23:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002, 2003 Huston Franklin.  All rights reserved.
@@ -18,17 +18,14 @@
 package org.beepcore.beep.lib;
 
 
-import org.beepcore.beep.core.BEEPError;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
-import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.MessageListener;
 import org.beepcore.beep.core.MessageStatus;
 import org.beepcore.beep.core.OutputDataStream;
 import org.beepcore.beep.core.ReplyListener;
 import org.beepcore.beep.core.Session;
 
-import java.util.LinkedList;
 import java.util.Date;
 
 
@@ -44,7 +41,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/04/21 15:09:11 $
+ * @version $Revision: 1.10 $, $Date: 2003/04/23 15:23:02 $
  */
 public class SharedChannel implements Channel {
 

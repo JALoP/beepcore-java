@@ -1,5 +1,5 @@
 /*
- * ChannelPool.java  $Revision: 1.7 $ $Date: 2002/10/05 15:31:04 $
+ * ChannelPool.java  $Revision: 1.8 $ $Date: 2003/04/23 15:23:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -23,7 +23,6 @@ import org.beepcore.beep.core.MessageListener;
 import org.beepcore.beep.core.Session;
 
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -42,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2002/10/05 15:31:04 $
+ * @version $Revision: 1.8 $, $Date: 2003/04/23 15:23:02 $
  */
 public class ChannelPool {
 

@@ -1,5 +1,5 @@
 /*
- * BEEPError.java  $Revision: 1.7 $ $Date: 2002/09/07 15:01:17 $
+ * BEEPError.java  $Revision: 1.8 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -18,7 +18,6 @@
 package org.beepcore.beep.core;
 
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import javax.xml.parsers.*;
@@ -36,7 +35,7 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2002/09/07 15:01:17 $
+ * @version $Revision: 1.8 $, $Date: 2003/04/23 15:23:04 $
  */
 public class BEEPError extends BEEPException {
 

@@ -1,5 +1,5 @@
 /*
- * StringOutputDataStream.java  $Revision: 1.2 $ $Date: 2002/09/07 14:57:37 $
+ * StringOutputDataStream.java  $Revision: 1.3 $ $Date: 2003/04/23 15:23:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -22,7 +22,6 @@ import java.util.Enumeration;
 import java.util.MissingResourceException;
 
 import java.io.UnsupportedEncodingException;
-import java.io.IOException;
 
 import org.beepcore.beep.util.BufferSegment;
 
@@ -42,7 +41,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2002/09/07 14:57:37 $
+ * @version $Revision: 1.3 $, $Date: 2003/04/23 15:23:05 $
  */
 public class StringOutputDataStream extends OutputDataStream {
     /**

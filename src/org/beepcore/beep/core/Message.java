@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.10 $ $Date: 2003/04/21 15:09:10 $
+ * Message.java            $Revision: 1.11 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,12 +17,6 @@
 package org.beepcore.beep.core;
 
 
-import java.util.Hashtable;
-import java.util.LinkedList;
-
-import java.lang.IndexOutOfBoundsException;
-
-
 /**
  * Message encapsulates the BEEP MSG, RPY, ERR and NUL message types.
  *
@@ -30,7 +24,7 @@ import java.lang.IndexOutOfBoundsException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2003/04/21 15:09:10 $
+ * @version $Revision: 1.11 $, $Date: 2003/04/23 15:23:04 $
  */
 public class Message {
 

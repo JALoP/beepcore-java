@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.34 $ $Date: 2003/04/21 15:09:10 $
+ * Session.java  $Revision: 1.35 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -19,19 +19,17 @@ package org.beepcore.beep.core;
 
 import java.util.Collection;
 
-import org.beepcore.beep.core.event.ChannelEvent;
 import org.beepcore.beep.core.event.ChannelListener;
-import org.beepcore.beep.core.event.SessionEvent;
 import org.beepcore.beep.core.event.SessionListener;
 
 
 /**
  * This interface represents the operations available for all BEEP Sessions.
  * <p>
- * With BEEP a Session is the 
+ * A BEEP Session encapsulates a connection for a given transport.
  *
  * @author Huston Franklin
- * @version $Revision: 1.34 $, $Date: 2003/04/21 15:09:10 $
+ * @version $Revision: 1.35 $, $Date: 2003/04/23 15:23:04 $
  *
  * @see Channel
  */

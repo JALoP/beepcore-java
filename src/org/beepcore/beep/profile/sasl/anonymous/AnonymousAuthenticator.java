@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.13 $ $Date: 2002/10/05 15:31:49 $
+ * AnonymousAuthenticator.java  $Revision: 1.14 $ $Date: 2003/04/23 15:23:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -18,10 +18,8 @@ package org.beepcore.beep.profile.sasl.anonymous;
 
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import java.util.Hashtable;
-import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2002/10/05 15:31:49 $
+ * @version $Revision: 1.14 $, $Date: 2003/04/23 15:23:03 $
  *
  */
 class AnonymousAuthenticator
@@ -106,7 +104,7 @@ class AnonymousAuthenticator
         state = STATE_UNKNOWN;
 
         credential.put(SessionCredential.AUTHENTICATOR_TYPE,
-                       profile.MECHANISM);
+                               SASLAnonymousProfile.MECHANISM);
     }
 
     /**
@@ -176,7 +174,7 @@ class AnonymousAuthenticator
 
         credential.put(SessionCredential.AUTHENTICATOR, data);
         credential.put(SessionCredential.AUTHENTICATOR_TYPE,
-                       profile.MECHANISM);
+                               SASLAnonymousProfile.MECHANISM);
 
         try
         {

@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java  $Revision: 1.6 $ $Date: 2003/03/08 16:39:18 $
+ * TCPSessionCreator.java  $Revision: 1.7 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -29,8 +29,6 @@ import java.util.Hashtable;
 
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.ProfileRegistry;
-import org.beepcore.beep.core.SessionCredential;
-import org.beepcore.beep.core.SessionTuningProperties;
 
 
 /**
@@ -41,7 +39,7 @@ import org.beepcore.beep.core.SessionTuningProperties;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2003/03/08 16:39:18 $
+ * @version $Revision: 1.7 $, $Date: 2003/04/23 15:23:04 $
  */
 public class TCPSessionCreator {
 

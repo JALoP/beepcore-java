@@ -1,5 +1,5 @@
 /*
- * TLSProfile.java  $Revision: 1.14 $ $Date: 2001/11/09 16:44:43 $
+ * TLSProfile.java  $Revision: 1.15 $ $Date: 2003/04/23 15:23:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -20,7 +20,6 @@ package org.beepcore.beep.profile.tls;
 import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.transport.tcp.*;
-import org.beepcore.beep.util.*;
 
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.1 $ $Date: 2003/04/21 15:09:10 $
+ * Session.java  $Revision: 1.2 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -21,7 +21,6 @@ package org.beepcore.beep.core;
 
 import java.io.IOException;
 
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
@@ -62,7 +61,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2003/04/21 15:09:10 $
+ * @version $Revision: 1.2 $, $Date: 2003/04/23 15:23:04 $
  *
  * @see Channel
  */

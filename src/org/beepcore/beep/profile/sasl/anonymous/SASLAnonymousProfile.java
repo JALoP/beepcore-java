@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.8 $ $Date: 2002/10/05 15:31:49 $
+ * SASLAnonymousProfile.java  $Revision: 1.9 $ $Date: 2003/04/23 15:23:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -18,9 +18,6 @@ package org.beepcore.beep.profile.sasl.anonymous;
 
 
 import java.util.Hashtable;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +42,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2002/10/05 15:31:49 $
+ * @version $Revision: 1.9 $, $Date: 2003/04/23 15:23:03 $
  *
  */
 public class SASLAnonymousProfile
