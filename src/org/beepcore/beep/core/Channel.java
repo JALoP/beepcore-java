@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.34 $ $Date: 2003/11/07 17:39:21 $
+ * Channel.java  $Revision: 1.35 $ $Date: 2004/01/01 19:12:51 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -21,7 +21,7 @@ package org.beepcore.beep.core;
  * This interface represents the operations available for all BEEP Channels.
  *
  * @author Huston Franklin
- * @version $Revision: 1.34 $, $Date: 2003/11/07 17:39:21 $
+ * @version $Revision: 1.35 $, $Date: 2004/01/01 19:12:51 $
  *
  */
 public interface Channel {
@@ -63,21 +63,6 @@ public interface Channel {
      *
      */
     public int getNumber();
-
-    /**
-     * Sets the <code>MessageListener</code> for this channel.
-     *
-     * @param listener
-     * @return The previous MessageListener or null if none was set.
-     * @deprecated
-     */
-    public MessageListener setMessageListener(MessageListener listener);
-
-    /**
-     * Returns the message listener for this channel.
-     * @deprecated
-     */
-    public MessageListener getMessageListener();
 
     /**
      * Returns the <code>RequestHandler</code> registered with this channel.

@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.13 $ $Date: 2003/11/18 14:03:08 $
+ * SharedChannel.java            $Revision: 1.14 $ $Date: 2004/01/01 19:12:51 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002, 2003 Huston Franklin.  All rights reserved.
@@ -20,7 +20,6 @@ package org.beepcore.beep.lib;
 
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
-import org.beepcore.beep.core.MessageListener;
 import org.beepcore.beep.core.MessageStatus;
 import org.beepcore.beep.core.RequestHandler;
 import org.beepcore.beep.core.OutputDataStream;
@@ -42,7 +41,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2003/11/18 14:03:08 $
+ * @version $Revision: 1.14 $, $Date: 2004/01/01 19:12:51 $
  */
 public class SharedChannel implements Channel {
 
@@ -101,23 +100,6 @@ public class SharedChannel implements Channel {
             throws BEEPException
     {
         return channel.sendMSG(stream, replyListener);
-    }
-
-    /**
-     * Sets the <code>DataListener</code> for this <code>SharedChannel</code>.
-     *
-     *
-     * @param ml A listener of type <code>DataListener</code>
-     *
-     */
-    public MessageListener setMessageListener(MessageListener ml)
-    {
-        return channel.setMessageListener(ml);
-    }
-
-    public MessageListener getMessageListener()
-    {
-        return channel.getMessageListener();
     }
 
     public RequestHandler getRequestHandler()

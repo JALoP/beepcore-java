@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java  $Revision: 1.12 $ $Date: 2003/11/18 14:03:08 $
+ * TuningProfile.java  $Revision: 1.13 $ $Date: 2004/01/01 19:12:51 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -247,7 +247,7 @@ public abstract class TuningProfile {
 
     public Channel startChannel(Session session, String profile,
                                 boolean base64Encoding, String data,
-                                MessageListener listener)
+                                RequestHandler handler)
             throws BEEPException, BEEPError
     {
         StartChannelProfile p = new StartChannelProfile(profile,
@@ -256,6 +256,6 @@ public abstract class TuningProfile {
 
         l.add(p);
 
-        return ((SessionImpl)session).startChannelRequest(l, listener, true);
+        return ((SessionImpl)session).startChannelRequest(l, handler, true);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.10 $ $Date: 2003/11/07 17:39:21 $
+ * ChannelImpl.java  $Revision: 1.11 $ $Date: 2004/01/01 19:12:51 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2003/11/07 17:39:21 $
+ * @version $Revision: 1.11 $, $Date: 2004/01/01 19:12:51 $
  *
  */
 class ChannelImpl implements Channel, Runnable {
@@ -274,33 +274,6 @@ class ChannelImpl implements Channel, Runnable {
 
             sendWindowUpdate();
         }
-    }
-
-    /**
-     * Sets the <code>MessageListener</code> for this channel.
-     *
-     * @param ml
-     * @return The previous MessageListener or null if none was set.
-     */
-    public MessageListener setMessageListener(MessageListener ml)
-    {
-        MessageListener tmp = getMessageListener();
-
-        this.handler = new MessageListenerAdapter(ml);
-
-        return tmp;
-    }
-
-    /**
-     * Returns the message listener for this channel.
-     */
-    public MessageListener getMessageListener()
-    {
-        if (!(this.handler instanceof MessageListenerAdapter)) {
-            return null;
-        }
-        
-        return ((MessageListenerAdapter)this.handler).getMessageListener();
     }
 
     /**
@@ -1118,37 +1091,6 @@ class ChannelImpl implements Channel, Runnable {
         return startData;
     }
     
-    static class MessageListenerAdapter implements RequestHandler {
-        MessageListenerAdapter(MessageListener listener) {
-            this.listener = listener;
-        }
-
-        public void receiveMSG(MessageMSG message) {
-            try {
-                listener.receiveMSG(message);
-            } catch (BEEPError e) {
-                try {
-                    message.sendERR(e);
-                } catch (BEEPException e2) {
-                    log.error("Error sending ERR", e2);
-                }
-            } catch (AbortChannelException e) {
-                try {
-                    message.getChannel().close();
-                } catch (BEEPException e2) {
-                    log.error("Error closing channel", e2);
-                }
-            }
-        }
-
-        public MessageListener getMessageListener() {
-            return this.listener;
-        }
-        
-        private Log log = LogFactory.getLog(this.getClass());
-        private MessageListener listener;
-    }
-
     private static class DefaultMSGHandler implements RequestHandler {
         public void receiveMSG(MessageMSG message) {
             log.error("No handler registered to process MSG received on " +
@@ -1163,6 +1105,5 @@ class ChannelImpl implements Channel, Runnable {
 
         
         private Log log = LogFactory.getLog(this.getClass());
-        private MessageListener listener;
     }
 }

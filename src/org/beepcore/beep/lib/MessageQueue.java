@@ -1,5 +1,5 @@
 /*
- * MessageQueue.java            $Revision: 1.5 $ $Date: 2002/10/05 15:31:19 $
+ * MessageQueue.java            $Revision: 1.6 $ $Date: 2004/01/01 19:12:51 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -23,8 +23,8 @@ import java.util.LinkedList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.beepcore.beep.core.Message;
-import org.beepcore.beep.core.MessageListener;
+import org.beepcore.beep.core.MessageMSG;
+import org.beepcore.beep.core.RequestHandler;
 
 
 /**
@@ -39,9 +39,9 @@ import org.beepcore.beep.core.MessageListener;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2002/10/05 15:31:19 $
+ * @version $Revision: 1.6 $, $Date: 2004/01/01 19:12:51 $
  */
-public class MessageQueue implements MessageListener {
+public class MessageQueue implements RequestHandler {
 
     private Log log = LogFactory.getLog(this.getClass());
 
@@ -50,18 +50,18 @@ public class MessageQueue implements MessageListener {
     /**
      * Gets the next message on the queue blocking if none are available.
      */
-    public Message getNextMessage() throws InterruptedException
+    public MessageMSG getNextMessage() throws InterruptedException
     {
         log.trace("getNextMessage: entry");
         synchronized (this) {
             if (queue.size() == 0) {
                 this.wait();
             }
-            return (Message) queue.removeFirst();
+            return (MessageMSG) queue.removeFirst();
         }
     }
 
-    public void receiveMSG(Message message)
+    public void receiveMSG(MessageMSG message)
     {
         log.trace("receiveMSG: entry");
         synchronized (this) {

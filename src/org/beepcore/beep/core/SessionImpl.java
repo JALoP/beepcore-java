@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.15 $ $Date: 2004/01/01 16:45:56 $
+ * SessionImpl.java  $Revision: 1.16 $ $Date: 2004/01/01 19:12:51 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -65,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.15 $, $Date: 2004/01/01 16:45:56 $
+ * @version $Revision: 1.16 $, $Date: 2004/01/01 19:12:51 $
  *
  * @see Channel
  */
@@ -177,7 +177,7 @@ public abstract class SessionImpl implements Session {
         GreetingListener greetingListener = new GreetingListener();
 
         zero = ChannelImpl.createChannelZero(this, greetingListener,
-                                             new ChannelImpl.MessageListenerAdapter(new ChannelZeroListener()));
+                                             new ChannelZeroListener());
 
         channels.put(CHANNEL_ZERO, zero);
 
@@ -228,7 +228,7 @@ public abstract class SessionImpl implements Session {
         GreetingListener greetingListener = new GreetingListener();
 
         zero = ChannelImpl.createChannelZero(this, greetingListener,
-                                             new ChannelImpl.MessageListenerAdapter(new ChannelZeroListener()));
+                                             new ChannelZeroListener());
         channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
@@ -429,17 +429,6 @@ public abstract class SessionImpl implements Session {
         return startChannel(profile, (RequestHandler)null);
     }
 
-    public Channel startChannel(String profile, MessageListener listener)
-            throws BEEPException, BEEPError
-    {
-        StartChannelProfile p = new StartChannelProfile(profile);
-        LinkedList l = new LinkedList();
-
-        l.add(p);
-
-        return startChannelRequest(l, listener, false);
-    }
-
     public Channel startChannel(String profile, RequestHandler handler)
             throws BEEPException, BEEPError
     {
@@ -460,19 +449,6 @@ public abstract class SessionImpl implements Session {
         return startChannel(p, null);
     }
     
-    public Channel startChannel(String profile, boolean base64Encoding,
-                                String data, MessageListener listener)
-            throws BEEPException, BEEPError
-    {
-        StartChannelProfile p = new StartChannelProfile(profile,
-                                                        base64Encoding, data);
-        LinkedList l = new LinkedList();
-
-        l.add(p);
-
-        return startChannelRequest(l, listener, false);
-    }
-    
     public Channel startChannel(StartChannelProfile profile, RequestHandler handler)
             throws BEEPException, BEEPError
     {
@@ -481,21 +457,6 @@ public abstract class SessionImpl implements Session {
         l.add(profile);
 
         return startChannelRequest(l, handler, false);
-    }
-
-    public Channel startChannel(Collection profiles, MessageListener listener)
-        throws BEEPException, BEEPError
-    {
-        return startChannelRequest(profiles, listener, false);
-    }
-
-    Channel startChannelRequest(Collection profiles, MessageListener listener,
-                                boolean tuning)
-        throws BEEPException, BEEPError
-    {
-        return startChannelRequest(profiles,
-                                   listener == null ? null : new ChannelImpl.MessageListenerAdapter(listener),
-                                   tuning);
     }
 
     public Channel startChannel(Collection profiles, RequestHandler handler)
@@ -1380,10 +1341,21 @@ public abstract class SessionImpl implements Session {
         m.sendRPY(f);
     }
 
-    private class ChannelZeroListener implements MessageListener {
+    private class ChannelZeroListener implements RequestHandler {
 
-        public void receiveMSG(Message message)
-            throws BEEPError, AbortChannelException
+        public void receiveMSG(MessageMSG message) {
+            try {
+                processMSG(message);
+            } catch (BEEPError e) {
+                try {
+                    message.sendERR(e);
+                } catch (BEEPException e2) {
+                    log.error("Error sending ERR", e2);
+                }
+            }
+        }
+
+        public void processMSG(MessageMSG message) throws BEEPError
         {
             Element topElement;
 
