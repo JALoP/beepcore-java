@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.7 $ $Date: 2003/06/10 18:59:17 $
+ * ChannelImpl.java  $Revision: 1.8 $ $Date: 2003/09/13 21:10:31 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2003/06/10 18:59:17 $
+ * @version $Revision: 1.8 $, $Date: 2003/09/13 21:10:31 $
  *
  */
 class ChannelImpl implements Channel, Runnable {
@@ -821,6 +821,7 @@ class ChannelImpl implements Channel, Runnable {
         
         if (ds.isComplete() && ds.availableSegment() == false &&
             (status.getMessageType() == Message.MESSAGE_TYPE_RPY ||
+             status.getMessageType() == Message.MESSAGE_TYPE_ERR ||
              status.getMessageType() == Message.MESSAGE_TYPE_NUL))
         {
             MessageMSGImpl m;
