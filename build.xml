@@ -1,7 +1,7 @@
 <project name="beepcore" default="core-jar" basedir=".">
     <property name="name" value="beepcore" />
     <property name="Name" value="BEEP Core" />
-    <property name="version" value="0.9.05" />
+    <property name="version" value="0.9.06" />
     <property name="release.name" value="${name}-${version}" />
 
     <property name="beepcore.home" value="."/>
