@@ -1,5 +1,5 @@
 /*
- * SessionTuningProperties.java  $Revision: 1.2 $ $Date: 2001/07/27 06:17:40 $
+ * SessionTuningProperties.java  $Revision: 1.3 $ $Date: 2001/07/30 13:00:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -28,7 +28,7 @@ import java.util.Hashtable;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Rev$, $Date: 2001/07/27 06:17:40 $
+ * @version $Rev$, $Date: 2001/07/30 13:00:53 $
  */
 public class SessionTuningProperties {
 
@@ -138,5 +138,9 @@ public class SessionTuningProperties {
         }
 
         return b.toString();
+    }
+
+    boolean isEmpty() {
+        return properties.isEmpty();
     }
 }

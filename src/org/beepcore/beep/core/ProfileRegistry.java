@@ -1,5 +1,5 @@
 /*
- * ProfileRegistry.java  $Revision: 1.5 $ $Date: 2001/07/27 06:17:40 $
+ * ProfileRegistry.java  $Revision: 1.6 $ $Date: 2001/07/30 13:00:07 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -19,6 +19,7 @@ package org.beepcore.beep.core;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import org.beepcore.beep.util.Log;
 
 
 /**
@@ -31,7 +32,7 @@ import java.util.Hashtable;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/07/27 06:17:40 $
+ * @version $Revision, $Date: 2001/07/30 13:00:07 $
  */
 public class ProfileRegistry implements Cloneable {
 
@@ -126,13 +127,15 @@ public class ProfileRegistry implements Cloneable {
         }
 
         // if there are no qualifications, then just return the listener
-        if (profile.tuning == null) {
+        if (profile.tuning == null || profile.tuning.isEmpty()) {
             return ((InternalProfile) profileListeners.get(uri)).listener;
         }
 
         // so the profile requires something, but if the session doesn't
         // have anything, then return null
         if (tuning == null) {
+            Log.logEntry(Log.SEV_DEBUG,
+                         "Session does not have any tuning properties");
             return null;
         }
 
@@ -147,6 +150,9 @@ public class ProfileRegistry implements Cloneable {
                     && (tuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i])
                         == null))
             {
+                Log.logEntry(Log.SEV_DEBUG,
+                             "Session does not have tuning property " +
+                             SessionTuningProperties.STANDARD_PROPERTIES[i]);
                 return null;
             }
         }
@@ -186,9 +192,6 @@ public class ProfileRegistry implements Cloneable {
 
         tempProfile.listener = listener;
 
-	if (tuning == null) {
-            tuning = SessionTuningProperties.emptyTuningProperties;
-        }
         tempProfile.tuning = tuning;
 
         profileListeners.put(profile, tempProfile);
