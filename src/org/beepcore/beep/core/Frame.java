@@ -1,8 +1,8 @@
 /*
- * Frame.java            $Revision: 1.17 $ $Date: 2002/09/07 14:59:43 $
+ * Frame.java  $Revision: 1.18 $ $Date: 2002/09/07 15:15:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.17 $, $Date: 2002/09/07 14:59:43 $
+ * @version $Revision: 1.18 $, $Date: 2002/09/07 15:15:49 $
  *
  * @see BufferSegment
  */

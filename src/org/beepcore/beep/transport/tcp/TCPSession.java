@@ -1,8 +1,8 @@
 /*
- * TCPSession.java  $Revision: 1.24 $ $Date: 2002/05/07 04:59:23 $
+ * TCPSession.java  $Revision: 1.25 $ $Date: 2002/09/07 15:11:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.24 $, $Date: 2002/05/07 04:59:23 $
+ * @version $Revision: 1.25 $, $Date: 2002/09/07 15:11:22 $
  */
 public class TCPSession extends Session {
 
@@ -251,7 +251,7 @@ public class TCPSession extends Session {
      * trailer to the wire.
      *
      * @param f the Frame to send.
-     * @returns boolean true of the frame was sent, false otherwise.
+     * @return boolean true of the frame was sent, false otherwise.
      *
      * @throws BEEPException
      *

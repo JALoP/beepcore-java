@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.5 $ $Date: 2001/11/09 18:41:23 $
+ * TLSProfileJSSE.java  $Revision: 1.6 $ $Date: 2002/09/07 15:13:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -139,6 +139,7 @@ public class TLSProfileJSSE extends TLSProfile
 
         public void handshakeCompleted(HandshakeCompletedEvent event)
         {
+            Log.logEntry(Log.SEV_DEBUG, "HandshakeCompleted");
             synchronized (handshakeListeners) {
                 Iterator i = TLSProfileJSSE.handshakeListeners.iterator();
 
@@ -592,6 +593,7 @@ public class TLSProfileJSSE extends TLSProfile
         // Consider the data (see if it's proceed)
         if ((data == null)
                 || (!data.equals(PROCEED1) &&!data.equals(PROCEED2))) {
+            Log.logEntry(Log.SEV_ERROR, "Invalid reply: " + data);
             throw new BEEPException(ERR_EXPECTED_PROCEED);
         }
 
@@ -616,7 +618,9 @@ public class TLSProfileJSSE extends TLSProfile
             // set up so the handshake listeners will be called
             l.session = session;
 
+            Log.logEntry(Log.SEV_DEBUG, "Handshake starting");
             newSocket.startHandshake();
+            Log.logEntry(Log.SEV_DEBUG, "Handshake returned");
 
             synchronized (l) {
                 if (!l.notifiedHandshake) {
@@ -627,6 +631,7 @@ public class TLSProfileJSSE extends TLSProfile
                     l.waitingForHandshake = false;
                 }
             }
+            Log.logEntry(Log.SEV_DEBUG, "Handshake done waiting");
         } catch (javax.net.ssl.SSLException e) {
             Log.logEntry(Log.SEV_ERROR, e);
             throw new BEEPException(e.getMessage());
@@ -661,7 +666,6 @@ public class TLSProfileJSSE extends TLSProfile
      * return the default credentials for the new session to use after a TLS
      * negotiation is complete.
      *
-     * @return
      */
     public static SessionCredential generateCredential()
     {

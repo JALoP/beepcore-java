@@ -1,7 +1,7 @@
 /*
- * BEEPException.java  $Revision: 1.4 $ $Date: 2002/05/07 04:57:51 $
+ * BEEPException.java  $Revision: 1.5 $ $Date: 2002/09/07 15:15:49 $
  *
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package org.beepcore.beep.core;
  * similar to what is available in JDK 1.4.
  *
  * @author Huston Franklin
- * @version $Revision: 1.4 $, $Date: 2002/05/07 04:57:51 $
+ * @version $Revision: 1.5 $, $Date: 2002/09/07 15:15:49 $
  */
 public class BEEPException extends Exception {
     private final Throwable cause;
