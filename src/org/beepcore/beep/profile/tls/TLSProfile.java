@@ -1,6 +1,6 @@
 
 /*
- * TLSProfile.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:51 $
+ * TLSProfile.java            $Revision: 1.2 $ $Date: 2001/04/09 13:36:56 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -61,7 +61,7 @@ public class TLSProfile extends TuningProfile
     public static final String PROCEED2 = "<proceed />";
     public static final String READY1 = "<ready/>";
     public static final String READY2 = "<ready />";
-    public static final String uri = "http://iana.org/beep/TLS";
+    public static final String URI = "http://iana.org/beep/TLS";
 
     // error messages thrown in exceptions
     static final String ERR_SERVER_MUST_HAVE_KEY =
@@ -141,8 +141,6 @@ public class TLSProfile extends TuningProfile
 
             synchronized (handshakeListeners) {
                 Iterator i = TLSProfile.handshakeListeners.iterator();
-//                  Session session =
-//                      (Session) TLSProfile.pendingHandshakes.get(event.getSocket());
 
                 while (i.hasNext()) {
                     TLSProfileHandshakeCompletedListener l =
@@ -205,9 +203,6 @@ public class TLSProfile extends TuningProfile
                 Collections.synchronizedList(new LinkedList());
         }
 
-//          if (pendingHandshakes == null) {
-//              pendingHandshakes = Collections.synchronizedMap(new HashMap());
-//          }
     }
 
     /**
@@ -461,7 +456,7 @@ public class TLSProfile extends TuningProfile
 
             // Freeze this Peer
             // Send a profile back with data in the 3rd argument
-            this.begin(channel, uri, data);
+            this.begin(channel, URI, data);
 
             // Negotiate TLS with the Socket
             Socket oldSocket = oldSession.getSocket();
@@ -471,14 +466,11 @@ public class TLSProfile extends TuningProfile
                                                        oldSocket.getPort(),
                                                        true);
 
-            //newSocket.setUseClientMode( true );
-            //newSocket.addHandshakeCompletedListener(this);
             TLSHandshake l = new TLSHandshake();
             newSocket.addHandshakeCompletedListener( l );
             newSocket.setUseClientMode(false);
             newSocket.setNeedClientAuth(needClientAuth);
             newSocket.setEnabledCipherSuites(newSocket.getSupportedCipherSuites());
-//              pendingHandshakes.put(newSocket, channel.getSession());
             l.session = channel.getSession();
             newSocket.startHandshake();
              synchronized (l) {
@@ -494,7 +486,7 @@ public class TLSProfile extends TuningProfile
             // Consider the Profile Registry
             ProfileRegistry preg = oldSession.getProfileRegistry();
 
-            preg.removeStartChannelListener(uri);
+            preg.removeStartChannelListener(URI);
 
             if (abortSession) {
                 this.abort(new BEEPError(451, ERR_TLS_NO_AUTHENTICATION),
@@ -513,7 +505,7 @@ public class TLSProfile extends TuningProfile
             throw new StartChannelException(450, x.getMessage());
         }
 
-        throw new TuningResetException(uri);
+        throw new TuningResetException(URI);
     }
 
     /**
@@ -532,13 +524,13 @@ public class TLSProfile extends TuningProfile
     }
 
     /**
-     * Returns the uri of this profile
+     * Returns the URI of this profile
      * ("http://xml.resource.org/profiles/TLS").
      *
      */
     public String getURI()
     {
-        return TLSProfile.uri;
+        return TLSProfile.URI;
     }
 
     /**
@@ -561,15 +553,17 @@ public class TLSProfile extends TuningProfile
      * anonymous connection with a peer that doesn't support an
      * anonymous cipher suite).  
 	 */
-    public static Session authenticateTLS(TCPSession session, Object arg)
+    public static Session authenticateTLS(TCPSession session)
             throws BEEPException
     {
-        if (session.getProfileRegistry().getStartChannelListener(TLSProfile.uri)
+        /*
+        if (session.getProfileRegistry().getStartChannelListener(TLSProfile.URI)
                 == null) {
             throw new BEEPException(ERR_TLS_NOT_SUPPORTED_BY_SESSION);
         }
+        */
 
-        Channel ch = session.startChannel(TLSProfile.uri, false, READY2,
+        Channel ch = session.startChannel(TLSProfile.URI, false, READY2,
                                           null);
         TLSProfile tempProfile = new TLSProfile();
 
@@ -590,7 +584,6 @@ public class TLSProfile extends TuningProfile
         TLSHandshake l = tempProfile.new TLSHandshake();
 
         // create the SSL Socket
-        //SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
         try {
             newSocket =
                 (SSLSocket) socketFactory.createSocket(oldSocket,
@@ -598,25 +591,11 @@ public class TLSProfile extends TuningProfile
                                                        oldSocket.getPort(),
                                                        true);
             newSocket.addHandshakeCompletedListener( l );
-//              newSocket.addHandshakeCompletedListener(tempProfile);
             newSocket.setUseClientMode(true);
             newSocket.setNeedClientAuth(needClientAuth);
             newSocket.setEnabledCipherSuites(newSocket.getSupportedCipherSuites());
 
-            //                      String ciphers[] = newSocket.getEnabledCipherSuites();
-            //                      for( int i = 0; i < ciphers.length; i++ ) {
-            //                              Utility.dprintln( "Cipher = " + ciphers[i] );
-            //                      }
-            //                  String ciphers[] = {
-            //                              "SSL_DH_anon_WITH_DES_CBC_SHA", 
-            //                              "SSL_DH_anon_WITH_3DES_EDE_CBC_SHA",
-            //                              "SSL_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
-            //                              "SSL_DH_anon_WITH_RC4_128_MD5",
-            //                              "SSL_DH_anon_EXPORT_WITH_RC4_40_MD5"
-            //                      };
-            //                      newSocket.setEnabledCipherSuites( ciphers );
             // set up so the handshake listeners will be called
-//              pendingHandshakes.put(newSocket, session);
             l.session = session;
             newSocket.startHandshake();
 
@@ -660,7 +639,7 @@ public class TLSProfile extends TuningProfile
     {
         Hashtable ht = new Hashtable(4);
 
-        ht.put(SessionCredential.AUTHENTICATOR, uri);
+        ht.put(SessionCredential.AUTHENTICATOR, URI);
 
         return new SessionCredential(ht);
     }
@@ -689,40 +668,6 @@ public class TLSProfile extends TuningProfile
     {
         handshakeListeners.remove(x);
     }
-
-    // we set ourselves up as the listener for the SSLSocket's HandshakeCompletedEvent 
-    // and then replicate that with additional information to our listeners.
-
-	// set to receive the SSLSocket's handshake completed events and forwards
-	// them to the TLSProfileHandshakeCompletedListeners registered.
-//      public void handshakeCompleted(HandshakeCompletedEvent event)
-//      {
-//          synchronized (handshakeListeners) {
-//              Iterator i = handshakeListeners.iterator();
-//              Session session =
-//                  (Session) pendingHandshakes.get(event.getSocket());
-
-//              while (i.hasNext()) {
-//                  TLSProfileHandshakeCompletedListener l =
-//                      (TLSProfileHandshakeCompletedListener) i.next();
-
-//                  if (l.handshakeCompleted(session, event) == false) {
-//                      abortSession = true;
-
-//                      break;
-//                  }
-//              }
-//          }
-
-//          synchronized (this) {
-//              if (waitingForHandshake) {
-//                  notify();
-//              }
-
-//              notifiedHandshake = true;
-//          }
-        
-//      }
 
 	// 
     public StartChannelListener getStartChannelListener()
