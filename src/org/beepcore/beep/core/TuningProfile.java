@@ -1,6 +1,5 @@
-
 /*
- * TuningProfile.java  $Revision: 1.6 $ $Date: 2001/11/08 05:51:34 $
+ * TuningProfile.java  $Revision: 1.7 $ $Date: 2002/08/20 03:04:26 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -244,25 +243,6 @@ public abstract class TuningProfile {
             throws BEEPException
     {
         session.sendProfile(uri, data, channel);
-    }
-
-    /**
-     * Weird support routine that should eventually be
-     * configuration based.  We reset the session, actually
-     * start over and exchange greetings, when we negotiate
-     * certain security layers.  TLS is such a layer.  The
-     * method name could be more apropos.
-     *
-     * @param profile
-     *
-     */
-    public static boolean isTuningProfile(String profile)
-    {
-        if (profile.equals(TLS_URI)) {
-            return true;
-        }
-
-        return false;
     }
 
     public Channel startChannel(Session session, String profile,
