@@ -1,6 +1,6 @@
 
 /*
- * OTPGenerator.java            $Revision: 1.6 $ $Date: 2003/04/23 15:23:03 $
+ * OTPGenerator.java            $Revision: 1.7 $ $Date: 2003/09/13 21:18:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import org.beepcore.beep.profile.sasl.otp.database.UserDatabasePool;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2003/04/23 15:23:03 $
+ * @version $Revision: 1.7 $, $Date: 2003/09/13 21:18:09 $
  *
  */
 public class OTPGenerator {
@@ -317,37 +317,5 @@ public class OTPGenerator {
         {
             throw new SASLException(x.getMessage());
         }
-    }
-    
-    static void storeUserDb(String username, String algorithm,
-                            String lastHash, String orgLastHash,
-                            String seed, int sequence, int orgSequence)
-        throws SASLException
-    {
-        if(!validateUserName(username))
-            throw new SASLException(ERR_USER_DB_EXISTS);
-        try
-        {
-            seed = seed.toLowerCase();
-            validateSeed(seed);
-        }
-        catch(Exception x)
-        {
-            throw new SASLException(x.getMessage());
-        }
-            
-        Properties p = new Properties();
-        try {
-            p.put(UserDatabasePool.OTP_AUTHENTICATOR, username);
-            p.put(UserDatabasePool.OTP_ALGO, algorithm);
-            p.put(UserDatabasePool.OTP_LAST_HASH, lastHash);
-            p.put(UserDatabasePool.OTP_SEQUENCE, Integer.toString(orgSequence));
-            p.put(UserDatabasePool.OTP_SEED, seed);
-            p.store(new FileOutputStream(username + UserDatabasePool.OTP_SUFFIX),
-                    UserDatabasePool.OTP_HEADER);
-        } catch (Exception x) {
-            throw new SASLException(x.getMessage());
-        }
-        
     }
 }
