@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.4 $ $Date: 2003/05/27 21:37:40 $
+ * ChannelImpl.java  $Revision: 1.5 $ $Date: 2003/06/03 02:33:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2003/05/27 21:37:40 $
+ * @version $Revision: 1.5 $, $Date: 2003/06/03 02:33:21 $
  *
  */
 class ChannelImpl implements Channel {
@@ -121,6 +121,10 @@ class ChannelImpl implements Channel {
     private Object applicationData = null;
 
     private boolean blockingMessageListener = false;
+
+    // tuningProfile indicates that the profile for this channel will
+    // request a tuning reset
+    private boolean tuningProfile = false;
 
     // in shutting down the session
     // something for waiting synchronous messages (semaphores or something)
@@ -523,10 +527,6 @@ class ChannelImpl implements Channel {
             // @todo should we check this on sendMSG instead?
         }
 
-        if (frame.isLast() && getState() == STATE_TUNING) {
-            this.session.disableIO();
-        }
-
         if (frame.getMessageType() == Message.MESSAGE_TYPE_NUL) {
             synchronized (recvReplyQueue) {
                 if (recvReplyQueue.size() != 0) {
@@ -658,7 +658,7 @@ class ChannelImpl implements Channel {
      * block if more is expected.
      * @param frame - the frame received by the session
      */
-    void postFrame(Frame frame) throws BEEPException
+    boolean postFrame(Frame frame) throws BEEPException
     {
         log.trace("Channel::postFrame");
 
@@ -679,6 +679,9 @@ class ChannelImpl implements Channel {
         }
 
         receiveFrame(frame);
+
+        return !(frame.isLast() == true &&
+                 getState() == STATE_TUNING || tuningProfile == true);
     }
 
     void sendMessage(MessageStatus m) throws BEEPException
