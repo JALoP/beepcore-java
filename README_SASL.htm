@@ -1,3 +1,4 @@
+<!-- saved from url=(0022)http://internet.e-mail -->
 <html>
 <head>
 <title>Untitled Document</title>
@@ -7,21 +8,6 @@
 <body bgcolor="#ffffff" text="#000000">
 <p align="center"><b><font face="Georgia, Times New Roman, Times, serif" size="5">README 
   for the BEEPLib SASL Profiles</font></b></p>
-<p><i>WARNING: The JVM we're currently testing with (JDK1.2.2) has an issue in 
-  its implementation of the MessageDigest classes, that can result in the generation 
-  of incorrect hashes from strings. This may be related to the platform (win32) 
-  rather than the VM design itself - we'll have to check it out. The fact is that 
-  while the initial hash of the SEED+PASSPHRASE information can fail, subsequent 
-  hashes of other hashes all work just fine. Again, it's just the initial hash 
-  that can be incorrect, I suspect the issue, just given what I've observed (that 
-  the failure is limited for hashes which, if turned to hex and then represented 
-  mathematically, exceed the Long.MAX_VALUE), is related to the signed limits 
-  of the 64-bit Long in the JVM. Once this is investigated further, we will update 
-  the library appropriately. It will still work in the majority of cases, but 
-  this is a limitation at present. We may provide non-JVM code as a workaround, 
-  but would prefer to avoid that if newer versions of the JVM fix this. This is 
-  a top issue right now, but it didn't get fully investigated prior to the first 
-  beta release.</i></p>
 <p><font face="Georgia, Times New Roman, Times, serif">This BEEP library comes 
   equipped with two SASL profiles, corresponding to the Anonymous and OTP SASL 
   mechanisms. Example code for the use of both mechanisms has been included in 

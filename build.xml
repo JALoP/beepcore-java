@@ -12,10 +12,13 @@
     <property name="core.doc.dir" value="${release.dir}/doc/core" />
     <property name="core.jar.name" value="${release.name}.jar" />
     <property name="core.src.dir" value="src" />
-    <property name="core.packages" value="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile"/>
+    <property name="core.packages" value="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile,org.beepcore.beep.profile.echo"/>
 
-    <property name="example.dir" value="example" />
-    <property name="test.dir"  value="test" />
+    <property name="example.build.dir" value="${build.dir}/example" />
+    <property name="example.src.dir" value="example" />
+
+    <property name="test.build.dir"  value="${build.dir}/test" />
+    <property name="test.src.dir"  value="test" />
 
     <property name="sasl.build.dir" value="${build.dir}/sasl"/>
     <property name="sasl.doc.dir" value="${release.dir}/doc/sasl"/>
@@ -37,6 +40,8 @@
         <javac srcdir="${core.src.dir}/" destdir="${core.build.dir}" >
             <include name="**/core/*.java"/>
             <include name="**/lib/*.java"/>
+            <include name="**/profile/*.java"/>
+            <include name="**/profile/echo/*.java"/>
             <include name="**/transport/**/*.java"/>
             <include name="**/util/*.java"/>
         </javac>
@@ -79,10 +84,16 @@
 	<copy file="README_SASL.htm" tofile="${release.dir}/README_SASL.htm"/>
     </target>
 
-    <target name="example" depends="core-jar">
+    <target name="example" depends="core-jar,sasl-jar,tls-jar">
         <mkdir dir="${example.build.dir}"/>
         <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
             <include name="**/*.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${tls.jar.name}"/>
+            </classpath>
         </javac>
     </target>
 
@@ -90,13 +101,20 @@
         <mkdir dir="${test.build.dir}"/>
         <javac srcdir="${test.src.dir}/" destdir="${test.build.dir}" >
             <include name="**/*.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${tls.jar.name}"/>
+		 <pathelement location="${example.build.dir}"/>
+            </classpath>
         </javac>
     </target>
 
     <target name="sasl" depends="core">
         <mkdir dir="${sasl.build.dir}"/>
         <javac srcdir="${sasl.src.dir}/" destdir="${sasl.build.dir}" >
-            <include name="**/sasl/*.java"/>
+            <include name="**/sasl/**/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
