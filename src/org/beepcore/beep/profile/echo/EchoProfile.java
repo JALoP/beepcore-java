@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.11 $ $Date: 2001/11/08 05:51:34 $
+ * EchoProfile.java    $Revision: 1.12 $ $Date: 2001/11/25 08:38:42 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -33,7 +33,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.12 $, $Date: 2001/11/25 08:38:42 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener
@@ -59,7 +59,6 @@ public class EchoProfile
     {
         Log.logEntry(Log.SEV_DEBUG, "EchoCCL CloseChannel Callback");
         channel.setMessageListener(null);
-        channel.setAppData(null);
     }
 
     public boolean advertiseProfile(Session session)
