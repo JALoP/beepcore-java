@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.3 $ $Date: 2001/04/26 16:30:14 $
+ * Message.java            $Revision: 1.4 $ $Date: 2001/05/07 21:50:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import java.lang.IndexOutOfBoundsException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/26 16:30:14 $
+ * @version $Revision: 1.4 $, $Date: 2001/05/07 21:50:37 $
  */
 public class Message {
 
@@ -72,16 +72,16 @@ public class Message {
     private static final int MESSAGE_TYPE_MAX = 6;
 
     /** BEEP message type of  <code>Message</code>. */
-    protected int messageType = MESSAGE_TYPE_UNK;
+    int messageType = MESSAGE_TYPE_UNK;
 
     /** <code>Channel</code> to which <code>Message</code> belongs. */
-    private Channel channel;
+    Channel channel;
 
     /** Message number of <code>Message</code>. */
-    private int msgno;
+    int msgno;
 
     /** Answer number of this BEEP message. */
-    private int ansno;
+    int ansno;
     private boolean notified = false;
 
     /**
