@@ -1,6 +1,6 @@
 
 /*
- * TLSProfileJSSEHandshakeCompletedListener.java  $Revision: 1.3 $ $Date: 2001/11/08 05:51:35 $
+ * TLSProfileJSSEHandshakeCompletedListener.java  $Revision: 1.4 $ $Date: 2003/06/03 02:43:43 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,7 +21,6 @@ package org.beepcore.beep.profile.tls.jsse;
 import org.beepcore.beep.core.*;
 
 import javax.net.ssl.HandshakeCompletedEvent;
-import javax.net.ssl.HandshakeCompletedListener;
 
 
 /**
