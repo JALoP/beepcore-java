@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.6 $ $Date: 2002/09/07 15:13:12 $
+ * TLSProfileJSSE.java  $Revision: 1.7 $ $Date: 2002/10/05 15:45:56 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -40,6 +40,9 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 
 import java.io.FileInputStream;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 /**
@@ -121,6 +124,8 @@ public class TLSProfileJSSE extends TLSProfile
     // socket factory that creates/wraps SSL connections
     static SSLSocketFactory socketFactory = null;
 
+    private Log log = LogFactory.getLog(this.getClass());
+
     // listeners to update when an SSL handshake completes
     //      static List handshakeListeners = null;
     //      static Map pendingHandshakes = null;
@@ -139,7 +144,7 @@ public class TLSProfileJSSE extends TLSProfile
 
         public void handshakeCompleted(HandshakeCompletedEvent event)
         {
-            Log.logEntry(Log.SEV_DEBUG, "HandshakeCompleted");
+            log.debug("HandshakeCompleted");
             synchronized (handshakeListeners) {
                 Iterator i = TLSProfileJSSE.handshakeListeners.iterator();
 
@@ -195,9 +200,9 @@ public class TLSProfileJSSE extends TLSProfile
 
             socketFactory = (SSLSocketFactory) ctx.getSocketFactory();
         } catch (NoSuchAlgorithmException e) {
-            Log.logEntry(1, "JSSE TLS Profile", e.getMessage());
+            log.error(e.getMessage());
         } catch (KeyManagementException e) {
-            Log.logEntry(1, "JSSE TLS Profile", e.getMessage());
+            log.error(e.getMessage());
         }
 
         if (handshakeListeners == null) {
@@ -425,7 +430,7 @@ public class TLSProfileJSSE extends TLSProfile
 
             return this;
         } catch (Exception e) {
-            Log.logEntry(Log.SEV_ERROR, e);
+            log.error(e);
 
             throw new BEEPException(e.getMessage());
         }
@@ -528,7 +533,7 @@ public class TLSProfileJSSE extends TLSProfile
         } catch (Exception x) {
 
             // @todo should be more detailed
-            Log.logEntry(Log.SEV_ERROR, x.getMessage());
+            log.error(x.getMessage());
 
             throw new StartChannelException(450, x.getMessage());
         }
@@ -548,7 +553,7 @@ public class TLSProfileJSSE extends TLSProfile
      */
     public void closeChannel(Channel channel) throws CloseChannelException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Closing TLS channel.");
+        log.debug("Closing TLS channel.");
     }
 
     /**
@@ -588,12 +593,15 @@ public class TLSProfileJSSE extends TLSProfile
         // See if we got start data back
         String data = ch.getStartData();
 
-        Log.logEntry(Log.SEV_DEBUG, "Got start data of " + data);
+        if (log.isDebugEnabled()) {
+            log.debug("Got start data of " + data);
+        }
 
         // Consider the data (see if it's proceed)
         if ((data == null)
-                || (!data.equals(PROCEED1) &&!data.equals(PROCEED2))) {
-            Log.logEntry(Log.SEV_ERROR, "Invalid reply: " + data);
+                || (!data.equals(PROCEED1) &&!data.equals(PROCEED2)))
+        {
+            log.error("Invalid reply: " + data);
             throw new BEEPException(ERR_EXPECTED_PROCEED);
         }
 
@@ -618,9 +626,9 @@ public class TLSProfileJSSE extends TLSProfile
             // set up so the handshake listeners will be called
             l.session = session;
 
-            Log.logEntry(Log.SEV_DEBUG, "Handshake starting");
+            log.debug("Handshake starting");
             newSocket.startHandshake();
-            Log.logEntry(Log.SEV_DEBUG, "Handshake returned");
+            log.debug("Handshake returned");
 
             synchronized (l) {
                 if (!l.notifiedHandshake) {
@@ -631,15 +639,15 @@ public class TLSProfileJSSE extends TLSProfile
                     l.waitingForHandshake = false;
                 }
             }
-            Log.logEntry(Log.SEV_DEBUG, "Handshake done waiting");
+            log.debug("Handshake done waiting");
         } catch (javax.net.ssl.SSLException e) {
-            Log.logEntry(Log.SEV_ERROR, e);
+            log.error(e);
             throw new BEEPException(e.getMessage());
         } catch (java.io.IOException e) {
-            Log.logEntry(Log.SEV_ERROR, e);
+            log.error(e);
             throw new BEEPException(ERR_TLS_SOCKET);
         } catch (InterruptedException e) {
-            Log.logEntry(Log.SEV_ERROR, e);
+            log.error(e);
             throw new BEEPException(ERR_TLS_HANDSHAKE_WAIT);
         }
 
