@@ -1,7 +1,7 @@
 <project name="beepcore" default="core-jar" basedir=".">
     <property name="name" value="beepcore" />
     <property name="Name" value="BEEP Core" />
-    <property name="version" value="0.9.0" />
+    <property name="version" value="0.9.01" />
     <property name="release.name" value="${name}-${version}" />
 
     <property name="beepcore.home" value="."/>
@@ -10,7 +10,7 @@
 
     <property name="core.build.dir" value="${build.dir}/core" />
     <property name="core.doc.dir" value="${release.dir}/doc/core" />
-    <property name="core.jar.name" value="${release.name}.jar" />
+    <property name="core.jar.name" value="beepcore.jar" />
     <property name="core.src.dir" value="src" />
     <property name="core.packages" value="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile,org.beepcore.beep.profile.echo"/>
 
@@ -22,13 +22,13 @@
 
     <property name="sasl.build.dir" value="${build.dir}/sasl"/>
     <property name="sasl.doc.dir" value="${release.dir}/doc/sasl"/>
-    <property name="sasl.jar.name" value="beepsasl-${version}.jar"/>
+    <property name="sasl.jar.name" value="beepsasl.jar"/>
     <property name="sasl.packages" value="org.beepcore.beep.profile.sasl.*"/>
     <property name="sasl.src.dir" value="src"/>
 
     <property name="tls.build.dir" value="${build.dir}/tls" />
     <property name="tls.doc.dir" value="${release.dir}/doc/tls" />
-    <property name="tls.jar.name" value="beeptls-${version}.jar" />
+    <property name="tls.jar.name" value="beeptls.jar" />
     <property name="tls.src.dir" value="src" />
 
     <target name="init">
