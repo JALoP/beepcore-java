@@ -1,7 +1,7 @@
 /*
- * OutputDataStream.java  $Revision: 1.2 $ $Date: 2001/11/08 05:51:34 $
+ * OutputDataStream.java  $Revision: 1.3 $ $Date: 2002/05/28 02:23:37 $
  *
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.beepcore.beep.util.BufferSegment;
  * stream.
  *
  * @author Huston Franklin
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.3 $, $Date: 2002/05/28 02:23:37 $
  */
 public class OutputDataStream {
 
@@ -48,7 +48,7 @@ public class OutputDataStream {
      * @param headers Mime headers to be prepended to the buffers in
      * the stream.
      */
-    protected OutputDataStream(MimeHeaders headers)
+    public OutputDataStream(MimeHeaders headers)
     {
         this.mimeHeaders = headers;
     }
@@ -60,7 +60,7 @@ public class OutputDataStream {
      * @param headers Mime headers to be prepended to the buffers in
      * the stream.
      */
-    protected OutputDataStream(MimeHeaders headers, BufferSegment buf)
+    public OutputDataStream(MimeHeaders headers, BufferSegment buf)
     {
         this.mimeHeaders = headers;
         this.add(buf);
