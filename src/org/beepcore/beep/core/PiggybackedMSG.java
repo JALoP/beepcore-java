@@ -1,5 +1,5 @@
 /*
- * RequestHandler.java  $Revision: 1.2 $ $Date: 2003/09/15 15:23:30 $
+ * RequestHandler.java  $Revision: 1.3 $ $Date: 2003/12/31 17:46:28 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -25,13 +25,13 @@ import org.beepcore.beep.util.BufferSegment;
  * This class is used to wrap piggybacked data from the start channel request.
  *
  * @author Huston Franklin
- * @version $Revision: 1.2 $, $Date: 2003/09/15 15:23:30 $
+ * @version $Revision: 1.3 $, $Date: 2003/12/31 17:46:28 $
  */
 class PiggybackedMSG extends MessageMSGImpl implements MessageMSG {
 
     PiggybackedMSG(ChannelImpl channel, byte[] data, boolean base64encoding)
     {
-        super(channel, -1, new InputDataStream());
+        super(channel, PIGGYBACKED_MSGNO, new InputDataStream());
         try {
             this.getDataStream().add(new BufferSegment("\r\n".getBytes("UTF-8"))); 
         } catch (UnsupportedEncodingException e) {
@@ -106,7 +106,7 @@ class PiggybackedMSG extends MessageMSGImpl implements MessageMSG {
 
         s.fireChannelStarted(this.channel);
         
-        return new MessageStatus(this.channel, Message.MESSAGE_TYPE_RPY, -1,
+        return new MessageStatus(this.channel, Message.MESSAGE_TYPE_RPY, PIGGYBACKED_MSGNO,
                                  stream);
 	}
 }

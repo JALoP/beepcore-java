@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.12 $ $Date: 2003/06/03 16:38:35 $
+ * Message.java            $Revision: 1.13 $ $Date: 2003/12/31 17:46:28 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -22,7 +22,7 @@ package org.beepcore.beep.core;
  * messages.
  *
  * @author Huston Franklin
- * @version $Revision: 1.12 $, $Date: 2003/06/03 16:38:35 $
+ * @version $Revision: 1.13 $, $Date: 2003/12/31 17:46:28 $
  */
 public interface Message {
 
@@ -56,6 +56,7 @@ public interface Message {
      */
     public static final int MESSAGE_TYPE_NUL = 5;
 
+	public static final int PIGGYBACKED_MSGNO = -1;
     /**
      * Returns <code>InputDataStream</code> containing the payload for this
      * <code>Message</code>.
