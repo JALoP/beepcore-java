@@ -1,5 +1,5 @@
 /*
- * Blob.java            $Revision: 1.6 $ $Date: 2002/05/04 22:42:41 $
+ * Blob.java            $Revision: 1.7 $ $Date: 2002/10/05 15:32:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -18,14 +18,21 @@
 package org.beepcore.beep.profile.sasl;
 
 import java.io.IOException;
+
 import java.util.Hashtable;
+
 import javax.xml.parsers.*;
+
 import org.w3c.dom.*;
+
 import org.xml.sax.SAXException;
+
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
-import org.beepcore.beep.util.Log;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 
 /**
  * The Blob class tries to abstract some of the complexity inherent in
@@ -42,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2002/05/04 22:42:41 $
+ * @version $Revision: 1.7 $, $Date: 2002/10/05 15:32:22 $
  *
  */
 public class Blob
@@ -74,6 +81,8 @@ public class Blob
     private static boolean initialized = false;
     
     // Data
+    private Log log = LogFactory.getLog(this.getClass());
+
     private int status;
     private String blobData;
     private String stringified;
@@ -92,7 +101,9 @@ public class Blob
     public Blob(int status)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Created blob=>"+status);
+        if (log.isDebugEnabled()) {
+            log.debug("Created blob=>"+status);
+        }
         if (!initialized) {
             init();
         }
@@ -129,7 +140,9 @@ public class Blob
         }
 
         stringified = buff.toString();
-        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + stringified);
+        if (log.isDebugEnabled()) {
+            log.debug("Created blob=>" + stringified);
+        }
     }
 
     /**
@@ -144,7 +157,9 @@ public class Blob
     public Blob(int status, String data)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + status + "," + data);
+        if (log.isDebugEnabled()) {
+            log.debug("Created blob=>" + status + "," + data);
+        }
         if (!initialized) {
             init();
         }
@@ -191,7 +206,9 @@ public class Blob
         }
 
         stringified = buff.toString();
-        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + stringified);
+        if (log.isDebugEnabled()) {
+            log.debug("Created blob=>" + stringified);
+        }
     }
 
     /**
@@ -246,7 +263,9 @@ public class Blob
         }
         
         stringified = buff.toString();
-        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + stringified);
+        if (log.isDebugEnabled()) {
+            log.debug("Created blob=>" + stringified);
+        }
     }
 
     /**
@@ -259,7 +278,9 @@ public class Blob
      */
     public Blob(String blob) throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Receiving blob of=>"+blob);
+        if (log.isDebugEnabled()) {
+            log.debug("Receiving blob of=>"+blob);
+        }
         if (!initialized) {
             init();
         }
@@ -300,8 +321,10 @@ public class Blob
         if (status == STATUS_NONE && blobData == null) {
             throw new SASLException("No valid data in blob");
         }
-        
-        Log.logEntry(Log.SEV_DEBUG, "Received Blob of =>" + stringified);
+
+        if (log.isDebugEnabled()) {
+            log.debug("Received Blob of =>" + stringified);
+        }
     }
     
     /**
@@ -391,13 +414,13 @@ public class Blob
         Document doc = null;
 
         try {
-            Log.logEntry(Log.SEV_DEBUG, "Tuning Profile Parse Routine");
+            log.debug("Tuning Profile Parse Routine");
 
             doc = builder.parse(new java.io.ByteArrayInputStream(blob.getBytes()));
 
-            Log.logEntry(Log.SEV_DEBUG, "parsed message");
+            log.debug("parsed message");
         } catch (Exception e) {
-            Log.logEntry(Log.SEV_DEBUG, e);
+            log.debug("Error parsing", e);
             throw new SASLException(ERR_XML_PARSE_FAILURE);
         }
 

@@ -1,7 +1,8 @@
 /*
- * EchoProfile.java    $Revision: 1.14 $ $Date: 2002/01/23 18:40:29 $
+ * EchoProfile.java    $Revision: 1.15 $ $Date: 2002/10/05 15:31:35 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -21,9 +22,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
-import org.beepcore.beep.util.*;
+import org.beepcore.beep.util.BufferSegment;
 
 
 /**
@@ -33,7 +37,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2002/01/23 18:40:29 $
+ * @version $Revision: 1.15 $, $Date: 2002/10/05 15:31:35 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener
@@ -41,6 +45,8 @@ public class EchoProfile
 
     public static final String ECHO_URI =
         "http://xml.resource.org/profiles/NULL/ECHO";
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     public StartChannelListener init(String uri, ProfileConfiguration config)
         throws BEEPException
@@ -51,13 +57,13 @@ public class EchoProfile
     public void startChannel(Channel channel, String encoding, String data)
             throws StartChannelException
     {
-        Log.logEntry(Log.SEV_DEBUG, "EchoCCL StartChannel Callback");
+        log.debug("EchoCCL StartChannel Callback");
         channel.setMessageListener(this);
     }
 
     public void closeChannel(Channel channel) throws CloseChannelException
     {
-        Log.logEntry(Log.SEV_DEBUG, "EchoCCL CloseChannel Callback");
+        log.debug("EchoCCL CloseChannel Callback");
         channel.setMessageListener(null);
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * OTPGenerator.java            $Revision: 1.4 $ $Date: 2001/11/08 05:51:34 $
+ * OTPGenerator.java            $Revision: 1.5 $ $Date: 2002/10/05 15:32:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.otp.database.UserDatabasePool;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.5 $, $Date: 2002/10/05 15:32:06 $
  *
  */
 public class OTPGenerator {
@@ -253,6 +253,11 @@ public class OTPGenerator {
         }
     }
         
+    static void printHex(byte buff[])
+    {
+        System.out.println(SASLOTPProfile.convertBytesToHex(buff));
+    }
+
     /**
      * Method main is the method used to run the OTP generator.
      * IT prompts the users for information necessary to create
@@ -295,7 +300,7 @@ public class OTPGenerator {
             hash = temp;
         }
 
-        SASLOTPProfile.printHex(hash);
+        printHex(hash);
 
         passphrase = SASLOTPProfile.convertBytesToHex(hash);
 

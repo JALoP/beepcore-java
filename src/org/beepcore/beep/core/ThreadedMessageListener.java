@@ -1,5 +1,5 @@
 /*
- * ThreadedMessageListener.java $Revision: 1.1 $ $Date: 2002/08/20 03:08:58 $
+ * ThreadedMessageListener.java $Revision: 1.2 $ $Date: 2002/10/05 15:30:11 $
  *
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
@@ -8,7 +8,8 @@ package org.beepcore.beep.core;
 
 import edu.oswego.cs.dl.util.concurrent.PooledExecutor;
 
-import org.beepcore.beep.util.Log;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 class ThreadedMessageListener implements MessageListener, Runnable {
@@ -35,13 +36,13 @@ class ThreadedMessageListener implements MessageListener, Runnable {
             try {
                 message.sendERR(e);
             } catch (BEEPException e2) {
-                Log.logEntry(Log.SEV_ERROR, e2);
+                log.error("Error sending ERR", e2);
             }
         } catch (AbortChannelException e) {
             try {
                 channel.close();
             } catch (BEEPException e2) {
-                Log.logEntry(Log.SEV_ERROR, e2);
+                log.error("Error closing channel", e2);
             }
         }
     }
@@ -57,5 +58,7 @@ class ThreadedMessageListener implements MessageListener, Runnable {
         
     private static final PooledExecutor callbackQueue =
         new PooledExecutor();
+
+    private Log log = LogFactory.getLog(this.getClass());
 }
 

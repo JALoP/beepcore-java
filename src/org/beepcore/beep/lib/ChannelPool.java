@@ -1,5 +1,5 @@
 /*
- * ChannelPool.java  $Revision: 1.6 $ $Date: 2002/09/07 15:06:07 $
+ * ChannelPool.java  $Revision: 1.7 $ $Date: 2002/10/05 15:31:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -27,7 +27,8 @@ import java.util.NoSuchElementException;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.beepcore.beep.util.Log;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 /**
@@ -41,7 +42,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2002/09/07 15:06:07 $
+ * @version $Revision: 1.7 $, $Date: 2002/10/05 15:31:04 $
  */
 public class ChannelPool {
 
@@ -50,6 +51,9 @@ public class ChannelPool {
      * channel reuse is and adjust ttl accordingly
      */
     private static final long DEFAULT_TIME_TO_LIVE = 120000;    // two minutes
+
+    private Log log = LogFactory.getLog(this.getClass());
+
     private long timeToLive = DEFAULT_TIME_TO_LIVE;
     Session session;
     LinkedList availableChannels;
@@ -109,8 +113,7 @@ public class ChannelPool {
                 sharedCh = (SharedChannel) i.next();
 
                 if (sharedCh.getProfile().equals(profile)) {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                 "Found an available channel for sharing");
+                    log.trace("Found an available channel for sharing");
                     i.remove();
 
                     found = true;
@@ -129,8 +132,9 @@ public class ChannelPool {
 
         // clean up channels that have expired
         garbageCollect();
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                     "Sharing channel number:" + sharedCh.getNumber());
+        if (log.isTraceEnabled()) {
+            log.trace("Sharing channel number:" + sharedCh.getNumber());
+        }
 
         return sharedCh;
     }
@@ -168,8 +172,7 @@ public class ChannelPool {
                 sharedCh = (SharedChannel) i.next();
 
                 if (sharedCh.getProfile().equals(profile)) {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                 "Found an available channel for sharing");
+                    log.trace("Found an available channel for sharing");
                     i.remove();
 
                     found = true;
@@ -188,8 +191,9 @@ public class ChannelPool {
 
         // clean up channels that have expired
         garbageCollect();
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                     "Sharing channel number:" + sharedCh.getNumber());
+        if (log.isTraceEnabled()) {
+            log.trace("Sharing channel number:" + sharedCh.getNumber());
+        }
 
         return sharedCh;
     }
@@ -244,7 +248,7 @@ public class ChannelPool {
      */
     private void garbageCollect()
     {
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE, "garbage collecting");
+        log.trace("garbage collecting");
 
         if (availableChannels.size() != 0) {
             Date now = new Date();
@@ -260,16 +264,16 @@ public class ChannelPool {
                             (SharedChannel) availableChannels.remove(0);
 
                         try {
-                            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                         "garbage collected channel number:"
-                                         + shCh.getNumber());
+                            if (log.isTraceEnabled()) {
+                                log.trace("garbage collected channel number:"
+                                          + shCh.getNumber());
+                            }
                             shCh.close();    // last gasp
                         } catch (BEEPException e) {
 
                             // ignore for now, we'll try again later
-                            Log.logEntry(Log.SEV_ALERT,
-                                         "unable to close channel number:"
-                                         + shCh.getNumber());
+                            log.error("unable to close channel number:"
+                                      + shCh.getNumber());
                         }
 
                         shCh = null;    // death by gib @todo does this really set the object to null?

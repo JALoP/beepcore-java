@@ -1,3 +1,19 @@
+/*
+ * InputDataStreamAdapter.java  $Revision: 1.2 $ $Date: 2002/10/05 15:28:49 $
+ *
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
+ *
+ * The contents of this file are subject to the Blocks Public License (the
+ * "License"); You may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at http://www.beepcore.org/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ */
 package org.beepcore.beep.core;
 
 import java.io.ByteArrayOutputStream;
@@ -6,8 +22,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.util.BufferSegment;
-import org.beepcore.beep.util.Log;
 
 public class InputDataStreamAdapter extends java.io.InputStream {
 
@@ -376,7 +394,7 @@ public class InputDataStreamAdapter extends java.io.InputStream {
                 try {
                     ids.buffers.wait();
                 } catch (InterruptedException e) {
-                    Log.logEntry(Log.SEV_ERROR, e);
+                    log.error("waiting for buffer", e);
                 }
             }
 
@@ -400,6 +418,8 @@ public class InputDataStreamAdapter extends java.io.InputStream {
     private static final int STATE_PARSING_VALUE_TERMINATOR = 4;
     private static final int STATE_PARSING_HEADERS_TERMINATOR = 5;
     private static final int STATE_HEADERS_PARSED = 6;
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     private int state = STATE_INIT;
     private ByteArrayOutputStream name = new ByteArrayOutputStream(32);

@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.29 $ $Date: 2002/09/07 15:00:12 $
+ * Channel.java  $Revision: 1.30 $ $Date: 2002/10/05 15:26:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -22,8 +22,10 @@ import java.io.*;
 
 import java.util.*;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.util.BufferSegment;
-import org.beepcore.beep.util.Log;
 
 
 /**
@@ -34,7 +36,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.29 $, $Date: 2002/09/07 15:00:12 $
+ * @version $Revision: 1.30 $, $Date: 2002/10/05 15:26:30 $
  *
  */
 public class Channel {
@@ -59,6 +61,8 @@ public class Channel {
     static final int DEFAULT_WINDOW_SIZE = 4096;
 
     // instance variables
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     /** syntax of messages */
     private String profile;
@@ -290,9 +294,10 @@ public class Channel {
             // set the new size and copy the buffer
             recvWindowSize = size;
 
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                         "Buffer size for channel " + number + " set to "
-                         + recvWindowSize);
+            if (log.isDebugEnabled()) {
+                log.debug("Buffer size for channel " + number + " set to "
+                          + recvWindowSize);
+            }
 
             // send a new SEQ message to update the buffer size
             if (session.updateMyReceiveBufferSize(this, prevAckno,
@@ -501,13 +506,14 @@ public class Channel {
                         try {
                             m.sendERR(e);
                         } catch (BEEPException e2) {
-                            Log.logEntry(Log.SEV_ERROR, e2);
+                            log.error("Error sending ERR", e2);
                         }
                     } catch (AbortChannelException e) {
                         try {
+                            /* @todo change this to abort or something else */
                             Channel.this.close();
                         } catch (BEEPException e2) {
-                            Log.logEntry(Log.SEV_ERROR, e2);
+                            log.error("Error closing channel", e2);
                         }
                     }
                 }
@@ -563,8 +569,7 @@ public class Channel {
 
                     // There are ANS messages on the queue for which we
                     // haven't received the last frame.
-                    Log.logEntry(Log.SEV_DEBUG,
-                                 "Received NUL before last ANS");
+                    log.debug("Received NUL before last ANS");
                     session.terminate("Received NUL before last ANS");
                 }
             }
@@ -573,9 +578,10 @@ public class Channel {
                             Message.MESSAGE_TYPE_NUL);
 
             mstatus.setMessageStatus(MessageStatus.MESSAGE_STATUS_RECEIVED_REPLY);
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                         "Notifying reply listener =>" + replyListener +
-                         "for NUL message");
+            if (log.isDebugEnabled()) {
+                log.debug("Notifying reply listener =>" + replyListener +
+                          "for NUL message");
+            }
 
             replyListener.receiveNUL(m);
 
@@ -661,23 +667,24 @@ public class Channel {
         // window is full, this is the last frame.
         synchronized (m) {
             if (m.isNotified() || ((this.notifyOnFirstFrame == false)
-
-            //                && recvWindowUsed != recvWindowSize
-                                   && (recvSequence - prevAckno)
-                                   != (recvWindowSize - prevWindowUsed) &&
-                                   (frame.isLast() == false))) {
-                Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                             "recvWindowUsed = " + recvWindowUsed
-                             + " recvWindowSize = " + recvWindowSize
-                             + "\t\r\nNot notifying frame listener.");
+                && (recvSequence - prevAckno)
+                    != (recvWindowSize - prevWindowUsed) &&
+                (frame.isLast() == false)))
+            {
+                if (log.isDebugEnabled()) {
+                    log.debug("recvWindowUsed = " + recvWindowUsed
+                              + " recvWindowSize = " + recvWindowSize
+                              + "\t\r\nNot notifying frame listener.");
+                }
                 return;
             }
 
             m.setNotified();
         }
 
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                     "Notifying reply listener.=>" + replyListener);
+        if (log.isDebugEnabled()) {
+            log.debug("Notifying reply listener.=>" + replyListener);
+        }
 
         if (m.messageType == Message.MESSAGE_TYPE_RPY) {
             replyListener.receiveRPY(m);
@@ -698,7 +705,7 @@ public class Channel {
      */
     void postFrame(Frame frame) throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Channel::postFrame");
+        log.trace("Channel::postFrame");
 
         boolean firstFrame = false;
         boolean createAndPostMessage = false;
@@ -813,7 +820,7 @@ public class Channel {
 
         // is this the last frame in the message?
         if (frame.isLast() == true) {
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Got the last frame");
+            log.trace("Got the last frame");
         }
 
         // save the previous frame to compare message types
@@ -930,7 +937,7 @@ public class Channel {
                      * @todo we should do something more than just log
                      * the error (e.g. close the channel or session).
                      */
-                    Log.logEntry(Log.SEV_ERROR, e);
+                    log.error("sendFrames", e);
                     status.setMessageStatus(MessageStatus.MESSAGE_STATUS_NOT_SENT);
 
                     throw e;
@@ -956,8 +963,7 @@ public class Channel {
      */
     synchronized void setState(int newState)
     {
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                     "CH" + number + " state=" + newState);
+        log.trace("CH" + number + " state=" + newState);
 
         this.state = newState;
 
@@ -986,16 +992,16 @@ public class Channel {
     {
         int previousPeerWindowSize = peerWindowSize;
 
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Channel.updatePeerReceiveBufferSize: size = " + size
-                     + " lastSeq = " + lastSeq + " sentSequence = "
-                     + sentSequence + " peerWindowSize = " + peerWindowSize);
+        if (log.isDebugEnabled()) {
+            log.debug("Channel.updatePeerReceiveBufferSize: size = " + size
+                      + " lastSeq = " + lastSeq + " sentSequence = "
+                      + sentSequence + " peerWindowSize = " + peerWindowSize);
+        }
 
         peerWindowSize = size - (int) (sentSequence - lastSeq);
 
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Channel.updatePeerReceiveBufferSize: New window size = "
-                     + peerWindowSize);
+        log.debug("Channel.updatePeerReceiveBufferSize: New window size = "
+                  + peerWindowSize);
 
         if ((previousPeerWindowSize == 0) && (peerWindowSize > 0)) {
             try {
@@ -1008,13 +1014,15 @@ public class Channel {
     synchronized void freeReceiveBufferBytes(int size)
     {
         try {
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                         "Freed up " + size + " bytes on channel " + number);
+            if (log.isTraceEnabled()) {
+                log.trace("Freed up " + size + " bytes on channel " + number);
+            }
 
             recvWindowUsed -= size;
 
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                         "recvWindowUsed = " + recvWindowUsed);
+            if (log.isTraceEnabled()) {
+                log.trace("recvWindowUsed = " + recvWindowUsed);
+            }
 
             if (session.updateMyReceiveBufferSize(this, prevAckno,
                                                   recvSequence,
@@ -1027,7 +1035,7 @@ public class Channel {
         } catch (BEEPException e) {
 
             // do nothing
-            Log.logEntry(Log.SEV_ALERT, e);
+            log.fatal("Error updating receive buffer size", e);
         }
     }
 

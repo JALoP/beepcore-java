@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.12 $ $Date: 2001/11/10 21:33:29 $
+ * AnonymousAuthenticator.java  $Revision: 1.13 $ $Date: 2002/10/05 15:31:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -23,8 +23,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.*;
-import org.beepcore.beep.util.*;
 import org.beepcore.beep.profile.sasl.*;
 
 /**
@@ -43,7 +45,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2001/11/10 21:33:29 $
+ * @version $Revision: 1.13 $, $Date: 2002/10/05 15:31:49 $
  *
  */
 class AnonymousAuthenticator
@@ -68,6 +70,8 @@ class AnonymousAuthenticator
         "Unexpected SASL-Anonymous Message";
 
     // Data
+    private Log log = LogFactory.getLog(this.getClass());
+
     private int state;
     private Channel channel;
     private Hashtable credential;
@@ -95,8 +99,7 @@ class AnonymousAuthenticator
      */
     AnonymousAuthenticator(SASLAnonymousProfile anonymousProfile)
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Creating Listener ANONYMOUS Authenticator");
+        log.debug("Creating Listener ANONYMOUS Authenticator");
 
         credential = new Hashtable();
         profile = anonymousProfile;
@@ -124,8 +127,7 @@ class AnonymousAuthenticator
     void started(Channel ch)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Starting Anonymous Authenticator");
+        log.debug("Starting Anonymous Authenticator");
 
         if (state != STATE_UNKNOWN) {
             throw new SASLException(ERR_ANON_STATE);
@@ -157,8 +159,7 @@ class AnonymousAuthenticator
     synchronized Blob receiveID(String data)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Anonymous Authenticator Receiving ID");
+        log.debug("Anonymous Authenticator Receiving ID");
 
         // If we're listening, the last state we should
         // have gotten to was STATE_STARTED (after the channel start)
@@ -198,16 +199,18 @@ class AnonymousAuthenticator
     void sendIdentity(String authenticateId)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Anonymous Authenticator sending Identity");
+        log.debug("Anonymous Authenticator sending Identity");
 
         if(authenticateId==null)
             throw new SASLException(ERR_IDENTITY_PARSE_FAILURE);
 
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Using=>" + authenticateId + "<=");
+        if (log.isDebugEnabled()) {
+            log.debug("Using=>" + authenticateId + "<=");
+        }
         Blob blob = new Blob(Blob.STATUS_NONE, authenticateId);
-        Log.logEntry(Log.SEV_DEBUG, "Using=>" + blob.toString() + "<=");
+        if (log.isDebugEnabled()) {
+            log.debug("Using=>" + blob.toString() + "<=");
+        }
         try {
             credential.put(SessionCredential.AUTHENTICATOR, authenticateId);
             channel.sendMSG(new StringOutputDataStream(blob.toString()), this);
@@ -225,8 +228,7 @@ class AnonymousAuthenticator
     synchronized SessionCredential receiveCompletion(String response)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Anonymous Authenticator Completing!");
+        log.debug("Anonymous Authenticator Completing!");
 
         // If we're initiating, the last state we should
         // have gotten to was STATE_CHALLENGE
@@ -252,18 +254,16 @@ class AnonymousAuthenticator
     void abort(String msg)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Aborting Anonymous Authenticator");
-        Log.logEntry(Log.SEV_DEBUG, msg);
+        log.debug("Aborting Anonymous Authenticator");
+        log.debug(msg);
         state = STATE_ABORT;
         throw new SASLException(msg);
     }
 
     void abortNoThrow(String msg)
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Aborting Anonymous Authenticator");
-        Log.logEntry(Log.SEV_DEBUG, msg);
+        log.debug("Aborting Anonymous Authenticator");
+        log.debug(msg);
         state = STATE_ABORT;
     }
 
@@ -283,8 +283,7 @@ class AnonymousAuthenticator
     {
         try
         {
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Anonymous Authenticator.receiveMSG");
+            log.debug("Anonymous Authenticator.receiveMSG");
             String data = null;
             Blob blob = null;
 
@@ -300,10 +299,12 @@ class AnonymousAuthenticator
                 blob = new Blob(new String(buff));
                 data = blob.getData();
             } catch (IOException x) {
-                Log.logEntry(Log.SEV_ERROR, x);
+                log.error("", x);
                 abort(x.getMessage());
             }
-            Log.logEntry(Log.SEV_DEBUG, "MSG DATA=>" + data);
+            if (log.isDebugEnabled()) {
+                log.debug("MSG DATA=>" + data);
+            }
             String status = blob.getStatus();
 
             if ((status != null)
@@ -352,8 +353,7 @@ class AnonymousAuthenticator
      */
     public void receiveRPY(Message message)
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Anonymous Authenticator.receiveRPY");
+        log.debug("Anonymous Authenticator.receiveRPY");
 
         Blob blob = null;
         boolean sendAbort = true;
@@ -376,11 +376,11 @@ class AnonymousAuthenticator
 
             String status = blob.getStatus();
 
-            if ((status != null)
-                    && status.equals(SASLProfile.SASL_STATUS_ABORT)) {
-                Log.logEntry(Log.SEV_DEBUG,
-                             "Anonymous Authenticator receiveRPY=>"
-                             + blob.getData());
+            if ((status != null) &&
+                status.equals(SASLProfile.SASL_STATUS_ABORT))
+            {
+                log.debug("Anonymous Authenticator receiveRPY=>"
+                          + blob.getData());
                 sendAbort = false;
                 abort(ERR_PEER_ABORTED);
             }
@@ -406,7 +406,7 @@ class AnonymousAuthenticator
         }
         catch(SASLException x)
         {
-            Log.logEntry(Log.SEV_ERROR, x);
+            log.error(x);
             synchronized (this) {
                 this.notify();
             }
@@ -439,8 +439,7 @@ class AnonymousAuthenticator
      */
     public void receiveERR(Message message)
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Anonymous Authenticator.receiveERR");
+        log.debug("Anonymous Authenticator.receiveERR");
 
         try {
             InputStream is = message.getDataStream().getInputStream();
@@ -448,9 +447,10 @@ class AnonymousAuthenticator
             byte buff[] = new byte[limit];
 
             is.read(buff);
-            Log.logEntry(Log.SEV_DEBUG,
-                         "SASL-Anonymous Authentication ERR received=>\n" +
-                         new String(buff));
+            if (log.isDebugEnabled()) {
+                log.debug("SASL-Anonymous Authentication ERR received=>\n" +
+                          new String(buff));
+            }
             abortNoThrow(new String(buff));
 
             synchronized (this) {

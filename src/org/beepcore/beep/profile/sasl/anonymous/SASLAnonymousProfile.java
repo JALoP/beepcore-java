@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.7 $ $Date: 2002/08/22 18:11:22 $
+ * SASLAnonymousProfile.java  $Revision: 1.8 $ $Date: 2002/10/05 15:31:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -22,11 +22,12 @@ import java.util.Hashtable;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.sasl.*;
-import org.beepcore.beep.transport.tcp.*;
-import org.beepcore.beep.util.*;
 
 
 /**
@@ -44,7 +45,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2002/08/22 18:11:22 $
+ * @version $Revision: 1.8 $, $Date: 2002/10/05 15:31:49 $
  *
  */
 public class SASLAnonymousProfile
@@ -56,6 +57,8 @@ public class SASLAnonymousProfile
     public static final String ANONYMOUS = "anonymous";
     public static final String MECHANISM = "SASL/ANONYMOUS";
     private static SASLAnonymousProfile instance = null;
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     public SASLAnonymousProfile() 
     {        
@@ -98,8 +101,7 @@ public class SASLAnonymousProfile
     public void startChannel(Channel channel, String encoding, String data)
             throws StartChannelException
     {
-        Log.logEntry(Log.SEV_DEBUG, this.getClass().toString(),
-                     "SASLAnonymousProfile.startChannel");
+        log.debug("SASLAnonymousProfile.startChannel");
         clearCredential(channel.getSession(), this);
         Session t = channel.getSession();
 
@@ -109,8 +111,9 @@ public class SASLAnonymousProfile
                 Blob blob = new Blob(data);
                 data = blob.getData();
 
-                Log.logEntry(Log.SEV_DEBUG,
-                             "SASLAnon...User claims to be=>" + data);
+                if (log.isDebugEnabled()) {
+                    log.debug("SASLAnon...User claims to be=>" + data);
+                }
                 finishListenerAuthentication(SASLAnonymousProfile.generateCredential(data),
                                              t);
 
@@ -219,8 +222,6 @@ public class SASLAnonymousProfile
                                           false,    // true, ??
                                           new Blob(Blob.STATUS_NONE, id).toString(),
                                           null);
-
-        Log.logEntry(Log.SEV_DEBUG, "Got start data of " + ch.getStartData());
 
         if ((ch.getStartData() != null)
                 && (ch.getStartData().indexOf("<error ") != -1)) {

@@ -1,7 +1,8 @@
 /*
- * TuningProfile.java  $Revision: 1.7 $ $Date: 2002/08/20 03:04:26 $
+ * TuningProfile.java  $Revision: 1.8 $ $Date: 2002/10/05 15:29:47 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -17,12 +18,11 @@
 package org.beepcore.beep.core;
 
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
 
-import org.beepcore.beep.profile.*;
-import org.beepcore.beep.profile.tls.*;
-import org.beepcore.beep.util.*;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * TuningProfiles change the security of a Session, either by
@@ -46,6 +46,8 @@ public abstract class TuningProfile {
 
     // Constants
     private static final String TLS_URI = "http://iana.org/beep/TLS";
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     // Data
     // If the channel has begun tuning, it's in the table.
@@ -75,7 +77,7 @@ public abstract class TuningProfile {
     public void abort(BEEPError error, Channel channel) throws BEEPException
     {
         tuningChannels.remove(channel);
-        Log.logEntry(Log.SEV_DEBUG, "TuningProfile.abort");
+        log.debug("TuningProfile.abort");
 
         // Log entry or something - throw an exception???
     }
@@ -96,7 +98,7 @@ public abstract class TuningProfile {
     public void begin(Channel channel, String profile, String data)
             throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG, "TuningProfile.begin");
+        log.debug("TuningProfile.begin");
 
         Session session = channel.getSession();
 
@@ -137,7 +139,7 @@ public abstract class TuningProfile {
             throws BEEPException
     {
         try {
-            Log.logEntry(Log.SEV_DEBUG, "TuningProfile.complete");
+            log.debug("TuningProfile.complete");
 
             Session s = channel.getSession();
 
