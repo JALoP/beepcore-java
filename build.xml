@@ -1,7 +1,7 @@
 <project name="beepcore" default="core-jar" basedir=".">
     <property name="name" value="beepcore" />
     <property name="Name" value="BEEP Core" />
-    <property name="version" value="0.9.01" />
+    <property name="version" value="0.9.02" />
     <property name="release.name" value="${name}-${version}" />
 
     <property name="beepcore.home" value="."/>
@@ -82,6 +82,8 @@
 	<copy file="LICENSE.txt" tofile="${release.dir}/LICENSE.txt"/>
 	<copy file="README.txt" tofile="${release.dir}/README.txt"/>
 	<copy file="README_SASL.htm" tofile="${release.dir}/README_SASL.htm"/>
+	<copy file="GettingStarted.txt"
+	      tofile="${release.dir}/GettingStarted.txt"/>
     </target>
 
     <target name="example" depends="core-jar,sasl-jar,tls-jar">
@@ -95,6 +97,14 @@
 		 <pathelement location="${release.dir}/lib/${tls.jar.name}"/>
             </classpath>
         </javac>
+    </target>
+
+    <target name="example-dist" depends="core-dist">
+        <mkdir dir="${release.dir}/example"/>
+
+        <copy todir="${release.dir}/example">
+            <fileset dir="${example.src.dir}"/>
+        </copy>
     </target>
 
     <target name="test" depends="example">
@@ -190,13 +200,13 @@
     <target name="doc" depends="core-doc,sasl-doc,tls-doc"/>
 
     <!-- Packages the distribution with ZIP -->
-    <target name="dist-zip" depends="core-dist,doc">
+    <target name="dist-zip" depends="core-dist,doc,example-dist">
         <zip zipfile="${build.dir}/${release.name}.zip"
 	     basedir="${release.dir}/.." includes="${release.name}/**"/>
     </target>
 
     <!-- Packages the distribution with TAR-GZIP -->
-    <target name="dist-tgz" depends="core-dist,doc">
+    <target name="dist-tgz" depends="core-dist,doc,example-dist">
         <tar tarfile="${build.dir}/${release.name}.tar"
 	     basedir="${release.dir}/.." includes="${release.name}/**"/>
         <gzip zipfile="${build.dir}/${release.name}.tgz"
