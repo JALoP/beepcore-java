@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.21 $ $Date: 2001/11/27 17:37:22 $
+ * TCPSession.java  $Revision: 1.22 $ $Date: 2002/04/30 17:09:35 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -50,7 +50,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.21 $, $Date: 2001/11/27 17:37:22 $
+ * @version $Revision: 1.22 $, $Date: 2002/04/30 17:09:35 $
  */
 public class TCPSession extends Session {
 
@@ -294,7 +294,7 @@ public class TCPSession extends Session {
                 if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
                     Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
                                  "Wrote the following\n" +
-                                 new String(outputBuf));
+                                 new String(outputBuf, 0, n));
                 }
             }
         } catch (IOException e) {
