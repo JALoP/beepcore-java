@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.14 $ $Date: 2003/11/19 17:30:06 $
+ * SessionImpl.java  $Revision: 1.15 $ $Date: 2004/01/01 16:45:56 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -65,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2003/11/19 17:30:06 $
+ * @version $Revision: 1.15 $, $Date: 2004/01/01 16:45:56 $
  *
  * @see Channel
  */
@@ -1259,12 +1259,6 @@ public abstract class SessionImpl implements Session {
                 String encoding = p.base64Encoding ? "base64" : "none";
 
                 scl.startChannel(ch, encoding, p.data);
-            } catch (TuningResetException e) {
-                log.debug("Leaving profile response to Tuning Profile CCL");
-
-                fireChannelStarted(ch);
-
-                return;
             } catch (StartChannelException e) {
                 this.enableIO();
 
