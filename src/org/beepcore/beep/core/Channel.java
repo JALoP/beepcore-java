@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.23 $ $Date: 2002/05/11 01:44:57 $
+ * Channel.java  $Revision: 1.24 $ $Date: 2002/05/12 00:34:07 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.23 $, $Date: 2002/05/11 01:44:57 $
+ * @version $Revision: 1.24 $, $Date: 2002/05/12 00:34:07 $
  *
  */
 public class Channel {
@@ -407,10 +407,10 @@ public class Channel {
         // if this is an incoming message rather than a reply to a
         // previously sent message
         if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
-            MessageMSG m = null;
             boolean notify = false;
 
             synchronized (recvMSGQueue) {
+                MessageMSG m = null;
                 if (recvMSGQueue.size() != 0) {
                     m = (MessageMSG) recvMSGQueue.getLast();
 
