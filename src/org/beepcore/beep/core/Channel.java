@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.22 $ $Date: 2002/05/08 02:56:32 $
+ * Channel.java  $Revision: 1.23 $ $Date: 2002/05/11 01:44:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.22 $, $Date: 2002/05/08 02:56:32 $
+ * @version $Revision: 1.23 $, $Date: 2002/05/11 01:44:57 $
  *
  */
 public class Channel {
@@ -46,7 +46,6 @@ public class Channel {
     static final int STATE_OK = 2;
     static final int STATE_CLOSING = 3;
     static final int STATE_CLOSED = 4;
-    static final int STATE_ERROR = 5;
     private static final BufferSegment zeroLengthSegment =
         new BufferSegment(new byte[0]);
 
@@ -350,9 +349,6 @@ public class Channel {
 
         if (state != STATE_OK) {
             switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException("Channel in currently experiencing " +
-					"technical difficulties.");
             case STATE_UNINITIALISED :
                 throw new BEEPException("Channel is uninitialised.");
             default :
@@ -399,7 +395,6 @@ public class Channel {
      * STATE_UNINITIALISED - after a channel is created
      * STATE_OK - a channel is acknowledged by the other session
      * STATE_CLOSED - the channel has been closed
-     * STATE_ERROR - an error occured during creation or transmission
      */
     int getState()
     {
@@ -807,9 +802,6 @@ public class Channel {
     {
         if (state != STATE_OK) {
             switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException("Channel in currently experiencing " +
-					"technical difficulties.");
             case STATE_UNINITIALISED :
                 throw new BEEPException("Channel is uninitialised.");
             default :

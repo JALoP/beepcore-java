@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.24 $ $Date: 2002/05/08 02:56:32 $
+ * Session.java  $Revision: 1.25 $ $Date: 2002/05/11 01:44:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,7 +59,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.24 $, $Date: 2002/05/08 02:56:32 $
+ * @version $Revision: 1.25 $, $Date: 2002/05/11 01:44:57 $
  *
  * @see Channel
  */
@@ -206,7 +206,7 @@ public abstract class Session {
         }
 
         // check the channel state and return the appropriate exception
-        if (zero.getState() == Channel.STATE_ERROR) {
+        if (state != SESSION_STATE_ACTIVE) {
             throw new BEEPException("Greeting exchange failed");
         }
     }
@@ -1666,7 +1666,7 @@ public abstract class Session {
 
             this.error = err;
 
-            channel.setState(Channel.STATE_ERROR);
+            channel.setState(Channel.STATE_CLOSED);
             channels.remove(channel.getNumberAsString());
 
             // release the block waiting for the channel to start or close
@@ -1759,7 +1759,7 @@ public abstract class Session {
             this.error = err;
 
             // set the state
-            channel.setState(Channel.STATE_ERROR);
+            channel.setState(Channel.STATE_OK);
             channels.remove(channel.getNumberAsString());
 
             // release the block waiting for the channel to start or close
