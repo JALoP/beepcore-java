@@ -1,5 +1,5 @@
 /*
- * TestByteOutputDataStream.java  $Revision: 1.1 $ $Date: 2001/11/10 21:33:29 $
+ * TestByteOutputDataStream.java  $Revision: 1.2 $ $Date: 2002/09/02 13:47:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -62,8 +62,6 @@ public class TestByteOutputDataStream extends TestCase {
     }
 
     protected void setUp() throws UnsupportedEncodingException, BEEPException {
-        Channel channel = new Channel("0", "0", null, null);
-
         String s = "12345678901234567890x2345678901234567890";
 
         String EH1 = "EntityHeader1";
