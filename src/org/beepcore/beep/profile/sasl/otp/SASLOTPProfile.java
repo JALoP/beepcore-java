@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.14 $ $Date: 2003/10/30 14:32:57 $
+ * SASLOTPProfile.java  $Revision: 1.15 $ $Date: 2003/11/18 14:03:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -39,7 +39,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2003/10/30 14:32:57 $
+ * @version $Revision: 1.15 $, $Date: 2003/11/18 14:03:09 $
  *
  */
 public class SASLOTPProfile
@@ -244,17 +244,17 @@ public class SASLOTPProfile
      * 
      * If you want to do that (I recommend it, then use the NEXT one).
      * 
-     * @param Session session is the session the user is authenticating on,
+     * @param session Session is the session the user is authenticating on,
      *                in other words, represents the peer we want to
      *                authenticate to.
-     * @param String authorizeId is the identity this peer wants to be
-     *               authorized to act as.
-     * @param String authenticateId is the identity this peer will
-     *               authenticate as
-     * @param String pwd is the passphrase to authenticate with (it isn't
-     * stored or kept around very long at all, it's only used in computation).
+     * @param authorizeId The identity this peer wants to be
+     *                    authorized to act as.
+     * @param authenticateId The identity this peer will
+     *                       authenticate as
+     * @param pwd The passphrase to authenticate with (it isn't stored or
+     *            kept around very long at all, it's only used in computation).
      * @throws SASLException if any issue is encountered (usually
-     * rejection by the other peer).
+     *                       rejection by the other peer).
      */
     public static Session AuthenticateSASLOTP(Session session, 
                                               String authorizeId, 

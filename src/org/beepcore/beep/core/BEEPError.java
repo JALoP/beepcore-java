@@ -1,5 +1,5 @@
 /*
- * BEEPError.java  $Revision: 1.8 $ $Date: 2003/04/23 15:23:04 $
+ * BEEPError.java  $Revision: 1.9 $ $Date: 2003/11/18 14:03:07 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2003/04/23 15:23:04 $
+ * @version $Revision: 1.9 $, $Date: 2003/11/18 14:03:07 $
  */
 public class BEEPError extends BEEPException {
 
@@ -149,7 +149,6 @@ public class BEEPError extends BEEPException {
      *
      * @param code Error code.
      * @param diagnostic Error diagnostic.
-     * @param xmlLang Language of the diagnostic message.
      */
     public static String createErrorMessage(int code, String diagnostic)
     {

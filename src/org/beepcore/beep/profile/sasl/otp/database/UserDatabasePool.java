@@ -1,6 +1,5 @@
-
 /*
- * UserDatabasePool.java            $Revision: 1.4 $ $Date: 2003/04/23 15:23:05 $
+ * UserDatabasePool.java  $Revision: 1.5 $ $Date: 2003/11/18 14:03:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -67,7 +66,7 @@ public class UserDatabasePool implements UserDatabaseManager
      * evolving the way init-hex/word are processed, as well...which
      * is slightly trickier than doing a dual parameter lookup.
      * 
-     * @param String username indicates which OTP database should 
+     * @param username Indicates which OTP database should 
      * be retrieved, based on who wishes to authenticate using it.
      *
      * @return UserDatabase the OTP database for the user specified.
@@ -163,7 +162,7 @@ public class UserDatabasePool implements UserDatabaseManager
      * 'last hash' value.
      *
      *
-     * @param UserDatabase ud is the updated form of the OTP database.
+     * @param ud The updated form of the OTP database.
      *
      * @throws SASLException if any issues are encountered during the
      * storage of the user's OTP DB.
@@ -198,7 +197,7 @@ public class UserDatabasePool implements UserDatabaseManager
      * Method removeUserDB causes the long-term representation
      * (e.g. file) of the user's OTP database to be removed.
      *
-     * @param String authenticator, the user of the OTP database.
+     * @param authenticator The user of the OTP database.
      *
      * @throws SASLException if any issues are encountered during the
      * removal of the user's OTP DB.

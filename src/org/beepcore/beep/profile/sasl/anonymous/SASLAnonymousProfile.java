@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.12 $ $Date: 2003/09/15 15:23:31 $
+ * SASLAnonymousProfile.java  $Revision: 1.13 $ $Date: 2003/11/18 14:03:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2003/09/15 15:23:31 $
+ * @version $Revision: 1.13 $, $Date: 2003/11/18 14:03:09 $
  *
  */
 public class SASLAnonymousProfile
@@ -125,8 +125,8 @@ public class SASLAnonymousProfile
      * Method authencitateSASLAnonymous is an Initiator routine designed
      * to allow a peer to authenticate to another one. 
      *
-     * @param Session session the current session
-     * @param String id the identity of the peer withing to authenticate
+     * @param session Session the current session
+     * @param id The identity of the peer withing to authenticate
      *
      * @throws SASLException if any failure occurs.
      */
@@ -171,8 +171,8 @@ public class SASLAnonymousProfile
      * one.  It is distinct in that it piggybacks the data for the
      * authentication request on the startChannel request.
      *
-     * @param Session session the current session
-     * @param String id the identity of the peer withing to authenticate
+     * @param session Session the current session
+     * @param id The identity of the peer withing to authenticate
      *
      * @throws SASLException if any failure occurs.
      */

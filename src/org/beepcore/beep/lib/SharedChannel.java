@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.12 $ $Date: 2003/11/07 23:01:12 $
+ * SharedChannel.java            $Revision: 1.13 $ $Date: 2003/11/18 14:03:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002, 2003 Huston Franklin.  All rights reserved.
@@ -42,7 +42,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2003/11/07 23:01:12 $
+ * @version $Revision: 1.13 $, $Date: 2003/11/18 14:03:08 $
  */
 public class SharedChannel implements Channel {
 
@@ -110,9 +110,9 @@ public class SharedChannel implements Channel {
      * @param ml A listener of type <code>DataListener</code>
      *
      */
-    public MessageListener setMessageListener(MessageListener dl)
+    public MessageListener setMessageListener(MessageListener ml)
     {
-        return channel.setMessageListener(dl);
+        return channel.setMessageListener(ml);
     }
 
     public MessageListener getMessageListener()

@@ -1,6 +1,6 @@
 
 /*
- * NoMoreTokensException.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:35 $
+ * NoMoreTokensException.java            $Revision: 1.3 $ $Date: 2003/11/18 14:03:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -29,7 +29,7 @@ import org.beepcore.beep.profile.sasl.SASLException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:35 $
+ * @version $Revision: 1.3 $, $Date: 2003/11/18 14:03:10 $
  *
  */
 public class NoMorePasswordsException extends SASLException {
@@ -40,7 +40,7 @@ public class NoMorePasswordsException extends SASLException {
     /**
      * Default Constructor
      * 
-     * @param String username denotes the identity of the peer
+     * @param username Denotes the identity of the peer
      * wishing to authenticate via SASL OTP
      *
      */

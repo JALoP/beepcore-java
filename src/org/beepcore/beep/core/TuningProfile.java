@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java  $Revision: 1.11 $ $Date: 2003/09/15 15:23:30 $
+ * TuningProfile.java  $Revision: 1.12 $ $Date: 2003/11/18 14:03:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -133,12 +133,6 @@ public abstract class TuningProfile {
     /**
      * Method complete
      *
-     *
-     * @param channel
-     * @param cred
-     * @param registry
-     * @param argument
-     *
      * @throws BEEPException
      *
      */
@@ -221,11 +215,6 @@ public abstract class TuningProfile {
      * Method reset
      *
      *
-     * @param session
-     * @param cred
-     * @param registry
-     * @param argument
-     *
      * @throws BEEPException
      *
      */
@@ -237,17 +226,13 @@ public abstract class TuningProfile {
                                    Object argument)
             throws BEEPException
     {
-        return ((SessionImpl)session).reset(localCred, peerCred, tuning, registry, argument);
+        return ((SessionImpl)session).reset(localCred, peerCred, tuning,
+                                            registry, argument);
     }
 
     /**
      * Method sendProfile
      *
-     *
-     * @param session
-     * @param uri
-     * @param data
-     * @param channel
      *
      * @throws BEEPException
      *

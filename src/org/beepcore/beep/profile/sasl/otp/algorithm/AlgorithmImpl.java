@@ -1,6 +1,6 @@
 
 /*
- * AlgorithmImpl.java            $Revision: 1.4 $ $Date: 2003/09/13 21:19:10 $
+ * AlgorithmImpl.java            $Revision: 1.5 $ $Date: 2003/11/18 14:03:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -27,7 +27,7 @@ import org.beepcore.beep.profile.sasl.InvalidParameterException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2003/09/13 21:19:10 $
+ * @version $Revision: 1.5 $, $Date: 2003/11/18 14:03:10 $
  *
  */
 public abstract class AlgorithmImpl implements Algorithm {
@@ -40,9 +40,10 @@ public abstract class AlgorithmImpl implements Algorithm {
     /**
      * Method AlgorithmImpl
      *
-     * @param String internal is the data used by the JVM internally
-     * to represent a certain MessageDigest hash algorithm.   This
-     * is defined in JVM documentation and in constants in SASLOTPProfile.,
+     * @param internal The data used by the JVM internally to represent
+     *                 a certain MessageDigest hash algorithm.   This is
+     *                 defined in JVM documentation and in constants in
+     *                 SASLOTPProfile.
      *
      */
     public AlgorithmImpl(String internal)
@@ -52,10 +53,6 @@ public abstract class AlgorithmImpl implements Algorithm {
 
     /**
      * Method getName
-     *
-     *
-     * @param String the algorithm's name.
-     *
      */
     public abstract String getName();
 
@@ -63,7 +60,7 @@ public abstract class AlgorithmImpl implements Algorithm {
      * Method generateHash generate a hash value using the appropriate
      * hash function.
      *
-     * @param String s is the data to be hashed
+     * @param s The data to be hashed
      * @return byte[] the hash value in binary form.
      *
      * @throws SASLException if an error is encountered during the 
@@ -80,7 +77,7 @@ public abstract class AlgorithmImpl implements Algorithm {
      * Method generateHash generate a hash value using the appropriate
      * hash function.
      *
-     * @param byte[] data is the data to be hashed
+     * @param data The data to be hashed
      * @return byte[] the hash value in binary form.
      *
      * @throws SASLException if an error is encountered during the 
@@ -106,7 +103,7 @@ public abstract class AlgorithmImpl implements Algorithm {
      * of the message digest hash must be folding into 64 bits before 
      * it can be used by the SASLOTPProfile and its supporting classes.
      *
-     * @param byte[] data the hash value to be folded
+     * @param hash The hash value to be folded
      * @return byte[] is the folded hash.
      *
      * @throws InvalidParameterException of the has provided is

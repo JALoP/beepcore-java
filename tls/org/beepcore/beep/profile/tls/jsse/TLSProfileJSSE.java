@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.12 $ $Date: 2003/11/16 00:17:14 $
+ * TLSProfileJSSE.java  $Revision: 1.13 $ $Date: 2003/11/18 14:03:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -637,8 +637,7 @@ public class TLSProfileJSSE extends TLSProfile
      * entrusted as per these parameters.<p>
      *
      * @see #init init - profile configuration
-     * @param session session - the session to encrypt communcation for
-     * @param arg arg - not used currently
+     * @param session The session to encrypt communcation for
      *
      * @return new <code>Session</code> with TLS negotiated.
      * @throws BEEPException an error occurs during the channel start
@@ -749,10 +748,8 @@ public class TLSProfileJSSE extends TLSProfile
 
     /**
      * add a listener for completed handshakes.
-     * @param TLSProfileJSSEHandshakeCompletedListener receives handshake complete
-     *    events
+     * @param x receives handshake complete events
      *
-     * @param x
      */
     public void addHandshakeCompletedListener(TLSProfileJSSEHandshakeCompletedListener x)
     {
@@ -762,10 +759,8 @@ public class TLSProfileJSSE extends TLSProfile
 
     /**
      * remove a listener for completed handshakes.
-     * @param TLSProfileJSSEHandshakeCompletedListener receives handshake complete
-     *    events
+     * @param x receives handshake complete events
      *
-     * @param x
      */
     public void removeHandshakeCompletedListener(TLSProfileJSSEHandshakeCompletedListener x)
     {
