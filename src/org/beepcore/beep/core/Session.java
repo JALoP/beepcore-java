@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * Session.java            $Revision: 1.2 $ $Date: 2001/04/02 21:39:45 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -53,7 +53,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/02 21:39:45 $
  *
  * @see Channel
  */
@@ -1628,7 +1628,7 @@ public abstract class Session {
                         Session.this.receiveStartChannelResultOk(channel,
                                                                  data);
                     } catch (Exception x) {
-                        x.printStackTrace();
+                        throw new BEEPException(x.getMessage());
                     }
                 } else {
                     throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);

@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * Frame.java            $Revision: 1.2 $ $Date: 2001/04/02 21:39:45 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -27,7 +27,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision, $Date: 2001/04/02 21:39:45 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -294,6 +294,19 @@ public class Frame {
         return this.last;
     }
 
+    /**
+     * A <code>BufferSegment</code> represents a BEEP Frame payload and holds
+     * the BEEP Frames's Header, Trailer and the message payload.
+     *
+     * It contains a byte array an offset into the array and the
+     * length from the offset.
+     *
+     * @author Eric Dixon
+     * @author Huston Franklin
+     * @author Jay Kint
+     * @author Scott Pead
+     * @version $Revision: 1.2 $, $Date: 2001/04/02 21:39:45 $
+     */
     public static class BufferSegment {
 
         private byte[] data;    // the byte array
@@ -303,11 +316,11 @@ public class Frame {
         /**
          * Constructor BufferSegment
          *
-         *
-         * @param data
-         * @param offset
-         * @param length
-         *
+         * @param data A byte array containing a BEEP Frame payload.
+         * @param offset Indicates the begining position of the BEEP Frame
+         * payload in the byte array <code>data</code>.
+         * @param length Number of valid bytes in the byte array starting from
+         * <code>offset</code>.
          */
         public BufferSegment(byte[] data, int offset, int length)
         {
