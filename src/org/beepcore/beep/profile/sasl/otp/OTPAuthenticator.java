@@ -1,7 +1,7 @@
 
 
 /*
- * OTPAuthenticator.java            $Revision: 1.1 $ $Date: 2001/04/02 21:38:14 $
+ * OTPAuthenticator.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +44,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 21:38:14 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:22 $
  *
  */
 class OTPAuthenticator implements MessageListener, ReplyListener {
@@ -239,7 +239,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         challenge.append(SPACE);
         challenge.append(database.getSequence());
         challenge.append(SPACE);
-        challenge.append(database.getSeed());
+        challenge.append(database.getSeed().toLowerCase());
         challenge.append(SPACE);
         challenge.append(EXT);
         Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
@@ -399,7 +399,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             st = new StringTokenizer(newParms);
             String algorithm = st.nextToken();
             String sequence = st.nextToken();
-            String seed = st.nextToken();
+            String seed = st.nextToken().toLowerCase();
+            if(!OTPGenerator.validateSeed(seed))
+                abort("Invalid Seed");
             st = new StringTokenizer(newParms);
             // Now do even weirder update of the db.
             Log.logEntry(Log.SEV_DEBUG,"Auth=>"+authenticated);
@@ -473,7 +475,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         sb.append(SPACE);
         sb.append(newSequence);
         sb.append(SPACE);
-        sb.append(newSeed);
+        sb.append(newSeed.toLowerCase());
         sb.append(COLON);
         sb.append(newHash);
         initData = sb.toString();
@@ -567,7 +569,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         }
 
         sequence = Integer.parseInt(st.nextToken());
-        seed = st.nextToken();
+        seed = st.nextToken().toLowerCase();
+        if(!OTPGenerator.validateSeed(seed))
+            abort("Invalid Seed");
 
         Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
                      "Algo is=>" + algo + " seed is=>" + seed + " seq=>"

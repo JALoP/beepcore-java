@@ -1,6 +1,6 @@
 
 /*
- * OTPGenerator.java            $Revision: 1.1 $ $Date: 2001/04/02 21:38:14 $
+ * OTPGenerator.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.otp.database.UserDatabasePool;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 21:38:14 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:22 $
  *
  */
 public class OTPGenerator {
@@ -154,7 +154,7 @@ public class OTPGenerator {
             }
         }
 
-        return seed;
+        return seed.toLowerCase();
     }
 
     private static String promptForSequence()
@@ -252,21 +252,7 @@ public class OTPGenerator {
             return false;
         }
     }
-    
-    /**
-     * This method has package-level access so that only classes here,
-     * such as SASLOTPProfile can call it during run-time.
-     * 
-     * The methods below are assistance methods.
-     */
-    UserDatabase buildOTPDictionary(String data)
-        throws SASLException
-    {
-        String algorithm, lastHash, orgHash, seed, username;
-        int sequence, orgSequence;
-        return null;
-    }
-    
+        
     /**
      * Method main is the method used to run the OTP generator.
      * IT prompts the users for information necessary to create
@@ -338,6 +324,7 @@ public class OTPGenerator {
             throw new SASLException(ERR_USER_DB_EXISTS);
         try
         {
+            seed = seed.toLowerCase();
             validateSeed(seed);
         }
         catch(Exception x)

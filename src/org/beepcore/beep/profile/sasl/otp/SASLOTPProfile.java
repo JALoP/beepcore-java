@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java            $Revision: 1.1 $ $Date: 2001/04/02 21:38:14 $
+ * SASLOTPProfile.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 21:38:14 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:22 $
  *
  */
 public class SASLOTPProfile extends SASLProfile {
@@ -244,6 +244,7 @@ public class SASLOTPProfile extends SASLProfile {
             throw new SASLException("User OTP data not found");
         }
 
+        newSeed = newSeed.toLowerCase();
         OTPAuthenticator a = new OTPAuthenticator(this, db,
                                                   password, authorizeId,
                                                   authenticateId, 
@@ -509,6 +510,8 @@ public class SASLOTPProfile extends SASLProfile {
         
         // Test the values
         convertHexToBytes(newHash);
+        newSeed = newSeed.toLowerCase();
+
         if(!OTPGenerator.validateSeed(newSeed) ||
            !OTPGenerator.validatePassphrase(pwd) ||
            !OTPGenerator.validateSequence(newSequence))
@@ -584,37 +587,49 @@ public class SASLOTPProfile extends SASLProfile {
 
     // See page 17 of RFC 2289 for the validation cases
     // used below.  The output should look like this...
-    // Note the JVM issue mentioned in the readme, it's
-    // MessageDigest classes can't grok all strings, I think
-    // it's related to the signed limits of Long somehow,since
-    // failures seem to be related to strings that generated
-    // values north of Long.MAX_VALUE (just a theory).
     /*
-        Testing MD5 Hash for =>alpha1AbCdEfGhIjK<=
-        [0]8706 6dd9 644b f206
-        main: populating Hash set
-        main: PWD=>FULL PEW DOWN ONCE MORT ARC
-        [1]7cd3 4c10 40ad d14b
-        main: PWD=>FACT HOOF AT FIST SITE KENT
-        [99]5aa3 7a81 f212 146c
-        main: PWD=>BODE HOP JAKE STOW JUT RAP
-
-
+        Testing MD5 Hash for =>testThis is a test.<=
+        [00]FoldW=>INCH SEA ANNE LONG AHEM TOUR
+        [01]FoldW=>EASE OIL FUM CURE AWRY AVIS
+        [99]FoldW=>BAIL TUFT BITS GANG CHEF THY
         Testing SHA1 Hash
-        [0]ad85 f658 ebe3 83c9
-        main: PWD=>LEST OR HEEL SCOT ROB SUIT
-        [1]d07c e229 b5cf 119b
-        main: PWD=>RITE TAKE GELD COST TUNE RECK
-        [99]27bc 7103 5aaf 3dc6
-        main: PWD=>MAY STAR TIN LYON VEDA STAN
+        [00]FoldW=>MILT VARY MAST OK SEES WENT
+        [01]FoldW=>CART OTTO HIVE ODE VAT NUT
+        [99]FoldW=>GAFF WAIT SKID GIG SKY EYED
+        Testing MD5 Hash for =>alpha1AbCdEfGhIjK<=
+        [00]FoldW=>FULL PEW DOWN ONCE MORT ARC
+        [01]FoldW=>FACT HOOF AT FIST SITE KENT
+        [99]FoldW=>BODE HOP JAKE STOW JUT RAP
+        Testing SHA1 Hash
+        [00]FoldW=>LEST OR HEEL SCOT ROB SUIT
+        [01]FoldW=>RITE TAKE GELD COST TUNE RECK
+        [99]FoldW=>MAY STAR TIN LYON VEDA STAN
+        Testing MD5 Hash for =>correctOTP's are good<=
+        [00]FoldW=>ULAN NEW ARMY FUSE SUIT EYED
+        [01]FoldW=>SKIM CULT LOB SLAM POE HOWL
+        [99]FoldW=>LONG IVY JULY AJAR BOND LEE
+        Testing SHA1 Hash
+        [00]FoldW=>RUST WELT KICK FELL TAIL FRAU
+        [01]FoldW=>FLIT DOSE ALSO MEW DRUM DEFY
+        [99]FoldW=>AURA ALOE HURL WING BERG WAIT
+        Testing MD5 Hash for =>avalidseedA_Valid_Pass_Phrase<=
+        [00]FoldW=>LEO IBIS WHAT OW WILD TROY
+        [01]FoldW=>RUTH HOOF SHED DEAF OKAY DARK
+        [99]FoldW=>FOWL KID MASH DEAD DUAL OAF
+        Testing SHA1 Hash
+        [00]FoldW=>JILT WOVE SOFA OWE KING VEND
+        [01]FoldW=>OUST KITE MEN NE BEAR JOIN
+        [99]FoldW=>ONCE GRAB SOOT CUBE SLAY WAIT
     */
     void testHash() throws SASLException
     {
         String pwd[] = new String[4];
-        pwd[0] = new String("alpha1AbCdEfGhIjK");
-        pwd[1] = new String("correctOTP's are good");
-        pwd[2] = new String("AValidSeedA_Valid_Pass_Phrase");
-        pwd[3] = new String("TeStThis is a test.");
+        int limit=100;
+        int i=0;
+        pwd[i++] = new String("testThis is a test.");
+        pwd[i++] = new String("alpha1AbCdEfGhIjK");
+        pwd[i++] = new String("correctOTP's are good");
+        pwd[i++] = new String("avalidseedA_Valid_Pass_Phrase");
 
         //      String pwd="correctOTP's are good";
         byte temp[], other[];
@@ -625,15 +640,17 @@ public class SASLOTPProfile extends SASLProfile {
             temp = pwd[j].getBytes();
             System.out.println("Testing MD5 Hash for =>" + pwd[j] + "<=");
 
-            for (int i = 0; i < 100; i++) {
+            for (i = 0; i < limit; i++) {
                 other = md5.generateHash(temp);
 
                 if ((i == 0) || (i == 1) || (i == 99)) {
-                    System.out.print("[" + i + "]");
-                    printHex(other);
+                    if(i<10)
+                        System.out.print("[0" + i + "]");
+                    else
+                        System.out.print("[" + i + "]");
+//                    printHex(other);
                     l = this.convertBytesToLong(other);
-                    System.out.println("PWD=>" + OTPDictionary.convertHashToWords(l));
-//                    System.out.println("PWD=>" + OTPDictionary.convertHashToWords(other));
+                    System.out.println("FoldW=>" + OTPDictionary.convertHashToWords(l));
                 }
                 temp = other;
             }
@@ -641,21 +658,21 @@ public class SASLOTPProfile extends SASLProfile {
             System.out.println("Testing SHA1 Hash");
             temp = pwd[j].getBytes();
 
-            for (int i = 0; i < 100; i++) {
+            for (i = 0; i < limit; i++) {
                 other = sha1.generateHash(temp);
 
                 if ((i == 0) || (i == 1) || (i == 99)) {
-                    System.out.print("[" + i + "]");
-                    printHex(other);
+                    if(i<10)
+                        System.out.print("[0" + i + "]");
+                    else
+                        System.out.print("[" + i + "]");
+//                    printHex(other);
                     l = this.convertBytesToLong(other);
-//                    System.out.println("PWD=>" + OTPDictionary.convertHashToWords(l));
-                    System.out.println("PWD=>" + convertBytesToHex(other));
-//                    System.out.println("PWD=>" + OTPDictionary.convertHashToWords(other));
+                    System.out.println("FoldW=>" + OTPDictionary.convertHashToWords(l));
                 }
                 temp = other;
             }
         }
-        System.exit(0);
     }
 
     static void printHex(byte buff[])
@@ -674,7 +691,7 @@ public class SASLOTPProfile extends SASLProfile {
 
         return hash;
     }
-
+    
     protected long convertBytesToLong(byte hash[]) {
         long l = 0L;
 
@@ -685,22 +702,13 @@ public class SASLOTPProfile extends SASLProfile {
         return(l);
     }
 
-    public static byte[] convertHexToBytes(String hash)
-        throws SASLException
+    public static long convertHexToLong(String hash) throws SASLException
     {
-        byte result[] = new byte[8];
-        
-        if (hash.length() != 16) 
-        {
+        if (hash.length() != 16) {
             throw new SASLException("Illegal hash" + hash.length());
         }
-        hash = hash.toUpperCase();
-//        Log.logEntry(Log.SEV_DEBUG, "Converting=>" + hash);
-        
-        for(int i = 0; i < 16; i+=2)
-            result[i/2]=(byte)Integer.parseInt(hash.substring(i,i+2), 16);
-//        Log.logEntry(Log.SEV_DEBUG, "Conversion=>" + convertBytesToHex(result));
-
+        long result = 0L;
+        result = Long.valueOf(hash,16).longValue();
         return result;
     }
 
@@ -717,12 +725,31 @@ public class SASLOTPProfile extends SASLProfile {
 
             sb.append(Integer.toHexString(val));
         }
+//        Log.logEntry(Log.SEV_DEBUG, "Conversion=>" + sb.toString());
         return sb.toString();
+    }
+    
+    public static byte[] convertHexToBytes(String hash)
+        throws SASLException
+    {
+        byte result[] = new byte[8];
+        
+        if (hash.length() != 16) 
+        {
+            throw new SASLException("Illegal hash" + hash.length());
+        }
+//        hash = hash.toLowerCase();
+//        Log.logEntry(Log.SEV_DEBUG, "Converting=>" + hash);
+        
+        for(int i = 0; i < 16; i+=2)
+            result[i/2]=(byte)Integer.parseInt(hash.substring(i,i+2), 16);
+//        Log.logEntry(Log.SEV_DEBUG, "Conversion=>" + convertBytesToHex(result));
+
+        return result;
     }
 
     //Main is for testing..and is obviously cluttered
     // Commenting it out so it doesn't get documented
-/*
     public static void main(String argv[])
     {
         ConsoleLog log = new ConsoleLog();
@@ -735,11 +762,11 @@ public class SASLOTPProfile extends SASLProfile {
             s.init(new ProfileConfiguration());
             MD5 md5 = new MD5();
             SHA1 sha1 = new SHA1();
+/*
             long t = Long.MAX_VALUE;
             System.out.println("ConvertedLongMax=>"+s.convertBytesToHex(s.convertLongToBytes(t)));            
             byte b[] = s.convertHexToBytes("9e876134d90499dd");
             System.out.println("=>"+s.convertBytesToHex(b));            
-//            long l = s.make_long(b);
             long l = s.convertBytesToLong(b);
             System.out.println("Long=>"+l);
             System.out.println("Long=>"+Long.toHexString(l));
@@ -747,24 +774,25 @@ public class SASLOTPProfile extends SASLProfile {
             for(int k=0;k<100;k++)
             {
                 byte c[] = md5.generateHash(b);
-                System.out.println("Hash["+k+"]=>"+s.convertBytesToHex(c));
+                if(k<2 || k>98)
+                    System.out.println("Hash["+k+"]=>"+s.convertBytesToHex(c));
                 b = c;
-            }
-            
-            String shitWhyNot= "TeStThis is a test.";
-            byte d[] = md5.generateHash(shitWhyNot);
+            }            
+            String whyNot= "TeStThis is a test.";
+            byte d[] = md5.generateHash(whyNot);
             System.out.println(s.convertBytesToHex(d));            
-            d = sha1.generateHash(shitWhyNot);
+            d = sha1.generateHash(whyNot);
             System.out.println(s.convertBytesToHex(d));
             
             String test = "63D936639745385B";
-            long l = s.convertHexToLong(test);
-//            System.out.println("L(long)=>"+Long.toHexString(l));
+            l = s.convertHexToLong(test);
+            System.out.println("L(long)=>"+Long.toHexString(l));
             byte buff[] = s.convertLongToBytes(l);
             test = s.convertBytesToHex(buff);
             System.out.println("L(bytes->String)=>"+test);
             buff = s.convertHexToBytes(test);
             System.out.println("L(bytes->String2)=>"+s.convertBytesToHex(buff));
+*/
             s.testHash();
         }
         catch(Exception x)
@@ -772,5 +800,4 @@ public class SASLOTPProfile extends SASLProfile {
             x.printStackTrace();
         }
     }
-*/
 }

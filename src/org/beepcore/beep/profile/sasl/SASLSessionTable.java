@@ -1,5 +1,5 @@
 /*
- * SASLSessionTable.java  $Revision: 1.2 $ $Date: 2001/04/02 22:33:27 $
+ * SASLSessionTable.java  $Revision: 1.3 $ $Date: 2001/04/09 13:26:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/02 22:33:27 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/09 13:26:21 $
  *
  */
 public class SASLSessionTable implements SessionEventListener
@@ -95,10 +95,11 @@ public class SASLSessionTable implements SessionEventListener
         
         if(session == null)
             throw new SASLException(ERR_INVALID_PARAMETERS);
+
         SessionCredential cred = session.getPeerCredential();
         if(cred == null)
             throw new SASLException(ERR_INVALID_PARAMETERS);        
-        
+
         anonymous = cred.getAuthenticatorType().equals(SASLAnonymousProfile.MECHANISM);
         
         // If this session is mapped to another user, get rid of it.
@@ -120,9 +121,10 @@ public class SASLSessionTable implements SessionEventListener
         authenticator = session.getPeerCredential().getAuthenticator();
         if(authenticator == null)
             throw new SASLException(ERR_INVALID_PARAMETERS);
-
         session.registerForEvent(this, 
                                  SessionEvent.SESSION_TERMINATED_EVENT_CODE);
+        if(sessionToName.contains(session))
+            nameToSession.remove(authenticator);
         sessionToName.put(session, authenticator);
         if(!anonymous)
             nameToSession.put(authenticator, session);
@@ -140,13 +142,13 @@ public class SASLSessionTable implements SessionEventListener
         if(session == null)
             throw new SASLException(ERR_INVALID_PARAMETERS);
 
-        if(session.getPeerCredential()==null)
-            return;
-        String authenticator = session.getPeerCredential().getAuthenticator();
-        if(authenticator == null)
-            throw new SASLException(ERR_INVALID_PARAMETERS);
-
-        nameToSession.remove(authenticator);
+        if(session.getPeerCredential() != null)
+        {
+            String authenticator = session.getPeerCredential().getAuthenticator();
+            if(authenticator == null)
+                throw new SASLException(ERR_INVALID_PARAMETERS);
+            nameToSession.remove(authenticator);
+        }
         sessionToName.remove(session);
         printContents();
     }
@@ -182,10 +184,10 @@ public class SASLSessionTable implements SessionEventListener
      */
     void printContents()
     {
-        Log.logEntry(Log.SEV_DEBUG,MSG_SESSIONS_TABLE_HEADER+this.toString());
+        Log.logEntry(Log.SEV_DEBUG, MSG_SESSIONS_TABLE_HEADER);
         if(sessionToName.size()==0)
         {
-            Log.logEntry(Log.SEV_DEBUG,MSG_EMPTY);
+            Log.logEntry(Log.SEV_DEBUG, MSG_EMPTY);
         }
         else
         {
@@ -194,9 +196,13 @@ public class SASLSessionTable implements SessionEventListener
             {
                 Session s = (Session)e.nextElement();
                 String user = (String)sessionToName.get(s);
-                String mech = s.getPeerCredential().getAuthenticatorType();
-                System.out.print(MSG_USER_PREFIX + user );
-                Log.logEntry(Log.SEV_DEBUG,MSG_MECHANISM_PREFIX + mech );
+                String mech;
+                if(s.getPeerCredential() != null)
+                    mech = s.getPeerCredential().getAuthenticatorType();
+                else 
+                    mech = "UNKNOWN";
+                Log.logEntry(Log.SEV_DEBUG, MSG_USER_PREFIX + user +
+                                   MSG_MECHANISM_PREFIX + mech );
             }        
         }
         Log.logEntry(Log.SEV_DEBUG,MSG_SESSIONS_TABLE_TRAILER);

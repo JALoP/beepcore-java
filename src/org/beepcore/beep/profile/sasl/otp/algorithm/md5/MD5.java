@@ -1,6 +1,6 @@
 
 /*
- * MD5.java            $Revision: 1.1 $ $Date: 2001/04/02 21:38:14 $
+ * MD5.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -29,7 +29,7 @@ import org.beepcore.beep.profile.sasl.otp.algorithm.AlgorithmImpl;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 21:38:14 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:22 $
  *
  */
 public class MD5 extends AlgorithmImpl {
@@ -68,17 +68,14 @@ public class MD5 extends AlgorithmImpl {
     {
         if (hash == null) {
             throw new InvalidParameterException();
-        }
-        
+        }        
         byte[] newHash = new byte[8];
 
-        for (int i = 0; i < 8; ++i) 
+        for(int i=0; i<8; i++)
         {
-            byte b = hash[i];
-            b ^= (0xFF & hash[i+8]);
-            newHash[i] = b;
+            newHash[i] = hash[i];
+            newHash[i] ^= hash[i+8];
         }
-
-        return (newHash);
+        return newHash;
     }
 }
