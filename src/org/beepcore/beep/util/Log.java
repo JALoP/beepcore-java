@@ -1,6 +1,6 @@
 
 /*
- * Log.java            $Revision: 1.3 $ $Date: 2001/04/26 16:35:05 $
+ * Log.java            $Revision: 1.4 $ $Date: 2001/05/23 13:53:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -30,7 +30,7 @@ import java.io.PrintWriter;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/26 16:35:05 $
+ * @version $Revision, $Date: 2001/05/23 13:53:30 $
  */
 public class Log {
 
@@ -52,6 +52,10 @@ public class Log {
      */
     public static void logEntry(int sev, String message)
     {
+        if (!log.isLogged(sev)) {
+           return;
+        }
+
         log.logEntry(sev, getClassName(), message);
     }
 
@@ -65,6 +69,10 @@ public class Log {
      */
     public static void logEntry(int sev, Throwable exception)
     {
+        if (!log.isLogged(sev)) {
+           return;
+        }
+
         log.logEntry(sev, getClassName(), exception);
     }
 
@@ -79,6 +87,10 @@ public class Log {
      */
     public static void logEntry(int sev, String service, String message)
     {
+        if (!log.isLogged(sev)) {
+           return;
+        }
+
         log.logEntry(sev, service, message);
     }
 
@@ -93,6 +105,10 @@ public class Log {
      */
     public static void logEntry(int sev, String service, Throwable exception)
     {
+        if (!log.isLogged(sev)) {
+           return;
+        }
+
         log.logEntry(sev, service, exception);
     }
 
