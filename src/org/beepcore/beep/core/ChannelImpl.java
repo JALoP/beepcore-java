@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.2 $ $Date: 2003/04/23 15:23:04 $
+ * ChannelImpl.java  $Revision: 1.3 $ $Date: 2003/05/16 16:44:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2003/04/23 15:23:04 $
+ * @version $Revision: 1.3 $, $Date: 2003/05/16 16:44:29 $
  *
  */
 class ChannelImpl implements Channel {
@@ -693,83 +693,11 @@ class ChannelImpl implements Channel {
     {
         log.trace("Channel::postFrame");
 
-        boolean firstFrame = false;
-        boolean createAndPostMessage = false;
-        Message currentMessage = null;
-        int msgno = frame.getMsgno();
-
         if (state != STATE_ACTIVE && state != STATE_TUNING) {
             throw new BEEPException("State is " + state);
         }
 
-        // Validate Frame
-        synchronized (this) {
-
-            // assume the frame has already been parsed by the session and
-            // that the flags indicated are part of the frame object
-
-            // is the message number correct?
-            if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
-                if (previousFrame != null) {
-                    if (frame.getMsgno() != previousFrame.getMsgno()) {
-                        throw new BEEPException("Incorrect message number: was "
-                                                + frame.getMsgno()
-                                                + "; expecting "
-                                                + previousFrame.getMsgno());
-                    }
-                } else {
-                    synchronized (recvMSGQueue) {
-                        ListIterator i =
-                            recvMSGQueue.listIterator(recvMSGQueue.size());
-                        while (i.hasPrevious()) {
-                            if (((Message) i.previous()).getMsgno()
-                                == frame.getMsgno())
-                            {
-                                throw new BEEPException("Received a frame " +
-                                                        "with a duplicate " +
-                                                        "msgno (" +
-                                                        frame.getMsgno() +
-                                                        ")");
-                            }
-                        }
-                    }
-                }
-            } else {
-                MessageStatus mstatus;
-
-                synchronized (sentMSGQueue) {
-                    if (sentMSGQueue.size() == 0) {
-                        throw new BEEPException("Received unsolicited reply");
-                    }
-
-                    mstatus = (MessageStatus) sentMSGQueue.get(0);
-                }
-
-                if (frame.getMsgno() != mstatus.getMsgno()) {
-                    throw new BEEPException("Incorrect message number: was "
-                                            + frame.getMsgno()
-                                            + "; expecting "
-                                            + mstatus.getMsgno());
-                }
-            }
-
-            // is the sequence number correct?
-            if (frame.getSeqno() != recvSequence) {
-                throw new BEEPException("Incorrect sequence number: was "
-                    + frame.getSeqno() + "; expecting "
-                    + recvSequence);
-            }
-
-            // is the message type the same as the previous frames?
-            if ((previousFrame != null)
-                    && (previousFrame.getMessageType()
-                        != frame.getMessageType())) {
-                throw new BEEPException("Incorrect message type: was "
-                    + frame.getMessageTypeString()
-                    + "; expecting "
-                    + previousFrame.getMessageTypeString());
-            }
-        }
+        validateFrame(frame);
 
         recvSequence += frame.getSize();
 
@@ -781,40 +709,7 @@ class ChannelImpl implements Channel {
             throw new BEEPException("Channel window overflow");
         }
 
-        if (frame.getMessageType() != Message.MESSAGE_TYPE_MSG) {
-            MessageStatus mstatus;
-
-            synchronized (sentMSGQueue) {
-                if (sentMSGQueue.size() == 0) {
-                    throw new BEEPException("Received unsolicited reply");
-                }
-
-                mstatus = (MessageStatus) sentMSGQueue.get(0);
-
-                if (mstatus.getMsgno() != frame.getMsgno()) {
-                    throw new BEEPException("Received reply out of order");
-                }
-            }
-        }
-
-        try {
-            receiveFrame(frame);
-        } catch (BEEPException e) {
-            // @todo change this to do the right thing
-            throw new BEEPException(e.getMessage());
-        }
-
-        // is this the last frame in the message?
-        if (frame.isLast() == true) {
-            log.trace("Got the last frame");
-        }
-
-        // save the previous frame to compare message types
-        if (frame.isLast()) {
-            previousFrame = null;
-        } else {
-            previousFrame = frame;
-        }
+        receiveFrame(frame);
     }
 
     void sendMessage(MessageStatus m) throws BEEPException
@@ -1035,6 +930,100 @@ class ChannelImpl implements Channel {
         }
     }
 
+    private void validateFrame(Frame frame) throws BEEPException 
+    {
+        synchronized (this) {
+
+            if (previousFrame == null) {
+                // is the message number correct?
+                if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
+                    synchronized (recvMSGQueue) {
+                        ListIterator i =
+                            recvMSGQueue.listIterator(recvMSGQueue.size());
+                        while (i.hasPrevious()) {
+                            if (((Message) i.previous()).getMsgno()
+                                == frame.getMsgno())
+                            {
+                                throw new BEEPException("Received a frame " +
+                                                        "with a duplicate " +
+                                                        "msgno (" +
+                                                        frame.getMsgno() +
+                                                        ")");
+                            }
+                        }
+                    }
+                } else {
+                    MessageStatus mstatus;
+
+                    synchronized (sentMSGQueue) {
+                        if (sentMSGQueue.size() == 0) {
+                            throw new BEEPException("Received unsolicited reply");
+                        }
+
+                        mstatus = (MessageStatus) sentMSGQueue.get(0);
+                    }
+
+                    if (frame.getMsgno() != mstatus.getMsgno()) {
+                        throw new BEEPException("Incorrect message number: was "
+                                                + frame.getMsgno()
+                                                + "; expecting "
+                                                + mstatus.getMsgno());
+                    }
+                }
+            } else {
+                // is the message type the same as the previous frames?
+                if (previousFrame.getMessageType() != frame.getMessageType()) {
+                    throw new BEEPException("Incorrect message type: was "
+                        + frame.getMessageTypeString()
+                        + "; expecting "
+                        + previousFrame.getMessageTypeString());
+                }
+
+                // is the message number correct?
+                if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG &&
+                    frame.getMsgno() != previousFrame.getMsgno())
+                {
+                    throw new BEEPException("Incorrect message number: was "
+                                            + frame.getMsgno()
+                                            + "; expecting "
+                                            + previousFrame.getMsgno());
+                }
+            }
+
+            // is the sequence number correct?
+            if (frame.getSeqno() != recvSequence) {
+                throw new BEEPException("Incorrect sequence number: was "
+                    + frame.getSeqno() + "; expecting "
+                    + recvSequence);
+            }
+
+        }
+
+        if (frame.getMessageType() != Message.MESSAGE_TYPE_MSG) {
+            MessageStatus mstatus;
+
+            synchronized (sentMSGQueue) {
+                if (sentMSGQueue.size() == 0) {
+                    throw new BEEPException("Received unsolicited reply");
+                }
+
+                mstatus = (MessageStatus) sentMSGQueue.get(0);
+
+                if (mstatus.getMsgno() != frame.getMsgno()) {
+                    throw new BEEPException("Received reply out of order");
+                }
+            }
+        }
+
+        // save the previous frame to compare message types
+        if (frame.isLast()) {
+            previousFrame = null;
+        } else {
+            previousFrame = frame;
+        }
+        
+    }
+    
     synchronized void freeReceiveBufferBytes(int size)
     {
         try {
