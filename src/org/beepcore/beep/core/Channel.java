@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.2 $ $Date: 2001/04/13 21:42:32 $
+ * Channel.java            $Revision: 1.3 $ $Date: 2001/04/16 20:03:58 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/13 21:42:32 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/16 20:03:58 $
  *
  */
 public class Channel {
@@ -171,8 +171,8 @@ public class Channel {
 
         // Add a MSG to the SentMSGQueue to fake channel into accepting the
         // greeting which comes in an unsolicited RPY.
-        sentMSGQueue.add(new MessageStatus(new Message(this, 0, null, Message.MESSAGE_TYPE_MSG),
-                                           rl));
+        Message m = new Message(this, 0, null, Message.MESSAGE_TYPE_MSG);
+        sentMSGQueue.add(new MessageStatus(m, rl));
 
         state = STATE_OK;
     }
@@ -476,7 +476,7 @@ public class Channel {
                 while (i.hasNext()) {
                     Message tmp = (Message) i.next();
 
-                    if (m.getAnsno() == frame.getAnsno()) {
+                    if (tmp.getAnsno() == frame.getAnsno()) {
                         m = tmp;
 
                         break;
@@ -1083,21 +1083,38 @@ public class Channel {
         byte[] payload;
         int sessionBufferSize;
 
-        try {
+        // allocate a shared buffer for this message
+        // @todo This call should be changed
+        sessionBufferSize = session.getMaxFrameSize();
+        payload = new byte[sessionBufferSize];
 
-            // allocate a shared buffer for this message
-            // @todo This call should be changed
-            sessionBufferSize = session.getMaxFrameSize();
-            payload = new byte[sessionBufferSize];
+        // get the message data
+        stream = message.getDataStream();
 
-            // get the message data
-            stream = message.getDataStream();
+        if (stream == null || (stream.availableHeadersAndData() == 0 &&
+                               stream.isComplete()))
+        {
+            Log.logEntry(Log.SEV_DEBUG, "Sending NUL or size 0 frame");
+            frame = new Frame(message.getMessageType(),
+                              message.getChannel(), message.getMsgno(), true,
+                              sentSequence, 0, ansno);
+            try {
+                session.sendFrame(frame);
+            } catch (BEEPException e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                status.setMessageStatus(MessageStatus.MESSAGE_STATUS_NOT_SENT);
 
-            // while we still have data to read
-            available = stream.availableHeadersAndData();
-        } catch (Exception e) {
-            throw new BEEPException(e.getMessage());
+                throw e;
+            }
+
+            // set the status to sent and return it
+            status.setMessageStatus(MessageStatus.MESSAGE_STATUS_SENT);
+
+            return;
         }
+
+        // while we still have data to read
+        available = stream.availableHeadersAndData();
 
         synchronized (this) {
             msgsPending++;
