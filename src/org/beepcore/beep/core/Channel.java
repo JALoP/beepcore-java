@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.26 $ $Date: 2002/09/02 13:44:39 $
+ * Channel.java  $Revision: 1.27 $ $Date: 2002/09/04 14:42:50 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.26 $, $Date: 2002/09/02 13:44:39 $
+ * @version $Revision: 1.27 $, $Date: 2002/09/04 14:42:50 $
  *
  */
 public class Channel {
@@ -890,18 +890,7 @@ public class Channel {
 
                 // make sure the other peer can accept something
                 if (peerWindowSize == 0) {
-                    try {
-                        wait();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException("caught InterruptedException");
-                    }
-
-                    // wait until there is something to send up to
-                    // our timeout
-                    if (peerWindowSize == 0) {
-                        throw new BEEPException("Time expired waiting " +
-                                                "for peer.");
-                    }
+                    return;
                 }
 
                 int maxToSend =
@@ -1009,7 +998,10 @@ public class Channel {
                      + peerWindowSize);
 
         if ((previousPeerWindowSize == 0) && (peerWindowSize > 0)) {
-            notify();    // unblock if we're waiting to send
+            try {
+                sendQueuedMessages();
+            } catch (BEEPException e) {
+            }
         }
     }
 
