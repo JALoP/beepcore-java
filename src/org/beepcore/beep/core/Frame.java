@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.12 $ $Date: 2001/11/27 02:39:03 $
+ * Frame.java            $Revision: 1.13 $ $Date: 2001/11/27 02:41:25 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -37,7 +37,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2001/11/27 02:39:03 $
+ * @version $Revision: 1.13 $, $Date: 2001/11/27 02:41:25 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -144,7 +144,7 @@ public class Frame {
         }
 
         b[0] = new BufferSegment(buildHeader());
-        b[b.length-1] = trailerBufferSegment;
+        b[j] = trailerBufferSegment;
 
         return b;
     }
