@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.33 $ $Date: 2003/06/10 18:59:16 $
+ * Channel.java  $Revision: 1.34 $ $Date: 2003/11/07 17:39:21 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -21,10 +21,20 @@ package org.beepcore.beep.core;
  * This interface represents the operations available for all BEEP Channels.
  *
  * @author Huston Franklin
- * @version $Revision: 1.33 $, $Date: 2003/06/10 18:59:16 $
+ * @version $Revision: 1.34 $, $Date: 2003/11/07 17:39:21 $
  *
  */
 public interface Channel {
+
+    public static final int STATE_INITIALIZED = 0;
+    public static final int STATE_STARTING = 1;
+    public static final int STATE_ACTIVE = 2;
+    public static final int STATE_TUNING_PENDING = 3;
+    public static final int STATE_TUNING = 4;
+    public static final int STATE_CLOSE_PENDING = 5;
+    public static final int STATE_CLOSING = 6;
+    public static final int STATE_CLOSED = 7;
+    public static final int STATE_ABORTED = 8;
 
     /**
      * Closes the channel.
@@ -103,6 +113,11 @@ public interface Channel {
      *
      */
     public Session getSession();
+
+    /**
+     * Returns the state of this channel.
+     */
+    public int getState();
 
     /**
      * Sends a MSG message.

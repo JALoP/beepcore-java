@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.9 $ $Date: 2003/09/15 15:23:30 $
+ * SessionImpl.java  $Revision: 1.10 $ $Date: 2003/11/07 17:39:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -65,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/09/15 15:23:30 $
+ * @version $Revision: 1.10 $, $Date: 2003/11/07 17:39:21 $
  *
  * @see Channel
  */
@@ -624,6 +624,14 @@ public abstract class SessionImpl implements Session {
         fireSessionTerminated();
     }
     
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return super.toString() + " (" + (isInitiator() ? "I " : "L ") +
+            getStateString() + ")";
+    }
+
     synchronized void changeState(int newState) throws BEEPException {
         try {
             ops[state].changeState(this, newState);
@@ -1207,6 +1215,31 @@ public abstract class SessionImpl implements Session {
 
         // Warning: nextChannelNumber is a long to detect overflow
         return nextChannel;
+    }
+    
+    private String getStateString() {
+        switch (state) {
+            case SESSION_STATE_INITIALIZED:
+                return "initialized";
+            case SESSION_STATE_GREETING_SENT:
+                return "greeting sent";
+            case SESSION_STATE_ACTIVE:
+                return "active";
+            case SESSION_STATE_TUNING_PENDING:
+                return "tuning pending";
+            case SESSION_STATE_TUNING:
+                return "tuning";
+            case SESSION_STATE_CLOSE_PENDING:
+                return "close pending";
+            case SESSION_STATE_CLOSING:
+                return "closing";
+            case SESSION_STATE_CLOSED:
+                return "closed";
+            case SESSION_STATE_ABORTED:
+                return "aborted";
+            default:
+                return "unknown";
+        }
     }
 
     /**
