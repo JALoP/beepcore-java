@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.1 $ $Date: 2001/04/18 07:11:20 $
+ * Bing.java  $Revision: 1.2 $ $Date: 2001/07/11 02:46:19 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -41,7 +41,7 @@ import org.beepcore.beep.transport.tcp.TCPSession;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/18 07:11:20 $
+ * @version $Revision: 1.2 $, $Date: 2001/07/11 02:46:19 $
  */
 public class Bing {
 
@@ -71,7 +71,8 @@ public class Bing {
         // Start TLS if requested
         if (privacy != PRIVACY_NONE) {
             try {
-                session = TLSProfile.startTLS((TCPSession) session);
+                session =
+                    TLSProfile.getDefaultInstance().startTLS((TCPSession) session);
             } catch (BEEPException e) {
                 System.err.println("bing: Error unable to start TLS.\n\t" +
                                    e.getMessage());
