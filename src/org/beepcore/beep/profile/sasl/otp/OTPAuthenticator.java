@@ -1,7 +1,5 @@
-
-
 /*
- * OTPAuthenticator.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:22 $
+ * OTPAuthenticator.java  $Revision: 1.3 $ $Date: 2001/04/13 19:57:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +42,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:22 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/13 19:57:11 $
  *
  */
 class OTPAuthenticator implements MessageListener, ReplyListener {
@@ -137,7 +135,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                      "Starting OTP Authenticator");
 
         if (state != STATE_UNKNOWN) {
-            throw new SASLException(ERR_OTP_STATE);;
+            throw new SASLException(ERR_OTP_STATE);
         }
         state = STATE_STARTED;
         channel = ch;
