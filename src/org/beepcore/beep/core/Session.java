@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.14 $ $Date: 2001/07/03 20:51:28 $
+ * Session.java  $Revision: 1.15 $ $Date: 2001/07/30 13:01:33 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2001/07/03 20:51:28 $
+ * @version $Revision: 1.15 $, $Date: 2001/07/30 13:01:33 $
  *
  * @see Channel
  */
@@ -1172,7 +1172,7 @@ public abstract class Session {
         }
 
         if (TuningProfile.isTuningProfile(channel.getProfile())) {
-            Log.logEntry(Log.SEV_DEBUG, CORE, "\nDisabling this I/O thread");
+            Log.logEntry(Log.SEV_DEBUG, CORE, "Disabling this I/O thread");
             disableIO();
         }
     }
