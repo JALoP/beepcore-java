@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.2 $ $Date: 2001/04/30 14:08:20 $
+ * SASLAnonymousProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,10 +44,12 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/30 14:08:20 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/03 21:56:49 $
  *
  */
-public class SASLAnonymousProfile extends SASLProfile {
+public class SASLAnonymousProfile
+    extends SASLProfile implements Profile, StartChannelListener
+{
 
     // Constants
     public static final String uri = "http://iana.org/beep/SASL/ANONYMOUS";
@@ -60,6 +62,12 @@ public class SASLAnonymousProfile extends SASLProfile {
         // @todo Probably do this slightly differently, although
         // the static routines make it tougher.
         instance = this;
+    }
+
+    public StartChannelListener init(String uri, ProfileConfiguration config)
+        throws BEEPException
+    {
+        return this;
     }
 
     /**
@@ -78,11 +86,6 @@ public class SASLAnonymousProfile extends SASLProfile {
             instance = new SASLAnonymousProfile();
         }
         return instance;
-    }
-
-    public String getURI()
-    {
-        return SASLAnonymousProfile.uri;
     }
 
     /**
@@ -253,11 +256,6 @@ public class SASLAnonymousProfile extends SASLProfile {
         return new SessionCredential(ht);
     }
 
-    public StartChannelListener getStartChannelListener()
-    {
-        return this;
-    }
-    
     /**
      * Method finishInitiatorAuthentication
      * 

@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java            $Revision: 1.2 $ $Date: 2001/04/10 14:42:55 $
+ * TuningProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -38,9 +38,10 @@ import org.beepcore.beep.util.*;
  * (complete) (terminal state)
  * (begin)
  * (continue)
- * */
-public abstract class TuningProfile extends ProfileImpl
-        implements StartChannelListener {
+ *
+ */
+public abstract class TuningProfile
+{
 
     // Constants
     private static final String TLS_URI = "http://iana.org/beep/TLS";
@@ -81,31 +82,6 @@ public abstract class TuningProfile extends ProfileImpl
     // Default Profile Methods
 
     /**
-     * Method init
-     *
-     *
-     * @param config
-     *
-     * @throws BEEPException
-     *
-     */
-    public void init(ProfileConfiguration config) 
-        throws BEEPException
-    {
-        super.init(config);
-    }
-
-    /**
-     * Method getStartChannelListener
-     *
-     *
-     */
-    public StartChannelListener getStartChannelListener()
-    {
-        return this;
-    }
-
-    /**
      * Method begin
      *
      *
@@ -129,7 +105,8 @@ public abstract class TuningProfile extends ProfileImpl
             session.disableIO();
         } catch (Exception x) {
 
-            // If we're here, the profile didn't succesfully send, so send an error
+            // If we're here, the profile didn't succesfully send, so
+            // send an error
             BEEPError error = new BEEPError(451,
                                             "UnknownError" + x.getMessage());
 

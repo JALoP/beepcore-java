@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:22 $
+ * SASLOTPProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,10 +43,12 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:22 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/03 21:56:49 $
  *
  */
-public class SASLOTPProfile extends SASLProfile {
+public class SASLOTPProfile
+    extends SASLProfile implements StartChannelListener
+{
 
     // Constants
     public static final String uri = "http://iana.org/beep/SASL/OTP";
@@ -85,11 +87,9 @@ public class SASLOTPProfile extends SASLProfile {
      * Method init is used to construct various static data
      * used in the SASL OTP profile.
      */
-    public void init(ProfileConfiguration config) 
+    public StartChannelListener init(String uri, ProfileConfiguration config)
         throws BEEPException
     {
-        super.init(config);
-
         md5 = new MD5();
         sha1 = new SHA1();
         authenticators = new Hashtable();
@@ -102,6 +102,8 @@ public class SASLOTPProfile extends SASLProfile {
             algorithms.put(sha1.getAlgorithmName(), sha1);
             userDatabase = new UserDatabasePool();
         }
+
+        return this;
     }
 
     static SASLOTPProfile instance() throws SASLException
@@ -127,11 +129,6 @@ public class SASLOTPProfile extends SASLProfile {
         }
 
         return null;
-    }
-
-    public String getURI()
-    {
-        return SASLOTPProfile.uri;
     }
 
     public void startChannel(Channel channel, String encoding, String data)
@@ -172,7 +169,8 @@ public class SASLOTPProfile extends SASLProfile {
             }
             channel.setDataListener(temp);
             if(blob != null)
-                sendProfile(channel.getSession(), uri, blob.toString(), channel);
+                sendProfile(channel.getSession(), uri, blob.toString(),
+                            channel);
             else
                 sendProfile(channel.getSession(), uri, null, channel);
 
@@ -285,10 +283,12 @@ public class SASLOTPProfile extends SASLProfile {
      * If you want to do that (I recommend it, then use the NEXT one).
      * 
      * @param Session session is the session the user is authenticating on,
-     * in other words, represents the peer we want to authenticate to.
-     * @param String authorizeId is the identity this peer wants to be authorized 
-     * to act as.
-     * @param String authenticateId is the identity this peer will authenticate as
+     *                in other words, represents the peer we want to
+     *                authenticate to.
+     * @param String authorizeId is the identity this peer wants to be
+     *               authorized to act as.
+     * @param String authenticateId is the identity this peer will
+     *               authenticate as
      * @param String pwd is the passphrase to authenticate with (it isn't
      * stored or kept around very long at all, it's only used in computation).
      * @throws SASLException if any issue is encountered (usually
@@ -332,12 +332,14 @@ public class SASLOTPProfile extends SASLProfile {
             auth.abort(x.getMessage());
         }
 
-        // @todo EITHER use the Session Event Mechanism once it's detached from
-        // the session I/O thread via the Channel Message (EVENT) Queues...
+        // @todo EITHER use the Session Event Mechanism once it's
+        // detached from the session I/O thread via the Channel
+        // Message (EVENT) Queues...
         // OR
-        // Embed some tuning profile logic in ChannelZero (hacky) to address stuff.
-        // For now, this is ok, the only thread blocked is the users, and it waits
-        // until the Authentication succeeds or fails.
+        // Embed some tuning profile logic in ChannelZero (hacky) to
+        // address stuff.  For now, this is ok, the only thread
+        // blocked is the users, and it waits until the Authentication
+        // succeeds or fails.
         Blob blob = null;
         
         if (startData != null)
@@ -384,9 +386,10 @@ public class SASLOTPProfile extends SASLProfile {
      * 
      * @param Session session is the session the user is authenticating on,
      * in other words, represents the peer we want to authenticate to.
-     * @param String authorizeId is the identity this peer wants to be authorized 
-     * to act as.
-     * @param String authenticateId is the identity this peer will authenticate as
+     * @param String authorizeId is the identity this peer wants to be
+     *               authorized to act as.
+     * @param String authenticateId is the identity this peer will
+     *               authenticate as
      * @param String pwd is the passphrase to authenticate with (it isn't
      * stored or kept around very long at all, it's only used in computation).
      * @throws SASLException if any issue is encountered (usually
@@ -428,12 +431,14 @@ public class SASLOTPProfile extends SASLProfile {
             auth.abort(x.getMessage());
         }
 
-        // @todo EITHER use the Session Event Mechanism once it's detached from
-        // the session I/O thread via the Channel Message (EVENT) Queues...
+        // @todo EITHER use the Session Event Mechanism once it's
+        // detached from the session I/O thread via the Channel
+        // Message (EVENT) Queues...
         // OR
-        // Embed some tuning profile logic in ChannelZero (hacky) to address stuff.
-        // For now, this is ok, the only thread blocked is the users, and it waits
-        // until the Authentication succeeds or fails.
+        // Embed some tuning profile logic in ChannelZero (hacky) to
+        // address stuff.  For now, this is ok, the only thread
+        // blocked is the users, and it waits until the Authentication
+        // succeeds or fails.
         Blob blob = null;
         
         if (startData != null)
@@ -481,13 +486,15 @@ public class SASLOTPProfile extends SASLProfile {
      * 
      * @param Session session is the session the user is authenticating on,
      * in other words, represents the peer we want to authenticate to.
-     * @param String authorizeId is the identity this peer wants to be authorized 
-     * to act as.
-     * @param String authenticateId is the identity this peer will authenticate as
+     * @param String authorizeId is the identity this peer wants to be
+     *               authorized to act as.
+     * @param String authenticateId is the identity this peer will
+     *               authenticate as
      * @param String pwd is the passphrase to authenticate with (it isn't
      * stored or kept around very long at all, it's only used in computation).
      *
-     * @param String newSequence String representation of the new Sequence integer
+     * @param String newSequence String representation of the new Sequence
+     *               integer
      * @param String newAlgorithm name of the algorithm in the new OTP DB
      * @param String newSeed value of the seed in the new OTP DB
      * @param String newHas value of the lastHash in the new OTP DB
@@ -585,96 +592,6 @@ public class SASLOTPProfile extends SASLProfile {
         return session;
     }
 
-    // See page 17 of RFC 2289 for the validation cases
-    // used below.  The output should look like this...
-    /*
-        Testing MD5 Hash for =>testThis is a test.<=
-        [00]FoldW=>INCH SEA ANNE LONG AHEM TOUR
-        [01]FoldW=>EASE OIL FUM CURE AWRY AVIS
-        [99]FoldW=>BAIL TUFT BITS GANG CHEF THY
-        Testing SHA1 Hash
-        [00]FoldW=>MILT VARY MAST OK SEES WENT
-        [01]FoldW=>CART OTTO HIVE ODE VAT NUT
-        [99]FoldW=>GAFF WAIT SKID GIG SKY EYED
-        Testing MD5 Hash for =>alpha1AbCdEfGhIjK<=
-        [00]FoldW=>FULL PEW DOWN ONCE MORT ARC
-        [01]FoldW=>FACT HOOF AT FIST SITE KENT
-        [99]FoldW=>BODE HOP JAKE STOW JUT RAP
-        Testing SHA1 Hash
-        [00]FoldW=>LEST OR HEEL SCOT ROB SUIT
-        [01]FoldW=>RITE TAKE GELD COST TUNE RECK
-        [99]FoldW=>MAY STAR TIN LYON VEDA STAN
-        Testing MD5 Hash for =>correctOTP's are good<=
-        [00]FoldW=>ULAN NEW ARMY FUSE SUIT EYED
-        [01]FoldW=>SKIM CULT LOB SLAM POE HOWL
-        [99]FoldW=>LONG IVY JULY AJAR BOND LEE
-        Testing SHA1 Hash
-        [00]FoldW=>RUST WELT KICK FELL TAIL FRAU
-        [01]FoldW=>FLIT DOSE ALSO MEW DRUM DEFY
-        [99]FoldW=>AURA ALOE HURL WING BERG WAIT
-        Testing MD5 Hash for =>avalidseedA_Valid_Pass_Phrase<=
-        [00]FoldW=>LEO IBIS WHAT OW WILD TROY
-        [01]FoldW=>RUTH HOOF SHED DEAF OKAY DARK
-        [99]FoldW=>FOWL KID MASH DEAD DUAL OAF
-        Testing SHA1 Hash
-        [00]FoldW=>JILT WOVE SOFA OWE KING VEND
-        [01]FoldW=>OUST KITE MEN NE BEAR JOIN
-        [99]FoldW=>ONCE GRAB SOOT CUBE SLAY WAIT
-    */
-    void testHash() throws SASLException
-    {
-        String pwd[] = new String[4];
-        int limit=100;
-        int i=0;
-        pwd[i++] = new String("testThis is a test.");
-        pwd[i++] = new String("alpha1AbCdEfGhIjK");
-        pwd[i++] = new String("correctOTP's are good");
-        pwd[i++] = new String("avalidseedA_Valid_Pass_Phrase");
-
-        //      String pwd="correctOTP's are good";
-        byte temp[], other[];
-        long l = 0;
-
-        for(int j=0; j < pwd.length && pwd[j] != null; j++)
-        {
-            temp = pwd[j].getBytes();
-            System.out.println("Testing MD5 Hash for =>" + pwd[j] + "<=");
-
-            for (i = 0; i < limit; i++) {
-                other = md5.generateHash(temp);
-
-                if ((i == 0) || (i == 1) || (i == 99)) {
-                    if(i<10)
-                        System.out.print("[0" + i + "]");
-                    else
-                        System.out.print("[" + i + "]");
-//                    printHex(other);
-                    l = this.convertBytesToLong(other);
-                    System.out.println("FoldW=>" + OTPDictionary.convertHashToWords(l));
-                }
-                temp = other;
-            }
-
-            System.out.println("Testing SHA1 Hash");
-            temp = pwd[j].getBytes();
-
-            for (i = 0; i < limit; i++) {
-                other = sha1.generateHash(temp);
-
-                if ((i == 0) || (i == 1) || (i == 99)) {
-                    if(i<10)
-                        System.out.print("[0" + i + "]");
-                    else
-                        System.out.print("[" + i + "]");
-//                    printHex(other);
-                    l = this.convertBytesToLong(other);
-                    System.out.println("FoldW=>" + OTPDictionary.convertHashToWords(l));
-                }
-                temp = other;
-            }
-        }
-    }
-
     static void printHex(byte buff[])
     {
         Log.logEntry(Log.SEV_DEBUG, SASL_OTP, convertBytesToHex(buff));
@@ -725,7 +642,7 @@ public class SASLOTPProfile extends SASLProfile {
 
             sb.append(Integer.toHexString(val));
         }
-//        Log.logEntry(Log.SEV_DEBUG, "Conversion=>" + sb.toString());
+
         return sb.toString();
     }
     
@@ -738,66 +655,10 @@ public class SASLOTPProfile extends SASLProfile {
         {
             throw new SASLException("Illegal hash" + hash.length());
         }
-//        hash = hash.toLowerCase();
-//        Log.logEntry(Log.SEV_DEBUG, "Converting=>" + hash);
         
         for(int i = 0; i < 16; i+=2)
             result[i/2]=(byte)Integer.parseInt(hash.substring(i,i+2), 16);
-//        Log.logEntry(Log.SEV_DEBUG, "Conversion=>" + convertBytesToHex(result));
 
         return result;
-    }
-
-    //Main is for testing..and is obviously cluttered
-    // Commenting it out so it doesn't get documented
-    public static void main(String argv[])
-    {
-        ConsoleLog log = new ConsoleLog();
-        log.setSeverity(Log.SEV_DEBUG_VERBOSE);
-        Log.setLogService(log);
-
-        try
-        {
-            SASLOTPProfile s = new SASLOTPProfile();
-            s.init(new ProfileConfiguration());
-            MD5 md5 = new MD5();
-            SHA1 sha1 = new SHA1();
-/*
-            long t = Long.MAX_VALUE;
-            System.out.println("ConvertedLongMax=>"+s.convertBytesToHex(s.convertLongToBytes(t)));            
-            byte b[] = s.convertHexToBytes("9e876134d90499dd");
-            System.out.println("=>"+s.convertBytesToHex(b));            
-            long l = s.convertBytesToLong(b);
-            System.out.println("Long=>"+l);
-            System.out.println("Long=>"+Long.toHexString(l));
-            
-            for(int k=0;k<100;k++)
-            {
-                byte c[] = md5.generateHash(b);
-                if(k<2 || k>98)
-                    System.out.println("Hash["+k+"]=>"+s.convertBytesToHex(c));
-                b = c;
-            }            
-            String whyNot= "TeStThis is a test.";
-            byte d[] = md5.generateHash(whyNot);
-            System.out.println(s.convertBytesToHex(d));            
-            d = sha1.generateHash(whyNot);
-            System.out.println(s.convertBytesToHex(d));
-            
-            String test = "63D936639745385B";
-            l = s.convertHexToLong(test);
-            System.out.println("L(long)=>"+Long.toHexString(l));
-            byte buff[] = s.convertLongToBytes(l);
-            test = s.convertBytesToHex(buff);
-            System.out.println("L(bytes->String)=>"+test);
-            buff = s.convertHexToBytes(test);
-            System.out.println("L(bytes->String2)=>"+s.convertBytesToHex(buff));
-*/
-            s.testHash();
-        }
-        catch(Exception x)
-        {
-            x.printStackTrace();
-        }
     }
 }

@@ -1,6 +1,5 @@
-
 /*
- * SASLProfile.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:21 $
+ * SASLProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +42,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:21 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/03 21:56:49 $
  *
  */
 public abstract class SASLProfile extends TuningProfile {
@@ -70,12 +69,6 @@ public abstract class SASLProfile extends TuningProfile {
     {
         sessionTable = new SASLSessionTable();
     }
-
-    public abstract void startChannel(Channel channel, String encoding, String data)
-        throws StartChannelException;
-
-    public abstract void closeChannel(Channel channel)
-        throws CloseChannelException;
 
     /**
      * Method sendReply This is usually used for sending challenges

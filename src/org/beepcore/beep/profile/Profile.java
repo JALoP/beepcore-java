@@ -1,6 +1,6 @@
 
 /*
- * Profile.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:28 $
+ * Profile.java            $Revision: 1.2 $ $Date: 2001/05/03 21:56:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,49 +32,27 @@ import org.beepcore.beep.core.Channel;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:28 $
+ * @version $Revision: 1.2 $, $Date: 2001/05/03 21:56:49 $
  */
 public interface Profile {
 
     /**
-     * Registers <code>StartChannelListener</code>s for the profiles
-     * supported by the class.
-     */
-//    public void registerStartChannelListeners(ProfileRegistry registry);
-
-    /**
-     * Returns the <code>StartChannelListener</code> to use when add
-     * this profile to the <code>ProfileRegistry</code>.
+     * Initializes the profile and returns the
+     * <code>StartChannelListener</code> for <code>uri</code>.
      *
-     */
-    public StartChannelListener getStartChannelListener();
-
-    /**
-     * Called to initalize the <code>Profile</code>. This must be
-     * called before any of the methods in the
-     * <code>StartChannelListener</code> that is returned from
-     * <code>getStartChannelListener</code>.
-     *
-     *
+     * @param uri
      * @param config
      *
+     * @returns The corresponding <code>StartChannelListener</code> for
+     *          the specified uri.
      * @throws BEEPException
-     *
      */
-    public void init(ProfileConfiguration config) throws BEEPException;
+    public StartChannelListener init(String uri, ProfileConfiguration config)
+        throws BEEPException;
 
     /**
-     * Returns the <code>ProfileConfiguration</code> passed to the
-     * <code>Profile</code> on the <code>init</code> call.
-     *
-     *
+     * Called when the <code>StartChannelListener</code> is removed from
+     * the <code>ProfileRegistry</code>.
      */
-    public ProfileConfiguration getConfiguration();
-
-    /**
-     * Returns the URI for this <code>Profile</code>. The URI typically
-     * references the DTD which describes the message exchanges for the
-     * BEEP Profile.
-     */
-    public String getURI();
+//    public void shutdown();
 }

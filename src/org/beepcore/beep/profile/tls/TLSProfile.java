@@ -1,6 +1,5 @@
-
 /*
- * TLSProfile.java            $Revision: 1.5 $ $Date: 2001/04/16 17:13:08 $
+ * TLSProfile.java  $Revision: 1.6 $ $Date: 2001/05/03 21:56:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -53,8 +52,8 @@ import java.io.FileInputStream;
  * @see org.beepcore.beep.core.Channel
  * @see org.beepcore.beep.profile.tls.TLSProfileHandshakeCompletedListener
  */
-public class TLSProfile extends TuningProfile
-                                /* implements HandshakeCompletedListener */ {
+public class TLSProfile
+    extends TuningProfile implements Profile, StartChannelListener {
 
     // Constants
     public static final String PROCEED1 = "<proceed/>";
@@ -295,7 +294,8 @@ public class TLSProfile extends TuningProfile
      * @see java.security.KeyStore
      * @see com.sun.net.ssl.SSLContext
      */
-    public void init(ProfileConfiguration config) throws BEEPException
+    public StartChannelListener init(String uri, ProfileConfiguration config)
+        throws BEEPException
     {
         KeyManagerFactory kmf = null;
         KeyManager[] km = null;
@@ -421,6 +421,8 @@ public class TLSProfile extends TuningProfile
             ctx.init(km, tm, null);
 
             socketFactory = ctx.getSocketFactory();
+
+            return this;
         } catch (Exception e) {
             Log.logEntry(Log.SEV_ERROR, e);
 
@@ -528,16 +530,6 @@ public class TLSProfile extends TuningProfile
     public void closeChannel(Channel channel) throws CloseChannelException
     {
         Log.logEntry(Log.SEV_DEBUG, "Closing TLS channel.");
-    }
-
-    /**
-     * Returns the URI of this profile
-     * ("http://xml.resource.org/profiles/TLS").
-     *
-     */
-    public String getURI()
-    {
-        return TLSProfile.URI;
     }
 
     /**
@@ -673,11 +665,5 @@ public class TLSProfile extends TuningProfile
     public void removeHandshakeCompletedListener(TLSProfileHandshakeCompletedListener x)
     {
         handshakeListeners.remove(x);
-    }
-
-	// 
-    public StartChannelListener getStartChannelListener()
-    {
-        return this;
     }
 }
