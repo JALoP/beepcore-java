@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.4 $ $Date: 2001/05/10 04:43:53 $
+ * AnonymousAuthenticator.java  $Revision: 1.5 $ $Date: 2001/05/16 18:21:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -29,7 +29,7 @@ import org.beepcore.beep.profile.sasl.*;
 
 /**
  * This class encapsulates the state associated with
- * an ongoing SASL-Anonymous Authentication, and 
+ * an ongoing SASL-Anonymous Authentication, and
  * provides methods to handle the exchange.  The
  * AnonymousAuthenticator provides inter-message
  * state for the exchange, which is normally
@@ -37,13 +37,13 @@ import org.beepcore.beep.profile.sasl.*;
  * in the start channel exchange.  This isn't mandatory
  * however, and so this class has been provided to
  * support that non-piggybacked start channel case.
- * 
+ *
  *
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/05/10 04:43:53 $
+ * @version $Revision: 1.5 $, $Date: 2001/05/16 18:21:02 $
  *
  */
 class AnonymousAuthenticator
@@ -64,7 +64,7 @@ class AnonymousAuthenticator
         "Our BEEP Peer has aborted this authentication sequence";
     public static final String ERR_IDENTITY_PARSE_FAILURE =
         "Invalid identity information submitted for Anonymous Authentication";
-    public static final String ERR_UNEXPECTED_MESSAGE = 
+    public static final String ERR_UNEXPECTED_MESSAGE =
         "Unexpected SASL-Anonymous Message";
 
     // Data
@@ -73,7 +73,7 @@ class AnonymousAuthenticator
     private Hashtable credential;
     private SASLAnonymousProfile profile;
     private String authenticated;
-    
+
     /**
      * Listener API
      *
@@ -85,7 +85,7 @@ class AnonymousAuthenticator
      * AnonymouAuthenticator is the constructor used by the Listener.
      * It means someone has started a SASL anon channel and hasn't
      * yet authenticated and this object has been constructed to
-     * track that. 
+     * track that.
      *
      * @param SASLAnonymousProfile the instance of the profile used
      * in the authentication.
@@ -95,7 +95,7 @@ class AnonymousAuthenticator
      */
     AnonymousAuthenticator(SASLAnonymousProfile anonymousProfile)
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Creating Listener ANONYMOUS Authenticator");
 
         credential = new Hashtable();
@@ -121,10 +121,10 @@ class AnonymousAuthenticator
      * @throws SASLException
      *
      */
-    void started(Channel ch) 
+    void started(Channel ch)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Starting Anonymous Authenticator");
 
         if (state != STATE_UNKNOWN) {
@@ -169,14 +169,14 @@ class AnonymousAuthenticator
         if (data == null) {
             abort(ERR_IDENTITY_PARSE_FAILURE);
         }
-        
+
         // Assign data
         state = STATE_ID;
 
         credential.put(SessionCredential.AUTHENTICATOR, data);
         credential.put(SessionCredential.AUTHENTICATOR_TYPE,
                        profile.MECHANISM);
-        
+
         try
         {
             return new Blob(Blob.STATUS_COMPLETE, null);
@@ -198,17 +198,18 @@ class AnonymousAuthenticator
     void sendIdentity(String authenticateId)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Anonymous Authenticator sending Identity");
 
         if(authenticateId==null)
             throw new SASLException(ERR_IDENTITY_PARSE_FAILURE);
-        
-        Log.logEntry(Log.SEV_DEBUG, 
+
+        Log.logEntry(Log.SEV_DEBUG,
                      "Using=>" + authenticateId + "<=");
         Blob blob = new Blob(Blob.STATUS_NONE, authenticateId);
         Log.logEntry(Log.SEV_DEBUG, "Using=>" + blob.toString() + "<=");
         try {
+            credential.put(SessionCredential.AUTHENTICATOR, authenticateId);
             profile.sendMessage(blob, channel);
         } catch (Exception x) {
             abort(x.getMessage());
@@ -224,7 +225,7 @@ class AnonymousAuthenticator
     synchronized SessionCredential receiveCompletion(String response)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Anonymous Authenticator Completing!");
 
         // If we're initiating, the last state we should
@@ -239,28 +240,28 @@ class AnonymousAuthenticator
     /**
      * Cheat here, if we don't want to send anything back, then
      * we don't do a damn thing...just abort.
-     * 
+     *
      * The params are a bit complex.  The reply boolean indicates
      * whether or not to send a reply or a message.
-     * 
+     *
      * The channel parameter is non-null if we are to send ANYTHING
      * AT ALL.  If it's null, we don't send.  This is kind of
      * kludgey.
      * @todo make it cleaner.
      */
-    void abort(String msg) 
+    void abort(String msg)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Aborting Anonymous Authenticator");
         Log.logEntry(Log.SEV_DEBUG, msg);
         state = STATE_ABORT;
         throw new SASLException(msg);
     }
 
-    void abortNoThrow(String msg) 
+    void abortNoThrow(String msg)
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Aborting Anonymous Authenticator");
         Log.logEntry(Log.SEV_DEBUG, msg);
         state = STATE_ABORT;
@@ -271,18 +272,18 @@ class AnonymousAuthenticator
      * Listener API
      *
      * We receive MSGS - IDs and stuff.
-     * 
+     *
      * @param Message message is the data we've received.
      * We parse it to see if it's identity information, an
      * abort, or otherwise.
-     * 
+     *
      * @throws BEEPError if an ERR message is generated
      */
     public void receiveMSG(Message message) throws BEEPError
-    {        
+    {
         try
         {
-            Log.logEntry(Log.SEV_DEBUG, 
+            Log.logEntry(Log.SEV_DEBUG,
                          "Anonymous Authenticator.receiveMSG");
             String data = null;
             Blob blob = null;
@@ -320,7 +321,7 @@ class AnonymousAuthenticator
                     // a waiting peer, so let's abort and blow it up...
                     // return;
                 }
-                profile.finishListenerAuthentication(new SessionCredential(credential), 
+                profile.finishListenerAuthentication(new SessionCredential(credential),
                                                      channel.getSession());
             }
         }
@@ -344,20 +345,20 @@ class AnonymousAuthenticator
      * Initiator API
      *
      * We receive replies to our ID messages
-     * 
+     *
      * @param Message message is the data we've received.
      * We parse it to see if it's identity information, an
      * abort, or otherwise.
-     * 
+     *
      */
     public void receiveRPY(Message message)
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Anonymous Authenticator.receiveRPY");
 
         Blob blob = null;
         boolean sendAbort = true;
-        
+
         try
         {
             if (state != STATE_ID) {
@@ -373,9 +374,9 @@ class AnonymousAuthenticator
             } catch (IOException x) {
                 abort(x.getMessage());
             }
-            
+
             if (blob.getData() != null) {
-                Log.logEntry(Log.SEV_DEBUG, 
+                Log.logEntry(Log.SEV_DEBUG,
                              "Anonymous Authenticator receiveRPY=>"
                              + blob.getData());
             }
@@ -433,15 +434,15 @@ class AnonymousAuthenticator
      * Generally we get this if our challenge fails or
      * our authenticate identity is unacceptable or the
      * hash we use isn't up to snuff etc.
-     * 
+     *
      * @param Message message is the data we've received.
      * We parse it to see if it's identity information, an
      * abort, or otherwise.
-     * 
+     *
      */
     public void receiveERR(Message message)
     {
-        Log.logEntry(Log.SEV_DEBUG, 
+        Log.logEntry(Log.SEV_DEBUG,
                      "Anonymous Authenticator.receiveERR");
 
         try {
@@ -450,11 +451,11 @@ class AnonymousAuthenticator
             byte buff[] = new byte[limit];
 
             is.read(buff);
-            Log.logEntry(Log.SEV_DEBUG, 
-                         "SASL-Anonymous Authentication ERR received=>\n" + 
+            Log.logEntry(Log.SEV_DEBUG,
+                         "SASL-Anonymous Authentication ERR received=>\n" +
                          new String(buff));
             abortNoThrow(new String(buff));
-            
+
             synchronized (this) {
                 this.notify();
             }
@@ -466,11 +467,11 @@ class AnonymousAuthenticator
     /**
      * Method receiveANS
      * This method should never be called
-     * 
+     *
      * @param Message message is the data we've received.
      * We parse it to see if it's identity information, an
      * abort, or otherwise.
-     * 
+     *
      */
     public void receiveANS(Message message)
     {
@@ -480,11 +481,11 @@ class AnonymousAuthenticator
     /**
      * Method receiveNUL
      * This method should never be called
-     * 
+     *
      * @param Message message is the data we've received.
      * We parse it to see if it's identity information, an
      * abort, or otherwise.
-     * 
+     *
      */
     public void receiveNUL(Message message)
     {
