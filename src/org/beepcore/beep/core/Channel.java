@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.5 $ $Date: 2001/04/24 22:53:30 $
+ * Channel.java            $Revision: 1.6 $ $Date: 2001/04/25 03:47:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/04/24 22:53:30 $
+ * @version $Revision: 1.6 $, $Date: 2001/04/25 03:47:27 $
  *
  */
 public class Channel {
@@ -393,7 +393,8 @@ public class Channel {
             synchronized (m) {
                 if (m.isNotified()
                         || ((this.notifyOnFirstFrame == false)
-                            && (recvSequence - prevAckno) != recvWindowSize
+                            && (recvSequence - prevAckno) !=
+                            (recvWindowSize - prevWindowUsed)
                             && (frame.isLast() == false))) {
                     return;
                 }
@@ -537,13 +538,13 @@ public class Channel {
             if (m.isNotified() || ((this.notifyOnFirstFrame == false)
 
             //                && recvWindowUsed != recvWindowSize
-            && (recvSequence - prevAckno)
-                    != recvWindowSize && (frame.isLast() == false))) {
+                                   && (recvSequence - prevAckno)
+                                   != (recvWindowSize - prevWindowUsed) &&
+                                   (frame.isLast() == false))) {
                 Log.logEntry(Log.SEV_DEBUG_VERBOSE,
                              "recvWindowUsed = " + recvWindowUsed
                              + " recvWindowSize = " + recvWindowSize
                              + "\t\r\nNot notifying frame listener.");
-
                 return;
             }
 
@@ -551,7 +552,7 @@ public class Channel {
         }
 
         Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                     "Notifying frame listener.=>" + replyListener);
+                     "Notifying reply listener.=>" + replyListener);
 
         if (m.messageType == Message.MESSAGE_TYPE_RPY) {
             replyListener.receiveRPY(m);
