@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.25 $ $Date: 2002/05/11 01:44:57 $
+ * Session.java  $Revision: 1.26 $ $Date: 2002/05/27 17:21:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,7 +59,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.25 $, $Date: 2002/05/11 01:44:57 $
+ * @version $Revision: 1.26 $, $Date: 2002/05/27 17:21:38 $
  *
  * @see Channel
  */
@@ -1090,29 +1090,17 @@ public abstract class Session {
         // closing the session
         // @todo fireEvent(SESSION_STATE_CLOSING);
 
-        /*
-        try {
-            if (!changeState(SESSION_STATE_CLOSING)) {
-
-                // @todo got consecutive shutdowns... now what... log it?
-                // Utility.assert("Illegal state for shutdown", -1);
-            }
-        } catch (BEEPException e) {
-            throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                e.getMessage());
-        }
-        */
         Log.logEntry(Log.SEV_DEBUG,
                      "Closing Session with " + channels.size() + " channels");
 
-        /*
         try {
+            changeState(SESSION_STATE_CLOSE_PENDING);
             changeState(SESSION_STATE_CLOSING);
         } catch (BEEPException x) {
             terminate("Error changing Session state to closing.");
             return;
         }
-        */
+
         Iterator i = channels.values().iterator();
 
         while (i.hasNext()) {
