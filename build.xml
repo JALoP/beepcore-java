@@ -129,6 +129,13 @@
 
 	<copy file="lib/concurrent.jar"
 	      tofile="${release.dir}/lib/concurrent.jar"/>
+	<copy file="lib/xerces.jar"
+	      tofile="${release.dir}/lib/xerces.jar"/>
+	<copy file="lib/LICENSE.xerces"
+	      tofile="${release.dir}/LICENSE.xerces"/>
+
+	<copy file="lib/VERSIONS"
+	      tofile="${release.dir}/lib/VERSIONS"/>
 
 	<copy file="LICENSE.txt" tofile="${release.dir}/LICENSE.txt"/>
 	<copy file="README.txt" tofile="${release.dir}/README.txt"/>
@@ -174,6 +181,19 @@
         </copy>
 
 	<fixcrlf srcdir="${release.dir}/example" cr="remove" eof="remove"/>
+    </target>
+
+    <target name="ptls-dist" depends="tls-ptls">
+	<copy file="lib/cryptix32.jar"
+	      tofile="${release.dir}/lib/cryptix32.jar"/>
+	<copy file="lib/cryptix-asn1.jar"
+	      tofile="${release.dir}/lib/cryptix-asn1.jar"/>
+	<copy file="lib/puretls.jar"
+	      tofile="${release.dir}/lib/puretls.jar"/>
+	<copy file="lib/LICENSE.cryptix"
+	      tofile="${release.dir}/LICENSE.cryptix"/>
+	<copy file="lib/LICENSE.puretls"
+	      tofile="${release.dir}/LICENSE.puretls"/>
     </target>
 
     <target name="test" depends="example">
@@ -333,13 +353,13 @@
     <target name="doc" depends="core-doc,sasl-doc,tls-jsse-doc,tls-ptls-doc"/>
 
     <!-- Packages the distribution with ZIP -->
-    <target name="dist-zip" depends="core-dist,doc,example-dist">
+    <target name="dist-zip" depends="core-dist,doc,example-dist,ptls-dist">
         <zip zipfile="${build.dir}/${release.name}.zip"
 	     basedir="${release.dir}/.." includes="${release.name}/**"/>
     </target>
 
     <!-- Packages the distribution with TAR-GZIP -->
-    <target name="dist-tgz" depends="core-dist,doc,example-dist">
+    <target name="dist-tgz" depends="core-dist,doc,example-dist,ptls-dist">
         <tar tarfile="${build.dir}/${release.name}.tar"
 	     basedir="${release.dir}/.." includes="${release.name}/**"/>
         <gzip zipfile="${build.dir}/${release.name}.tgz"
