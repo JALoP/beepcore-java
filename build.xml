@@ -155,7 +155,7 @@
         </javac>
     </target>
 
-    <target name="example" depends="example-compile,log4jlog">
+    <target name="example" depends="example-compile,log4jlog,14log">
         <mkdir dir="${release.dir}/lib"/>
         <jar jarfile="${release.dir}/lib/${example.jar.name}"
 	     basedir="${example.build.dir}">
@@ -357,7 +357,7 @@
          classpath="${java.class.path}"/>
     </target>
 
-    <target name="log4jlog" depends="init,log4jCheck" if="log4j-present">
+    <target name="log4jlog" depends="init,core-jar,log4jCheck" if="log4j-present">
         <mkdir dir="${example.build.dir}"/>
         <javac srcdir="${example.src.dir}/"
 	       destdir="${example.build.dir}"
@@ -372,13 +372,13 @@
         </javac>
     </target>
 
-	<target name="14LoggingCheck">
-		<available classname="java.util.loggin.Logger"
-			property="14logging-present"
-			classpath="${java.class.path}"/>
-	</target>
+    <target name="14LoggingCheck">
+        <available classname="java.util.loggin.Logger"
+            property="14logging-present"
+            classpath="${java.class.path}"/>
+    </target>
 
-    <target name="14log" depends="init,14LoggingCheck" if="14logging-present">
+    <target name="14log" depends="init,core-jar,14LoggingCheck" if="14logging-present">
         <mkdir dir="${example.build.dir}"/>
         <javac srcdir="${example.src.dir}/"
 	       destdir="${example.build.dir}"
