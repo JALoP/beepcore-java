@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.19 $ $Date: 2001/11/27 07:31:21 $
+ * TCPSession.java  $Revision: 1.20 $ $Date: 2001/11/27 16:04:59 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -38,6 +38,7 @@ import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.SessionCredential;
 import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.util.BufferSegment;
+import org.beepcore.beep.util.HeaderParser;
 import org.beepcore.beep.util.Log;
 
 
@@ -48,21 +49,13 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.19 $, $Date: 2001/11/27 07:31:21 $
+ * @version $Revision: 1.20 $, $Date: 2001/11/27 16:04:59 $
  */
 public class TCPSession extends Session {
 
     // Constants
-    private static final String ERR_SEND_FRAME_FAILED =
-        "Unable to send a frame";
-    private static final String ERR_TCP_BUFFER_TOO_LARGE = "";
-    private static final String SEQ_PREFIX = "SEQ ";
-    private static final char NEWLINE_CHAR = '\n';
-    private static final int DEFAULT_PROPERTIES_SIZE = 4;
-    private static final int DEFAULT_RECEIVE_BUFFER_SIZE = 4 * 1024;
+    private static final char[] MESSAGE_TYPE_SEQ = new char[] {'S', 'E', 'Q'};
     private static final int MAX_RECEIVE_BUFFER_SIZE = 64 * 1024;
-    private static final int MIN_RECEIVE_BUFFER_SIZE = 4 * 1024;
-    private static final int SEQ_LENGTH = SEQ_PREFIX.length();
     private static final String TCP_MAPPING = "TCP Mapping";
     private static final String CRLF = "\r\n";
     private static final int MIN_SEQ_HEADER_SIZE = (3        // msg type
@@ -79,10 +72,6 @@ public class TCPSession extends Session {
 
 
     // Instance Data
-    // @todo had these per stack, but have
-    // since changed my tune, since we'll be thread/session
-    // for probably a while yet...this'll help on performance.
-    // reusing fixed size buffers.
     private byte headerBuffer[] = new byte[Frame.MAX_HEADER_SIZE];
     private byte[] outputBuf = new byte[0];
     private Object writerLock;
@@ -396,7 +385,8 @@ public class TCPSession extends Session {
 
         StringBuffer sb = new StringBuffer(Frame.MAX_HEADER_SIZE);
 
-        sb.append(SEQ_PREFIX);
+        sb.append(MESSAGE_TYPE_SEQ);
+        sb.append(' ');
         sb.append(this.getChannelNumberAsString(channel));
         sb.append(' ');
         sb.append(Long.toString(currentSeq));
@@ -465,7 +455,7 @@ public class TCPSession extends Session {
                     return;
                 }
 
-                if (headerBuffer[0] == (byte) SEQ_PREFIX.charAt(0)) {
+                if (headerBuffer[0] == (byte) MESSAGE_TYPE_SEQ[0]) {
                     processSEQFrame(headerBuffer, amountRead, is);
                     continue;
                 } else {
@@ -664,30 +654,21 @@ public class TCPSession extends Session {
         }
 
         // Process the header
-        StringTokenizer st = new StringTokenizer(new String(headerBuffer, 0,
-                                                            headerLength));
-
-        if (st.countTokens() != 4) {
-
-            // This should just shut the session down.
-            Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, "Malformed BEEP header");
-
+        HeaderParser header = new HeaderParser(headerBuffer,
+                                               headerLength - CRLF.length());
+        
+        char[] type = header.parseType();
+        if (java.util.Arrays.equals(type, MESSAGE_TYPE_SEQ) == false) {
             throw new BEEPException("Malformed BEEP header");
         }
 
-        // Skip the SEQ
-        if (st.nextToken().equals("SEQ") == false) {
-            throw new BEEPException("Malformed BEEP header");
+        int channelNum = header.parseInt();
+        long ackNum = header.parseUnsignedInt();
+        int window = header.parseInt();
+
+        if (header.hasMoreTokens()) {
+            throw new BEEPException("Malformed BEEP Header");
         }
-
-        // Read the Channel Number
-        int channelNum = Integer.parseInt(st.nextToken());
-
-        // Read the Ack Number
-        long ackNum = Long.parseLong(st.nextToken());
-
-        // Read the Window Number
-        int window = Integer.parseInt(st.nextToken());
 
         // update the channel with the new receive window size
         this.updatePeerReceiveBufferSize(channelNum, ackNum, window);

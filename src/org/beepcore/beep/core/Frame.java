@@ -1,7 +1,8 @@
 /*
- * Frame.java            $Revision: 1.14 $ $Date: 2001/11/27 07:31:21 $
+ * Frame.java            $Revision: 1.15 $ $Date: 2001/11/27 16:04:58 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -24,6 +25,7 @@ import java.util.LinkedList;
 import java.util.StringTokenizer;
 
 import org.beepcore.beep.util.BufferSegment;
+import org.beepcore.beep.util.HeaderParser;
 import org.beepcore.beep.util.Log;
 
 /**
@@ -37,7 +39,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2001/11/27 07:31:21 $
+ * @version $Revision: 1.15 $, $Date: 2001/11/27 16:04:58 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -292,67 +294,23 @@ public class Frame {
     {
         Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Processing normal BEEP frame");
 
-        int limit = length;
+        HeaderParser header = new HeaderParser(headerBuffer, length);
 
-        StringTokenizer st;
-        try {
-            st = new StringTokenizer(new String(headerBuffer, 0, length,
-                                                "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UnsupportedEncodingException" +
-                                       e.getMessage());
-        }
-
-        int count = st.countTokens();
-
-        if (!(count == 6 || count == 7)) {
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Illegal header tokens=" + count + "\n"
-                         + new String(headerBuffer));
-
-            throw new BEEPException("Malformed BEEP Header");
-        }
-
-        // Get Message Type
-        // Kick out if we've maxed, or if the type gets set.
-        int msgType = MessageType.getMessageType(st.nextToken());
-
-        // Read the Channel Number
-        int channelNum = Integer.parseInt(st.nextToken());
-
-        // Read the Message Number
-        int msgNum = Integer.parseInt(st.nextToken());
-
-        // Read the more flag
-        char isLast = st.nextToken().charAt(0);
-
-        boolean last;
-        if (isLast == '*') {
-            last = false;
-        } else if (isLast == '.') {
-            last = true;
-        } else {
-
-            Log.logEntry(Log.SEV_DEBUG, "lastFrame=" + isLast);
-
-            throw new BEEPException("Malformed BEEP Header");
-        }
-
-        // Sequence Number
-        long seqNum = Long.parseLong(st.nextToken());
-
-        // Size
-        int size = Integer.parseInt(st.nextToken());
-
-        if (size < 0) {
-            throw new BEEPException("Malformed BEEP Header");
-        }
+        int msgType =
+            MessageType.getMessageType(new String(header.parseType()));
+        int channelNum = header.parseInt();
+        int msgNum = header.parseInt();
+        boolean last = header.parseLast();
+        long seqNum = header.parseUnsignedInt();
+        int size = header.parseInt();
 
         int ansNum = -1;
-        if (count == 7) {
+        if (header.hasMoreTokens()) {
+            ansNum = header.parseInt();
+        }
 
-            // AnsNo
-            ansNum = Integer.parseInt(st.nextToken());
+        if (header.hasMoreTokens()) {
+            throw new BEEPException("Malformed BEEP Header");
         }
 
         return new Frame(msgType, session.getValidChannel(channelNum), msgNum,
