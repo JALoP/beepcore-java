@@ -1,6 +1,6 @@
 
 /*
- * LogService.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * LogService.java            $Revision: 1.2 $ $Date: 2001/04/26 16:35:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,7 +26,7 @@ package org.beepcore.beep.util;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:53 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/26 16:35:05 $
  */
 public interface LogService {
 
@@ -51,4 +51,9 @@ public interface LogService {
      *
      */
     public void logEntry(int sev, String service, Throwable exception);
+
+    /**
+     * Used to determine if a message of <code>sev</code> will be logged.
+     */
+    public boolean isLogged(int sev);
 }

@@ -1,5 +1,5 @@
 /*
- * TCPSession.java            $Revision: 1.6 $ $Date: 2001/04/18 05:37:15 $
+ * TCPSession.java            $Revision: 1.7 $ $Date: 2001/04/26 16:35:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/18 05:37:15 $
+ * @version $Revision, $Date: 2001/04/26 16:35:05 $
  */
 public class TCPSession extends Session {
 
@@ -219,16 +219,20 @@ public class TCPSession extends Session {
 
             synchronized (writerLock) {
                 
-                Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                             "Wrote the following\n");
+                if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
+                    Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                                 "Wrote the following\n");
+                }
                 Iterator i = f.getBytes();
                 while (i.hasNext()) {
                     Frame.BufferSegment b = (Frame.BufferSegment) i.next();
                     os.write(b.data, b.offset, b.length);
 
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                 new String(b.data, b.offset,
-                                            b.length));
+                    if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
+                        Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                                     new String(b.data, b.offset,
+                                                b.length));
+                    }
                 }
 
                 os.flush();
@@ -314,6 +318,15 @@ public class TCPSession extends Session {
                                                 int bufferSize)
             throws BEEPException
     {
+        if (Log.isLogged(Log.SEV_DEBUG)) {
+            Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
+                         "update SEQ channel=" + channel.getNumber() +
+                         " prevSeq=" + previouslySeq +
+                         " curSeq=" + currentSeq +
+                         " prevUsed=" + previouslyUsed +
+                         " curUsed=" + currentlyUsed +
+                         " bufSize=" + bufferSize);
+        }
       // @todo update the java-doc to correctly identify the params
         if (currentSeq > 0) {    // don't send it the first time
             if (((currentSeq - previouslySeq) < (bufferSize / 2))
@@ -333,8 +346,10 @@ public class TCPSession extends Session {
         sb.append(CRLF);
 
         try {
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                         "Wrote the following\n" + sb.toString());
+            if (Log.isLogged(Log.SEV_DEBUG)) {
+                Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
+                             "Wrote: " + sb.toString());
+            }
 
             OutputStream os = socket.getOutputStream();
 
@@ -367,7 +382,10 @@ public class TCPSession extends Session {
      */
     private void processNextFrame() throws BEEPException, IOException
     {
-        Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING, "Processing next frame");
+        if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
+            Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                         "Processing next frame");
+        }
 
         int length = 0;
         InputStream is = socket.getInputStream();
@@ -395,9 +413,10 @@ public class TCPSession extends Session {
             }
         }
 
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                     "Read the following\n" +
-                     new String(headerBuffer, 0, length));
+        if (Log.isLogged(Log.SEV_DEBUG)) {
+            Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING, "Processing: " +
+                         new String(headerBuffer, 0, length));
+        }
         // If this is not a SEQ frame build a <code>Frame</code> and
         // read in the payload and verify the TRAILER.
         if (headerBuffer[0] != (byte) SEQ_PREFIX.charAt(0)) {
@@ -408,8 +427,10 @@ public class TCPSession extends Session {
                 count += is.read(payload, count, payload.length - count);
             }
 
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                         new String(payload));
+            if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
+                Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                             new String(payload));
+            }
 
             for (int i = 0; i < Frame.TRAILER.length(); ++i) {
                 int b = is.read();
@@ -430,13 +451,6 @@ public class TCPSession extends Session {
 
             return;
         }
-
-        Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING, "Processing SEQ frame");
-
-        //            headerBuffer[pos] = 0;
-
-        Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                     new String(headerBuffer, 0, length));
 
         // Process the header
         StringTokenizer st = new StringTokenizer(new String(headerBuffer,

@@ -1,6 +1,6 @@
 
 /*
- * ConsoleLog.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * ConsoleLog.java            $Revision: 1.2 $ $Date: 2001/04/26 16:35:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,21 +26,22 @@ package org.beepcore.beep.util;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:45:53 $
+ * @version $Revision, $Date: 2001/04/26 16:35:05 $
  */
 public class ConsoleLog implements LogService {
 
     private int severity = Log.SEV_DEBUG;
 
-    /**
-     * Method logEntry
-     *
-     *
-     * @param sev
-     * @param service
-     * @param message
-     *
-     */
+    public ConsoleLog()
+    {
+        this.severity = Log.SEV_DEBUG;
+    }
+
+    public ConsoleLog(int severity)
+    {
+        this.severity = severity;
+    }
+
     public void logEntry(int sev, String service, String message)
     {
         if (sev > this.severity) {
@@ -52,15 +53,6 @@ public class ConsoleLog implements LogService {
         System.out.println(name + ":" + service + ": " + message);
     }
 
-    /**
-     * Method logEntry
-     *
-     *
-     * @param sev
-     * @param service
-     * @param exception
-     *
-     */
     public void logEntry(int sev, String service, Throwable exception)
     {
         if (sev > this.severity) {
@@ -72,6 +64,11 @@ public class ConsoleLog implements LogService {
         System.out.println(name + ":" + service + ": "
                            + exception.toString());
         exception.printStackTrace();
+    }
+
+    public boolean isLogged(int sev)
+    {
+        return this.severity > sev;
     }
 
     /**

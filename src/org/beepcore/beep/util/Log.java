@@ -1,6 +1,6 @@
 
 /*
- * Log.java            $Revision: 1.2 $ $Date: 2001/04/02 22:33:27 $
+ * Log.java            $Revision: 1.3 $ $Date: 2001/04/26 16:35:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -30,34 +30,16 @@ import java.io.PrintWriter;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 22:33:27 $
+ * @version $Revision, $Date: 2001/04/26 16:35:05 $
  */
 public class Log {
 
-    private static String parse(String trace)
+    /**
+     * Used to determine if a message of <code>sev</code> will be logged.
+     */
+    public static boolean isLogged(int sev)
     {
-        int pos = trace.indexOf("logEntry");
-
-        if (pos != -1) {
-            pos = trace.indexOf("at", pos);
-            String sub = trace.substring(pos + 3,
-                                         trace.indexOf("(", pos + 3));
-
-            return sub;
-        }
-
-        return "";
-    }
-
-    private static String getClassName()
-    {
-        Exception e = new Exception();
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        PrintWriter pw = new PrintWriter(os, true);
-
-        e.printStackTrace(pw);
-
-        return parse(os.toString());
+        return log.isLogged(sev);
     }
 
     /**
@@ -126,6 +108,32 @@ public class Log {
         Log.log = log;
     }
 
+    private static String parse(String trace)
+    {
+        int pos = trace.indexOf("logEntry");
+
+        if (pos != -1) {
+            pos = trace.indexOf("at", pos);
+            String sub = trace.substring(pos + 3,
+                                         trace.indexOf("(", pos + 3));
+
+            return sub;
+        }
+
+        return "";
+    }
+
+    private static String getClassName()
+    {
+        Exception e = new Exception();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        PrintWriter pw = new PrintWriter(os, true);
+
+        e.printStackTrace(pw);
+
+        return parse(os.toString());
+    }
+
     /** System is unusable */
     public static final int SEV_EMERGENCY = 0;
 
@@ -190,6 +198,11 @@ public class Log {
         public void logEntry(int sev, String service, Throwable exception)
         {
             return;
+        }
+
+        public boolean isLogged(int sev)
+        {
+            return false;
         }
     }
 }
