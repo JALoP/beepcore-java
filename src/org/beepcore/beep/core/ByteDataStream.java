@@ -1,6 +1,6 @@
 
 /*
- * ByteDataStream.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * ByteDataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -39,73 +39,75 @@ import java.io.UnsupportedEncodingException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/17 22:44:00 $
  */
-public class ByteDataStream extends DataStream {
+public class ByteDataStream extends InputStreamDataStream {
 
-    private ByteArrayInputStream data = null;
-
-    /**
-     * Constructor ByteDataStream
-     *
-     *
-     * @param contentType
-     *
-     */
-    protected ByteDataStream(String contentType)
+    ByteDataStream(String contentType, String transferEncoding)
     {
-        super(contentType, DEFAULT_CONTENT_TRANSFER_ENCODING);
+      super( contentType, transferEncoding, null );
     }
 
     /**
      * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> with a
-     * content type of <code>DEFAULT_CONTENT_TYPE</code>.
+     * content type of <code>DEFAULT_CONTENT_TYPE</code> and a transfer encoding
+     * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  A <code>byte[]</code> representing a message's payload.
      */
     public ByteDataStream(byte[] data)
     {
-        super();
-
-        this.data = new ByteArrayInputStream(data);
+        super(new ByteArrayInputStream(data));
     }
 
     /**
      * Creates a <code>ByteDataStream</code> from a <code>byte[]</code>
-     * with a specified content type.
+     * with a specified content type and a transfer encoding
+     * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param contentType Content type of <code>data</code>.
      * @param data  A <code>byte[]</code> representing a message's payload.
      */
     public ByteDataStream(String contentType, byte[] data)
     {
-        super(contentType, DEFAULT_CONTENT_TRANSFER_ENCODING);
+        super(contentType, new ByteArrayInputStream(data));
+    }
 
-        this.data = new ByteArrayInputStream(data);
+    /**
+     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code>
+     * with a specified content type and a specified transfer encoding.
+     *
+     * @param contentType Content type of <code>data</code>.
+     * @param transferEncoding Encoding Transfer encoding type of
+     * <code>data</code>.
+     * @param data  A <code>byte[]</code> representing a message's payload.
+     */
+    public ByteDataStream(String contentType, String transferEncoding,
+                          byte[] data)
+    {
+        super(contentType, transferEncoding, new ByteArrayInputStream(data));
     }
 
     /**
      * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> using
      * the specified length and offset
-     * with a content type of <code>DEFAULT_CONTENT_TYPE</code>.
+     * with a content type of <code>DEFAULT_CONTENT_TYPE</code> and a transfer
+     * encoding of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  A <code>byte[]</code> representing a message's payload.
      * @param offset  The start offset in array <code>data</code> at which the
      * data is written.
-     * @param len The maximum number of bytes to read.
-     * @param length
+     * @param length The maximum number of bytes to read.
      */
     public ByteDataStream(byte[] data, int offset, int length)
     {
-        super();
-
-        this.data = new ByteArrayInputStream(data, offset, length);
+        super(new ByteArrayInputStream(data, offset, length));
     }
 
     /**
      * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> using
-     * the specified length and offset
-     * with a specified content type.
+     * the specified length and offset and with a specified content type and a
+     * transfer encoding of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param contentType Content type of <code>byte[]</code>.
      * @param data  A <code>byte[]</code> representing a message's payload.
@@ -116,82 +118,31 @@ public class ByteDataStream extends DataStream {
     public ByteDataStream(String contentType, byte[] data, int offset,
                           int length)
     {
-        super(contentType, DEFAULT_CONTENT_TRANSFER_ENCODING);
-
-        this.data = new ByteArrayInputStream(data, offset, length);
+        super(contentType, new ByteArrayInputStream(data, offset, length));
     }
 
     /**
-     * Method setData
+     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> using
+     * the specified length and offset and with a specified content type and a
+     * specified transfer encoding.
      *
-     *
-     * @param data
-     *
+     * @param contentType Content type of <code>byte[]</code>.
+     * @param transferEncoding Encoding Transfer encoding type of
+     * <code>data</code>.
+     * @param data  A <code>byte[]</code> representing a message's payload.
+     * @param offset  The start offset in array <code>data</code> at which the
+     * data is written.
+     * @param length The maximum number of bytes to read.
      */
-    protected void setData(byte[] data)
+    public ByteDataStream(String contentType, String transferEncoding,
+                          byte[] data, int offset, int length)
+    {
+        super(contentType, transferEncoding,
+              new ByteArrayInputStream(data, offset, length));
+    }
+
+    void setData( byte[] data )
     {
         this.data = new ByteArrayInputStream(data);
-    }
-
-    /**
-     * Returns this data stream as an <code>InputStream</code>.
-     *
-     */
-    public InputStream getInputStream()
-    {
-        return this.data;
-    }
-
-    int available()
-    {
-        return data.available();
-    }
-
-    int read()
-    {
-        return this.data.read();
-    }
-
-    int read(byte[] buf) throws BEEPException
-    {
-        try {
-            return this.data.read(buf);
-        } catch (IOException e) {
-            throw new BEEPException(e.getMessage());
-        }
-    }
-
-    int read(byte[] buf, int off, int len) throws BEEPException
-    {
-        return this.data.read(buf, off, len);
-    }
-
-    long skip(long n)
-    {
-        return this.data.skip(n);
-    }
-
-    boolean markSupported()
-    {
-        return this.data.markSupported();
-    }
-
-    void mark(int readlimit)
-    {
-        this.data.mark(readlimit);
-    }
-
-    void reset() throws BEEPException
-    {
-        this.data.reset();
-    }
-
-    void close() throws BEEPException
-    {
-        try {
-            this.data.close();
-        } catch (IOException e) {
-            throw new BEEPException(e.getMessage());
-        }
     }
 }

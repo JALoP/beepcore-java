@@ -1,6 +1,6 @@
 
 /*
- * StringDataStream.java            $Revision: 1.2 $ $Date: 2001/04/15 04:47:54 $
+ * StringDataStream.java            $Revision: 1.3 $ $Date: 2001/04/17 22:44:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,13 +21,14 @@ package org.beepcore.beep.core;
 import java.util.MissingResourceException;
 
 import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 
 
 /**
  * <code>StringDataStream</code> represents a BEEP message's payload.
  * Allows implementors to treat a
  * <code>String</code> as a <code>DataSream</code>. The <code>String</code>
- * is stored as a <code>byte[]</code>.
+ * is stored as a <code>byte[]</code> using UTF-8 encoding.
  * <p>
  * <b>Note that this implementation
  * is not synchronized.</b> If multiple threads access a
@@ -39,7 +40,7 @@ import java.io.UnsupportedEncodingException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/15 04:47:54 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/17 22:44:00 $
  */
 public class StringDataStream extends ByteDataStream {
 
@@ -47,13 +48,15 @@ public class StringDataStream extends ByteDataStream {
 
     /**
      * Creates a <code>StringDataStream</code> with a <code>String</code> and
-     * a <code>BEEP_XML_CONTENT_TYPE</code> content type.
+     * a <code>BEEP_XML_CONTENT_TYPE</code> content type and a transfer encoding
+     * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  A <code>String</code> representing a message's payload.
      */
     public StringDataStream(String data)
     {
-        super(BEEP_XML_CONTENT_TYPE);
+        super(BEEP_XML_CONTENT_TYPE,
+              DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
 
         try {
             setData(data.getBytes("UTF-8"));
@@ -67,15 +70,40 @@ public class StringDataStream extends ByteDataStream {
 
     /**
      * Creates a <code>StringDataStream</code> with a <code>String</code> and
-     * a specified content type.
+     * a specified content type and a transfer encoding of
+     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param contentType Content type of <code>data</code>
      * @param data  A <code>String</code> representing a message's payload.
      */
     public StringDataStream(String contentType, String data)
     {
-        super(contentType);
+        super(BEEP_XML_CONTENT_TYPE,
+              DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
+        try {
+            setData(data.getBytes("UTF-8"));
 
+            this.enc = "UTF-8";
+        } catch (UnsupportedEncodingException e) {
+            throw new MissingResourceException("Encoding UTF-8 not supported",
+                                               "StringDataStream", "UTF-8");
+        }
+    }
+
+    /**
+     * Creates a <code>StringDataStream</code> with a <code>String</code> and
+     * a specified content type and a transfer encoding of
+     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     *
+     * @param contentType Content type of <code>data</code>
+     * @param transferEncoding Encoding Transfer encoding type of
+     * <code>data</code>.
+     * @param data  A <code>String</code> representing a message's payload.
+     */
+    public StringDataStream(String contentType, String transferEncoding,
+                            String data)
+    {
+        super(contentType, transferEncoding);
         try {
             setData(data.getBytes("UTF-8"));
 
@@ -91,18 +119,24 @@ public class StringDataStream extends ByteDataStream {
      * a specified content type and encoding.
      *
      * @param contentType Content type of <code>data</code>
+     * @param transferEncoding Encoding Transfer encoding type of
+     * <code>data</code>.
      * @param data  A <code>String</code> representing a message's payload.
      * @param enc The encoding used when converting <code>data</code> to a
      * <code>bytes[]</code>.
-     *
-     * @throws UnsupportedEncodingException
      */
-    public StringDataStream(String contentType, String data, String enc)
-            throws UnsupportedEncodingException
+    public StringDataStream(String contentType, String transferEncoding,
+                            String data, String enc)
     {
-        super(contentType, data.getBytes(enc));
+        super(contentType, transferEncoding);
+        try {
+            setData(data.getBytes("UTF-8"));
 
-        this.enc = enc;
+            this.enc = "UTF-8";
+        } catch (UnsupportedEncodingException e) {
+            throw new MissingResourceException("Encoding UTF-8 not supported",
+                                               "StringDataStream", "UTF-8");
+        }
     }
 
     /**

@@ -1,6 +1,6 @@
 
 /*
- * DataStream.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * DataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import java.util.Enumeration;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/17 22:44:00 $
  */
 public abstract class DataStream {
 
@@ -251,7 +251,7 @@ public abstract class DataStream {
      *
      * @throws BEEPException
      */
-    public String getHeader(String name) throws BEEPException
+    public String getHeaderValue(String name) throws BEEPException
     {
         return (String) this.mimeHeadersTable.get(name);
     }
@@ -259,7 +259,7 @@ public abstract class DataStream {
     /**
      * Returns an <code>Enumeration</code> of all the names of the MIME entity
      * headers in this data stream.
-     * Use this call in conjunction with <code>getHeader</code> to iterate
+     * Use this call in conjunction with <code>getHeaderValue</code> to iterate
      * through all the corresponding MIME entity header <code>value</code>(s)
      * in this data stream.
      *

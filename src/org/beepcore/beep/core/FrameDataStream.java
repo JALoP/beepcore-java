@@ -1,6 +1,6 @@
 
 /*
- * FrameDataStream.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * FrameDataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +44,7 @@ import java.util.Iterator;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision, $Date: 2001/04/17 22:44:00 $
  */
 public class FrameDataStream extends DataStream {
 
@@ -157,13 +157,13 @@ public class FrameDataStream extends DataStream {
      *
      * @throws BEEPException
      */
-    public String getHeader(String name) throws BEEPException
+    public String getHeaderValue(String name) throws BEEPException
     {
         if (!this.headersParsed) {
             parseHeaders();
         }
 
-        return super.getHeader(name);
+        return super.getHeaderValue(name);
     }
 
     /**
@@ -546,7 +546,7 @@ public class FrameDataStream extends DataStream {
      * may only be preceed by <code>availableHeadersAndData</code> and may
      * not be proceeded by any other method call which reads or manipulates the
      * the stream (i.e. <code>read</code>, <code>skip</code>,
-     * <code>available</code>, <code>getHeader</code>)
+     * <code>available</code>, <code>getHeaderValue</code>)
      *
      * @param dest
      * @param destOffset

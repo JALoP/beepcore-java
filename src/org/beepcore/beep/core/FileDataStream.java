@@ -1,6 +1,6 @@
 
 /*
- * FileDataStream.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * FileDataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -16,7 +16,6 @@
  *
  */
 package org.beepcore.beep.core;
-
 
 import java.io.FileInputStream;
 import java.io.File;
@@ -43,12 +42,9 @@ import java.lang.SecurityException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision, $Date: 2001/04/17 22:44:00 $
  */
-public class FileDataStream extends DataStream {
-
-    private FileInputStream data = null;
-
+public class FileDataStream extends InputStreamDataStream {
     /**
      * Creates a <code>FileDataStream</code> by opening a connection to an
      * actual file, the file named by the <code>File</code> object file in
@@ -66,9 +62,7 @@ public class FileDataStream extends DataStream {
     public FileDataStream(File file)
             throws FileNotFoundException, SecurityException
     {
-        super();
-
-        this.data = new FileInputStream(file);
+        super(new FileInputStream(file));
     }
 
     /**
@@ -89,9 +83,7 @@ public class FileDataStream extends DataStream {
     public FileDataStream(String contentType, File file)
             throws FileNotFoundException, SecurityException
     {
-        super(contentType, DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
-
-        this.data = new FileInputStream(file);
+        super(contentType, new FileInputStream(file));
     }
 
     /**
@@ -106,11 +98,7 @@ public class FileDataStream extends DataStream {
      */
     public FileDataStream(FileDescriptor fdObj) throws SecurityException
     {
-        super();
-
-        this.data = new FileInputStream(fdObj);
-
-        // length is unknown
+        super(new FileInputStream(fdObj));
     }
 
     /**
@@ -127,9 +115,7 @@ public class FileDataStream extends DataStream {
     public FileDataStream(String contentType, FileDescriptor fdObj)
             throws SecurityException
     {
-        super(contentType, DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
-
-        this.data = new FileInputStream(fdObj);
+        super(contentType, new FileInputStream(fdObj));
     }
 
     /**
@@ -149,9 +135,7 @@ public class FileDataStream extends DataStream {
     public FileDataStream(String name)
             throws FileNotFoundException, SecurityException
     {
-        super();
-
-        this.data = new FileInputStream(name);
+        super(new FileInputStream(name));
     }
 
     /**
@@ -172,144 +156,6 @@ public class FileDataStream extends DataStream {
     public FileDataStream(String contentType, String name)
             throws FileNotFoundException, SecurityException
     {
-        super(contentType, DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
-
-        this.data = new FileInputStream(name);
-    }
-
-    /**
-     * Returns this data stream as an <code>InputStream</code>
-     */
-    public InputStream getInputStream()
-    {
-        return this.data;
-    }
-
-    /**
-     * Returns the number of bytes that can be read (or skipped over) from this
-     * data stream without blocking by the next caller of a method for this
-     * input stream.  See <code>isComplete</code> to detect end of stream
-     * without blocking.
-     *
-     * @return Number of bytes available.
-     *
-     * @throws IOException
-     */
-    int available() throws BEEPException
-    {
-        try {
-            return data.available();
-        } catch (IOException e) {
-            throw new BEEPException("threw IOException");
-        }
-    }
-
-    /**
-     * Reads a byte of data from this data stream.
-     * This method blocks if no input is yet available..
-     * Note that this implementation is not synchronized.
-     *
-     * @return The next byte.
-     *
-     * @exception IOException Throws <code>IOException</code>,
-     * if an I/O error occurs.
-     */
-    int read() throws BEEPException
-    {
-        try {
-            return this.data.read();
-        } catch (IOException e) {
-            throw new BEEPException("threw IOException");
-        }
-    }
-
-    /**
-     * Reads some number of bytes from the input stream and stores them into
-     * the buffer array <code>buf</code>.
-     * This method blocks until some input is available.
-     * Note that this implementation is not synchronized.
-     *
-     * @param buf The buffer into which the data is read.
-     * @return The total number of bytes read into the buffer, or -1 if
-     *    there is no more data because the end of the file has been reached.
-     *
-     * @exception IOException Throws <code>IOException</code>,
-     * if an I/O error occurs.
-     */
-    int read(byte[] buf) throws BEEPException
-    {
-        try {
-            return this.data.read(buf);
-        } catch (IOException e) {
-            throw new BEEPException("threw IOException");
-        }
-    }
-
-    /**
-     * Reads up to len bytes of data from the input stream into an array of
-     * bytes. This method blocks until some input is available.
-     * Note that this implementation is not synchronized.
-     *
-     * @param buf The buffer into which the data is read.
-     * @param off The start offset of the data.
-     * @param len The maximum number of bytes read.
-     * @return The number of bytes read.  Returns -1 if no more can be
-     *    read.
-     * @exception IOException Throws <code>IOException</code>,
-     * if an I/O error occurs.
-     */
-    int read(byte[] buf, int off, int len) throws BEEPException
-    {
-        try {
-            return this.data.read(buf, off, len);
-        } catch (IOException e) {
-            throw new BEEPException("threw IOException");
-        }
-    }
-
-    /**
-     * Skips over and discards n bytes of data from this input stream.
-     *
-     * @param n Number of bytes to skip.
-     * @return Number of bytes actually skipped.
-     *
-     * @exception IOException Throws <code>IOException</code>,
-     * if an I/O error occurs.
-     */
-    long skip(long n) throws BEEPException
-    {
-        try {
-            return this.data.skip(n);
-        } catch (IOException e) {
-            throw new BEEPException("threw IOException");
-        }
-    }
-
-    void reset() throws BEEPException
-    {
-        try {
-            this.data.reset();
-        } catch (IOException e) {
-            throw new BEEPException("threw IOException");
-        }
-    }
-
-    boolean markSupported()
-    {
-        return this.data.markSupported();
-    }
-
-    void mark(int readlimit)
-    {
-        this.data.mark(readlimit);
-    }
-
-    void close() throws BEEPException
-    {
-        try {
-            this.data.close();
-        } catch (IOException e) {
-            throw new BEEPException("threw IOException");
-        }
+        super(contentType, new FileInputStream(name));
     }
 }
