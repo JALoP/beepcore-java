@@ -1,6 +1,6 @@
 
 /*
- * ConsoleLog.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * ConsoleLog.java            $Revision: 1.1.1.1 $ $Date: 2001/04/02 08:45:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *

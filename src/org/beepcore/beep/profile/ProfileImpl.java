@@ -1,6 +1,6 @@
 
 /*
- * ProfileImpl.java    $Revision: 1.1 $ $Date: 2001/04/02 08:45:29 $
+ * ProfileImpl.java    $Revision: 1.1.1.1 $ $Date: 2001/04/02 08:45:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *

@@ -1,6 +1,6 @@
 
 /*
- * Reply.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:27 $
+ * Reply.java            $Revision: 1.1.1.1 $ $Date: 2001/04/02 08:45:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *

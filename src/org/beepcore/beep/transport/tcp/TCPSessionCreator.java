@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * TCPSessionCreator.java $Revision: 1.1.1.1 $ $Date: 2001/04/02 08:45:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import org.beepcore.beep.core.SessionCredential;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:53 $
+ * @version $Revision: 1.1.1.1 $, $Date: 2001/04/02 08:45:53 $
  */
 public class TCPSessionCreator {
 

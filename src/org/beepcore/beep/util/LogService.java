@@ -1,6 +1,6 @@
 
 /*
- * LogService.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * LogService.java            $Revision: 1.1.1.1 $ $Date: 2001/04/02 08:45:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,7 +26,7 @@ package org.beepcore.beep.util;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:53 $
+ * @version $Revision: 1.1.1.1 $, $Date: 2001/04/02 08:45:53 $
  */
 public interface LogService {
 

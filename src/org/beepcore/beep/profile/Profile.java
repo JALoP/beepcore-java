@@ -1,6 +1,6 @@
 
 /*
- * Profile.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:28 $
+ * Profile.java            $Revision: 1.1.1.1 $ $Date: 2001/04/02 08:45:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.core.Channel;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:28 $
+ * @version $Revision: 1.1.1.1 $, $Date: 2001/04/02 08:45:28 $
  */
 public interface Profile {
 
