@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.21 $ $Date: 2002/03/30 16:19:42 $
+ * Channel.java  $Revision: 1.22 $ $Date: 2002/05/08 02:56:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.21 $, $Date: 2002/03/30 16:19:42 $
+ * @version $Revision: 1.22 $, $Date: 2002/05/08 02:56:32 $
  *
  */
 public class Channel {
@@ -97,8 +97,6 @@ public class Channel {
     private LinkedList recvReplyQueue;
 
     private int state = STATE_UNINITIALISED;
-
-    private BEEPError errMessage;
 
     private Frame previousFrame;
 
@@ -974,16 +972,6 @@ public class Channel {
     public String getProfile()
     {
         return this.profile;
-    }
-
-    BEEPError getErrorMessage()
-    {
-        return this.errMessage;
-    }
-
-    void setErrorMessage(BEEPError message)
-    {
-        this.errMessage = message;
     }
 
     synchronized void updatePeerReceiveBufferSize(long lastSeq, int size)
