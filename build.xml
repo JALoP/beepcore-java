@@ -147,6 +147,10 @@
         <jar jarfile="${release.dir}/${source.jar.name}"
 	     basedir="${build.dir}/src"/>
 
+	<copy file="${commons-logging.jar}"
+	      tofile="${release.dir}/lib/commons-logging.jar"/>
+	<copy file="lib/LICENSE.commons-logging"
+	      tofile="${release.dir}/LICENSE.commons-logging"/>
 	<copy file="${concurrent.jar}"
 	      tofile="${release.dir}/lib/concurrent.jar"/>
 	<copy file="lib/xerces.jar"
