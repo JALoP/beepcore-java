@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.2 $ $Date: 2001/07/12 07:09:10 $
+ * TLSProfileJSSE.java  $Revision: 1.3 $ $Date: 2001/07/30 13:10:47 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -633,13 +633,14 @@ public class TLSProfileJSSE extends TLSProfile
                     l.waitingForHandshake = false;
                 }
             }
+        } catch (javax.net.ssl.SSLException e) {
+            Log.logEntry(Log.SEV_ERROR, e);
+            throw new BEEPException(e.getMessage());
         } catch (java.io.IOException e) {
-            e.printStackTrace();
-
+            Log.logEntry(Log.SEV_ERROR, e);
             throw new BEEPException(ERR_TLS_SOCKET);
         } catch (InterruptedException e) {
-            e.printStackTrace();
-
+            Log.logEntry(Log.SEV_ERROR, e);
             throw new BEEPException(ERR_TLS_HANDSHAKE_WAIT);
         }
 
