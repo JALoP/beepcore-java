@@ -1,5 +1,5 @@
 /*
- * SASLProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
+ * SASLProfile.java  $Revision: 1.4 $ $Date: 2001/07/03 20:51:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/05/03 21:56:49 $
+ * @version $Revision: 1.4 $, $Date: 2001/07/03 20:51:28 $
  *
  */
 public abstract class SASLProfile extends TuningProfile {
@@ -121,25 +121,6 @@ public abstract class SASLProfile extends TuningProfile {
         }
     }
 
-    /**
-     * Method sendERR also provided to make the underlying code
-     * simpler (see sendReply etc.)
-     * 
-     * @param blob the data to send
-     * @param Channel the channel to send the data on
-     * 
-     * @throws SASLException if an issue is encountered during the send.
-     */
-    public void sendERR(String data, Channel channel)
-        throws SASLException
-    {
-        try {
-            channel.sendERR(new StringDataStream(data));
-        } catch (Exception x) {
-            throw new SASLException(x.getMessage());
-        }        
-    }
-    
     /**
      * Method clearCredential simply clears the credentials associated
      * with a given Session - this is typically done before a new

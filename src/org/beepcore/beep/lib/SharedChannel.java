@@ -1,6 +1,6 @@
 
 /*
- * SharedChannel.java            $Revision: 1.2 $ $Date: 2001/06/18 19:28:44 $
+ * SharedChannel.java            $Revision: 1.3 $ $Date: 2001/07/03 20:51:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -18,6 +18,7 @@
 package org.beepcore.beep.lib;
 
 
+import org.beepcore.beep.core.BEEPError;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
 import org.beepcore.beep.core.DataListener;
@@ -43,7 +44,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/06/18 19:28:44 $
+ * @version $Revision: 1.3 $, $Date: 2001/07/03 20:51:28 $
  */
 public class SharedChannel extends Channel {
 
@@ -102,6 +103,7 @@ public class SharedChannel extends Channel {
      * message.
      *
      * @throws BEEPException
+     * @deprecated
      */
     public MessageStatus sendANS(DataStream stream) throws BEEPException
     {
@@ -123,6 +125,7 @@ public class SharedChannel extends Channel {
      * @see MessageStatus
      *
      * @throws BEEPException
+     * @deprecated
      */
     public MessageStatus sendMSG(DataStream stream, ReplyListener replyListener)
             throws BEEPException
@@ -141,13 +144,12 @@ public class SharedChannel extends Channel {
      * @see MessageStatus
      *
      * @throws BEEPException
+     * @deprecated
      */
     public MessageStatus sendNUL() throws BEEPException
     {
         return channel.sendNUL();
     }
-
-    // send a reply using the data passed to us
 
     /**
      * Send a message of type RPY. Sends <code>stream</code> as message's
@@ -164,33 +166,69 @@ public class SharedChannel extends Channel {
      * @see MessageStatus
      *
      * @throws BEEPException
+     * @deprecated
      */
     public MessageStatus sendRPY(DataStream stream) throws BEEPException
     {
         return channel.sendRPY(stream);
     }
 
-    // send an error
-
     /**
-     * Send a message of type ERR. Sends <code>stream</code> as message's
-     * payload.
-     * Note: If the stream is not complete, then the send will block
-     * until it is finished (a <code>read</code> returns a -1).
+     * Sends a message of type ERR.
      *
-     * @param stream <code>DataStream</code> that is read to send data.
+     * @param error Error to send in the form of <code>BEEPError</code>.
      *
-     * @return MessageStutas Can be queried to get status information about the
-     * message.
-     *
-     * @see DataStream
+     * @see BEEPError
      * @see MessageStatus
      *
-     * @throws BEEPException
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
      */
-    public MessageStatus sendERR(DataStream stream) throws BEEPException
+    public MessageStatus sendERR(BEEPError error) throws BEEPException
     {
-        return channel.sendERR(stream);
+        return channel.sendERR(error);
+    }
+
+    /**
+     * Sends a message of type ERR.
+     *
+     * @param code <code>code</code> attibute in <code>error</code> element.
+     * @param diagnostic Message for <code>error</code> element.
+     *
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendERR(int code, String diagnostic)
+        throws BEEPException
+    {
+        return channel.sendERR(code, diagnostic);
+    }
+
+    /**
+     * Sends a message of type ERR.
+     *
+     * @param code <code>code</code> attibute in <code>error</code> element.
+     * @param diagnostic Message for <code>error</code> element.
+     * @param xmlLang <code>xml:lang</code> attibute in <code>error</code>
+     *                element.
+     *
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
+        throws BEEPException
+    {
+        return channel.sendERR(code, diagnostic, xmlLang);
     }
 
     /**

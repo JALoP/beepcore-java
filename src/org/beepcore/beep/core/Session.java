@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.13 $ $Date: 2001/06/28 15:42:49 $
+ * Session.java  $Revision: 1.14 $ $Date: 2001/07/03 20:51:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2001/06/28 15:42:49 $
+ * @version $Revision: 1.14 $, $Date: 2001/07/03 20:51:28 $
  *
  * @see Channel
  */
@@ -87,8 +87,8 @@ public abstract class Session {
         "Greeting exchange failed";
     private static final String ERR_ILLEGAL_SHUTDOWN =
         "Illegal state for shutdown";
-    private static final String ERR_MSG_PROFILES_UNAVAILABLE =
-        "<error code='550'>all requested profiles are unsupported</error>";
+    private static final String ERR_PROFILES_UNAVAILABLE =
+        "all requested profiles are unsupported";
     private static final String ERR_NONEXISTENT_CHANNEL =
         "Session call on nonexistent channel.";
     private static final String ERR_STATE_CHANGE =
@@ -1006,7 +1006,7 @@ public abstract class Session {
         // Store the Channel
         ch.setState(Channel.STATE_OK);
         channels.put(ch.getNumberAsString(), ch);
-        zero.sendRPY(sds);
+        ((Message)zero.getAppData()).sendRPY(sds);
     }
 
     /**
@@ -1058,7 +1058,7 @@ public abstract class Session {
                                  FRAGMENT_OK);
 
         try {
-            zero.sendRPY(sds);
+            ((Message)zero.getAppData()).sendRPY(sds);
         } catch (BEEPException x) {
             terminate("Error sending RPY for <close>");
 
@@ -1136,7 +1136,7 @@ public abstract class Session {
                                  FRAGMENT_OK);
 
         try {
-            zero.sendRPY(sds);
+            ((Message)zero.getAppData()).sendRPY(sds);
         } catch (BEEPException x) {
             terminate("Error sending RPY for <close> for channel 0");
 
@@ -1287,8 +1287,7 @@ public abstract class Session {
                 return true;
             } catch (StartChannelException e) {
                 try {
-                    zero.sendERR(new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
-                                                      e.createErrorMessage()));
+                    ((Message)zero.getAppData()).sendERR(e);
                 } catch (BEEPException x) {
                     terminate("Error sending ERR response to start channel");
                 }
@@ -1308,7 +1307,7 @@ public abstract class Session {
         }
 
         try {
-            zero.sendERR(new StringDataStream(ERR_MSG_PROFILES_UNAVAILABLE));
+            ((Message)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, ERR_PROFILES_UNAVAILABLE);
         } catch (Exception x) {
             terminate("Error sending error. " + x.getMessage());
         }
@@ -1411,8 +1410,10 @@ public abstract class Session {
         ByteDataStream f =
             new ByteDataStream(DataStream.BEEP_XML_CONTENT_TYPE, greeting);
 
+        Message m = new MessageMSG(this.zero, 0, null);
+
         // send the greeting
-        this.zero.sendRPY(f);
+        m.sendRPY(f);
     }
 
     private class ChannelZeroListener implements MessageListener {
@@ -1498,6 +1499,7 @@ public abstract class Session {
                     profileList.add(new StartChannelProfile(uri, b64, data));
                 }
 
+                Session.this.zero.setAppData(message);
                 Session.this.processStartChannel(channelNumber, profileList);
             }
 
@@ -1534,6 +1536,7 @@ public abstract class Session {
                     }
                 }
 
+                Session.this.zero.setAppData(message);
                 Session.this.receiveCloseChannel(channelNumber, code,
                                                  xmlLang, data);
             } else {

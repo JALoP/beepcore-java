@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.6 $ $Date: 2001/06/28 15:42:49 $
+ * EchoProfile.java    $Revision: 1.7 $ $Date: 2001/07/03 20:51:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -34,10 +34,10 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/06/28 15:42:49 $
+ * @version $Revision: 1.7 $, $Date: 2001/07/03 20:51:28 $
  */
 public class EchoProfile
-    implements Profile, StartChannelListener, FrameListener
+    implements Profile, StartChannelListener, MessageListener
 {
 
     public static final String ECHO_URI =
@@ -70,54 +70,51 @@ public class EchoProfile
         return true;
     }
 
-    public void receiveFrame(Frame frame) throws BEEPException
+    public void receiveMSG(Message message) throws BEEPError
     {
-        FrameDataStream ds =
-            (FrameDataStream) frame.getChannel().getAppData();
-
-        // The MessageType is guaranteed to be MSG since this
-        // peer won't be sending MSGs on a channel with this profile.
-
-        if (ds == null) {
-            ds = new FrameDataStream();
-            frame.getChannel().setAppData(ds);
-        }
-
-        ds.add(frame);
-
-        if (frame.isLast() == false) {
-            return;
-        }
-
-        frame.getChannel().setAppData(null);
-
-        try {
-            InputStream is = ds.getInputStream();
-
-            byte buf[] = new byte[is.available()];
-
-            is.read(buf, 0, buf.length);
-
-            new ReplyThread(frame.getChannel(), new ByteDataStream(buf)).start();
-        } catch (IOException e) {
-            Log.logEntry(Log.SEV_ERROR, e);
-        }
+        new ReplyThread(message).start();
     }
 
     private class ReplyThread extends Thread {
-        private Channel channel;
-        private DataStream reply;
+        private Message message;
 
-        ReplyThread(Channel channel, DataStream reply) {
-            this.channel = channel;
-            this.reply = reply;
+        ReplyThread(Message message) {
+            this.message = message;
         }
 
         public void run() {
-            try {
-                channel.sendRPY(reply);
-            } catch (BEEPException e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+            byte[] buf = new byte[4096];
+            ByteArrayOutputStream data = new ByteArrayOutputStream();
+
+            DataStream ds = message.getDataStream();
+            InputStream is = ds.getInputStream();
+
+            while (true) {
+
+                try {
+                    int n = is.read(buf);
+                    
+                    if (n == -1) {
+                        break;
+                    }
+
+                    data.write(buf, 0, n);
+                } catch (IOException e) {
+                    message.getChannel().getSession().terminate(e.getMessage());
+                    return;
+                }
+
+                try {
+                    message.sendRPY(new ByteDataStream(data.toByteArray()));
+                } catch (BEEPException e) {
+                    try {
+                        message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                        "Error sending RPY");
+                    } catch (BEEPException x) {
+                        message.getChannel().getSession().terminate(x.getMessage());
+                    }
+                    return;
+                }
             }
         }
     }
