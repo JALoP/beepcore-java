@@ -1,5 +1,5 @@
 /*
- * ProfileRegistry.java  $Revision: 1.4 $ $Date: 2001/07/03 20:47:25 $
+ * ProfileRegistry.java  $Revision: 1.5 $ $Date: 2001/07/27 06:17:40 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -31,7 +31,7 @@ import java.util.Hashtable;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/07/03 20:47:25 $
+ * @version $Revision, $Date: 2001/07/27 06:17:40 $
  */
 public class ProfileRegistry implements Cloneable {
 
@@ -185,6 +185,10 @@ public class ProfileRegistry implements Cloneable {
         InternalProfile tempProfile = new InternalProfile();
 
         tempProfile.listener = listener;
+
+	if (tuning == null) {
+            tuning = SessionTuningProperties.emptyTuningProperties;
+        }
         tempProfile.tuning = tuning;
 
         profileListeners.put(profile, tempProfile);

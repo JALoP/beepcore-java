@@ -1,5 +1,5 @@
 /*
- * SessionTuningProperties.java  $Revision: 1.1 $ $Date: 2001/06/28 15:42:49 $
+ * SessionTuningProperties.java  $Revision: 1.2 $ $Date: 2001/07/27 06:17:40 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -28,7 +28,7 @@ import java.util.Hashtable;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Rev$, $Date: 2001/06/28 15:42:49 $
+ * @version $Rev$, $Date: 2001/07/27 06:17:40 $
  */
 public class SessionTuningProperties {
 
@@ -43,6 +43,9 @@ public class SessionTuningProperties {
     public static final String NEWLINE = "\n";
     public static final String NO_PROPERTIES =
         "SessionTuningProperties: No properties";
+
+    static final SessionTuningProperties emptyTuningProperties =
+        new SessionTuningProperties();
 
     // Data
     private Hashtable properties;
