@@ -1,5 +1,5 @@
 /*
- * InputDataStream.java  $Revision: 1.2 $ $Date: 2001/11/08 05:51:34 $
+ * InputDataStream.java  $Revision: 1.3 $ $Date: 2002/01/15 16:02:59 $
  *
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @see org.beepcore.beep.util.BufferSegment
  *
  * @author Huston Franklin
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.3 $, $Date: 2002/01/15 16:02:59 $
  */
 public class InputDataStream {
 
@@ -160,9 +160,16 @@ public class InputDataStream {
         return b;
     }
 
+    /**
+     *
+     * @returns null if isComplete() is true.
+     */
     public BufferSegment waitForNextSegment() throws InterruptedException {
         synchronized (buffers) {
-            if (availableSegment() == false) {
+            while (availableSegment() == false) {
+                if (isComplete() == true) {
+                    return null;
+                }
                 buffers.wait();
             }
             return getNextSegment();
@@ -184,7 +191,9 @@ public class InputDataStream {
 
     void setComplete() {
         this.complete = true;
-        // @todo notify objects waiting for more buffers.
+        synchronized (this.buffers) {
+            this.buffers.notify();
+        }
     }
 
     LinkedList buffers = new LinkedList();
@@ -194,65 +203,3 @@ public class InputDataStream {
     private boolean complete = false;
     private InputDataStreamAdapter stream = null;
 }
-    /**
-     * Returns the content type of a <code>InputDataStrea</code>.  If
-     * the <code>BufferSegment</code> containing the content type
-     * hasn't been received yet, the method blocks until it is
-     * received.
-     *
-     * @return Content type.
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-//     public String getContentType() throws BEEPException
-//     {
-//         return this.getInputStream().getContentType();
-//     }
-
-    /**
-     * Returns the value of the MIME entity header which corresponds
-     * to the given <code>name</code>. If the <code>BufferSegment</code>
-     * containing the content type hasn't been received yet, the
-     * method blocks until it is received.
-     *
-     * @param name Name of the entity header.
-     * @return String Value of the entity header.
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-//     public String getHeaderValue(String name) throws BEEPException
-//     {
-//         return this.getInputStream().getHeaderValue(name);
-//     }
-
-    /**
-     * Returns an <code>Enumeration</code> of all the MIME entity
-     * header names belonging to this <code>InputDataStream</code>.
-     * If the <code>BufferSegment</code> containing the content type
-     * hasn't been received yet, the method blocks until it is
-     * received.
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-//     public Enumeration getHeaderNames() throws BEEPException
-//     {
-//         return this.getInputStream().getHeaderNames();
-//     }
-
-    /**
-     * Returns the transfer encoding of a <code>InputDataStrea</code>.
-     * If the <code>BufferSegment</code> containing the content type
-     * hasn't been received yet, the method blocks until it is
-     * received.
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-//     public String getTransferEncoding() throws BEEPException
-//     {
-//         return this.getInputStream().getTransferEncoding();
-//     }
-
