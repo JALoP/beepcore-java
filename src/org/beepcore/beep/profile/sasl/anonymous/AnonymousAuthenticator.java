@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.7 $ $Date: 2001/07/03 20:50:26 $
+ * AnonymousAuthenticator.java  $Revision: 1.8 $ $Date: 2001/07/30 13:07:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2001/07/03 20:50:26 $
+ * @version $Revision: 1.8 $, $Date: 2001/07/30 13:07:11 $
  *
  */
 class AnonymousAuthenticator
@@ -210,7 +210,7 @@ class AnonymousAuthenticator
         Log.logEntry(Log.SEV_DEBUG, "Using=>" + blob.toString() + "<=");
         try {
             credential.put(SessionCredential.AUTHENTICATOR, authenticateId);
-            profile.sendMessage(blob, channel);
+            channel.sendMSG(new StringDataStream(blob.toString()), this);
         } catch (Exception x) {
             abort(x.getMessage());
         }
@@ -313,13 +313,13 @@ class AnonymousAuthenticator
 
             if (state == STATE_STARTED) {
                 try {
-                    profile.sendReply(receiveID(data), channel);
-                } catch (Exception szf) {
-                    abort(szf.getMessage());
+                    Blob reply = receiveID(data);
+                    message.sendRPY(new StringDataStream(reply.toString()));
+                } catch (BEEPException x) {
+                    abort(x.getMessage());
                     // @todo weird and iffy, cuz we may have sent...
                     // Unsolicited message is probably better than
                     // a waiting peer, so let's abort and blow it up...
-                    // return;
                 }
                 profile.finishListenerAuthentication(new SessionCredential(credential),
                                                      channel.getSession());
@@ -329,10 +329,10 @@ class AnonymousAuthenticator
         {
             try
             {
-                profile.sendReply(new Blob(Blob.STATUS_ABORT, s.getMessage()),
-                                  channel);
+                Blob reply = new Blob(Blob.STATUS_ABORT, s.getMessage());
+                message.sendRPY(new StringDataStream(reply.toString()));
             }
-            catch(Exception t)
+            catch(BEEPException t)
             {
                 message.getChannel().getSession().terminate(t.getMessage());
             }
@@ -412,12 +412,12 @@ class AnonymousAuthenticator
             synchronized (this) {
                 this.notify();
             }
-            try
-            {
-                if(sendAbort)
-                    profile.sendMessage(new Blob(Blob.STATUS_ABORT,
-                                                 x.getMessage()),
-                                        channel);
+            try {
+                if(sendAbort) {
+                    Blob reply = new Blob(Blob.STATUS_ABORT, x.getMessage());
+                    channel.sendMSG(new StringDataStream(blob.toString()),
+                                    this);
+                }
             }
             catch(Exception q)
             {

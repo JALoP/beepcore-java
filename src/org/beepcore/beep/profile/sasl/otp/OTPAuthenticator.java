@@ -1,5 +1,5 @@
 /*
- * OTPAuthenticator.java  $Revision: 1.6 $ $Date: 2001/05/23 16:39:36 $
+ * OTPAuthenticator.java  $Revision: 1.7 $ $Date: 2001/07/30 13:07:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/05/23 16:39:36 $
+ * @version $Revision: 1.7 $, $Date: 2001/07/30 13:07:11 $
  *
  */
 class OTPAuthenticator implements MessageListener, ReplyListener {
@@ -518,7 +518,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                      "AuthOTP Using=>" + blob.toString() + "<=");
         try {
             channel.sendMSG(new StringDataStream(blob.toString()), (ReplyListener) this);
-        } catch (Exception x) {
+        } catch (BEEPException x) {
             abort(x.getMessage());
         }
     }
@@ -608,7 +608,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         try
         {
             blob = new Blob(Blob.STATUS_CONTINUE, phrase);
-            profile.sendMessage(blob, channel);
+            channel.sendMSG(new StringDataStream(blob.toString()), this);
         }
         catch(BEEPException x)
         {
@@ -713,8 +713,12 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             }
 
             if (state == STATE_STARTED) {
-                profile.sendReply(receiveIDs(data),
-                                  channel);
+                Blob reply = receiveIDs(data);
+                try {
+                    message.sendRPY(new StringDataStream(reply.toString()));
+                } catch (BEEPException x) {
+                    throw new SASLException(x.getMessage());
+                }
                 return;
             }
 
@@ -732,7 +736,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                              + " is valid for\n" + cred.toString());
                 try
                 {
-                    channel.sendRPY(new StringDataStream(new Blob(Blob.STATUS_COMPLETE).toString()));
+                    message.sendRPY(new StringDataStream(new Blob(Blob.STATUS_COMPLETE).toString()));
                     channel.setDataListener(null);
                 }
                 catch(BEEPException x)
@@ -753,8 +757,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                 // if it's redundant
                 profile.failListenerAuthentication(channel.getSession(),
                                                    authenticated);
-                channel.sendRPY(new StringDataStream(new Blob(Blob.STATUS_ABORT,
-                                                              s.getMessage()).toString()));
+                Blob reply  = new Blob(Blob.STATUS_ABORT, s.getMessage());
+                message.sendRPY(new StringDataStream(reply.toString()));
 //                channel.setDataListener(null);
             }
             catch(BEEPException x)
@@ -856,11 +860,11 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             {
                 try
                 {
-                        profile.sendMessage(new Blob(Blob.STATUS_ABORT,
-                                                     x.getMessage()),
-                                            channel);
+                    Blob a = new Blob(Blob.STATUS_ABORT, x.getMessage());
+                    channel.sendMSG(new StringDataStream(a.toString()),
+                                    this);
                 }
-                catch(SASLException y)
+                catch(BEEPException y)
                 {
                     message.getChannel().getSession().terminate(y.getMessage());
                 }

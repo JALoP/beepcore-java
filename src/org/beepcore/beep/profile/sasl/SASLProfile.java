@@ -1,5 +1,5 @@
 /*
- * SASLProfile.java  $Revision: 1.4 $ $Date: 2001/07/03 20:51:28 $
+ * SASLProfile.java  $Revision: 1.5 $ $Date: 2001/07/30 13:07:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/07/03 20:51:28 $
+ * @version $Revision: 1.5 $, $Date: 2001/07/30 13:07:11 $
  *
  */
 public abstract class SASLProfile extends TuningProfile {
@@ -68,57 +68,6 @@ public abstract class SASLProfile extends TuningProfile {
     public SASLProfile() 
     {
         sessionTable = new SASLSessionTable();
-    }
-
-    /**
-     * Method sendReply This is usually used for sending challenges
-     * in response to authentication requests...or in response
-     * to authentication attempts.  It was simpler to do it here once
-     * and wrap the exceptions as SASLExceptions than it was to replicate
-     * this code all over the SASL portion of the library.
-     * 
-     * @param blob the data to send
-     * @param Channel the channel to send the data on
-     * 
-     * @throws SASLException if an issue is encountered during the send.
-     */
-    public void sendReply(Blob blob, Channel channel)
-            throws SASLException
-    {
-        try {
-            channel.sendRPY(new StringDataStream(blob.toString()));
-        } catch (Exception x) {
-            throw new SASLException(x.getMessage());
-        }
-    }
-
-    /**
-     * This routine is typically used for ...
-     * either at the beginning of the authentication
-     * "I would like to authenticate as <blank>"
-     * "I got your challenge.  Here is the info to authenticate me"
-     */
-    /**
-     * Method sendMessage This is usually used for sending
-     * messages in response to challenges from SASL mechanisms
-     * It was simpler to do it here once
-     * and wrap the exceptions as SASLExceptions than it was to replicate
-     * this code all over the SASL portion of the library.
-     * 
-     * @param blob the data to send
-     * @param Channel the channel to send the data on
-     * 
-     * @throws SASLException if an issue is encountered during the send.
-     */                                
-    public void sendMessage(Blob blob, Channel channel)
-            throws SASLException
-    {
-        try {
-            channel.sendMSG(new StringDataStream(blob.toString()),
-                            (ReplyListener) channel.getDataListener());
-        } catch (Exception x) {
-            throw new SASLException(x.getMessage());
-        }
     }
 
     /**
