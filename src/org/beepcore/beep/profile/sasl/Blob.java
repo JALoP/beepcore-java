@@ -1,5 +1,5 @@
 /*
- * Blob.java            $Revision: 1.1 $ $Date: 2001/04/02 21:38:14 $
+ * Blob.java            $Revision: 1.2 $ $Date: 2001/05/23 16:38:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -41,7 +41,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 21:38:14 $
+ * @version $Revision: 1.2 $, $Date: 2001/05/23 16:38:37 $
  *
  */
 public class Blob
@@ -90,33 +90,135 @@ public class Blob
     
     // Data
     private int status;
-    private String blobData, decodedData, stringified;
-    
+    private String blobData;
+    private String stringified;
+    private byte[] decodedData;
+
     /**
      * This is the Constructor for those that want to create and send a blob.
      * 
      * @param status the status to construct the blob with (see the constants
      * in this class).
      * @param data the data to be embedded in the blob element
-     * 
-     * @throws SASLException 
+     *
+     * @throws SASLException
+     */
+    public Blob(int status)
+        throws SASLException
+    {
+        Log.logEntry(Log.SEV_DEBUG, "Created blob=>"+status);
+        if (!initialized) {
+            init();
+        }
+
+        // Validate status
+        if (!validateStatus(status)) {
+            throw new SASLException(ERR_INVALID_STATUS_VALUE);
+        }
+
+        this.status = status;
+
+        StringBuffer buff = new StringBuffer(DEFAULT_BLOB_SIZE);
+        buff.append(FRAGMENT_BLOB_PREFIX);
+
+        if (status != STATUS_NONE) {
+            buff.append(FRAGMENT_STATUS_PREFIX);
+            buff.append(statusMappings[status]);
+            buff.append(FRAGMENT_QUOTE_SUFFIX);
+        }
+
+        if (blobData == null) {
+            buff.append(FRAGMENT_SLASH_ANGLE_SUFFIX);
+        } else {
+            buff.append(FRAGMENT_ANGLE_SUFFIX);
+            buff.append(blobData);
+            buff.append(FRAGMENT_BLOB_SUFFIX);
+        }
+
+        stringified = buff.toString();
+        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + stringified);
+    }
+
+    /**
+     * This is the Constructor for those that want to create and send a blob.
+     *
+     * @param status the status to construct the blob with (see the constants
+     * in this class).
+     * @param data the data to be embedded in the blob element
+     *
+     * @throws SASLException
      */
     public Blob(int status, String data)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Created blob=>"+status+","+data);
-        if(!initialized)
+        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + status + "," + data);
+        if (!initialized) {
             init();
-        
+        }
+
         // Validate status
-        if(!validateStatus(status))
+        if (!validateStatus(status)) {
             throw new SASLException(ERR_INVALID_STATUS_VALUE);
+        }
 
         this.status = status;
-        if(data != null)
-        {
+        if (data != null) {
+          try {
+            this.decodedData = data.getBytes("UTF-8");
+          } catch (java.io.UnsupportedEncodingException e) {
+            throw new
+                java.lang.RuntimeException("UTF-8 encoding not supported");
+          }
+
+          this.blobData = encoder.encodeBuffer(this.decodedData);
+        }
+
+        StringBuffer buff = new StringBuffer(DEFAULT_BLOB_SIZE);
+        buff.append(FRAGMENT_BLOB_PREFIX);
+
+        if (status != STATUS_NONE) {
+            buff.append(FRAGMENT_STATUS_PREFIX);
+            buff.append(statusMappings[status]);
+            buff.append(FRAGMENT_QUOTE_SUFFIX);
+        }
+
+        if (blobData == null) {
+            buff.append(FRAGMENT_SLASH_ANGLE_SUFFIX);
+        } else {
+            buff.append(FRAGMENT_ANGLE_SUFFIX);
+            buff.append(blobData);
+            buff.append(FRAGMENT_BLOB_SUFFIX);
+        }
+
+        stringified = buff.toString();
+        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + stringified);
+    }
+
+    /**
+     * This is the Constructor for those that want to create and send a blob.
+     *
+     * @param status the status to construct the blob with (see the constants
+     * in this class).
+     * @param data the data to be embedded in the blob element
+     *
+     * @throws SASLException
+     */
+    public Blob(int status, byte[] data )
+        throws SASLException
+    {
+        if (!initialized) {
+            init();
+        }
+
+        // Validate status
+        if (!validateStatus(status)) {
+            throw new SASLException(ERR_INVALID_STATUS_VALUE);
+        }
+
+        this.status = status;
+        if (data != null) {
             this.decodedData = data;
-            this.blobData = encoder.encodeBuffer(data.getBytes());
+            this.blobData = encoder.encodeBuffer(data);
         }
         
         StringBuffer buff = new StringBuffer(DEFAULT_BLOB_SIZE);
@@ -137,7 +239,7 @@ public class Blob
         }
         
         stringified = buff.toString();
-        Log.logEntry(Log.SEV_DEBUG, "Created blob=>"+stringified);
+        Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + stringified);
     }
 
     /**
@@ -148,25 +250,22 @@ public class Blob
      * @throws SASLException in the event that errors occur during the
      * parsing of the blob passed in.
      */
-    public Blob(String blob)
-        throws SASLException
+    public Blob(String blob) throws SASLException
     {
         Log.logEntry(Log.SEV_DEBUG, "Receiving blob of=>"+blob);
-        if(!initialized)
-            init();                
+        if (!initialized) {
+            init();
+        }
         
         stringified = blob;
         // Parse out the status if there is any
         String statusString = extractStatusFromBlob(blob);
         this.status = STATUS_NONE;
-        if(statusString != null)
-        {
-            for(int i=0; i<STATUS_LIMIT; i++)
-            {
-                if(statusMappings[i].equals(statusString))
-                {
+        if (statusString != null) {
+            for (int i=0; i<STATUS_LIMIT; i++) {
+                if (statusMappings[i].equals(statusString)) {
                     status = i;
-                    continue;
+                    break;
                 }
             }
             statusString = statusMappings[status];
@@ -174,23 +273,21 @@ public class Blob
         
         // Parse out the data if there is any
         blobData = extractDataFromBlob(blob);
-        if(blobData != null)
-        {
-            try
-            {
-                decodedData = new String(decoder.decodeBuffer(blobData));
-            }
-            catch(IOException x)
-            {
+        if (blobData != null) {
+            try {
+                decodedData = decoder.decodeBuffer(blobData);
+            } catch (IOException x) {
                 throw new SASLException(x.getMessage());
             }
-        }
-        else
+        } else {
             decodedData = null;
-        if(status == STATUS_NONE && blobData == null )
+        }
+
+        if (status == STATUS_NONE && blobData == null) {
             throw new SASLException(ERR_MEANINGLESS_BLOB);
+        }
         
-        Log.logEntry(Log.SEV_DEBUG, "Received Blob of =>"+stringified);
+        Log.logEntry(Log.SEV_DEBUG, "Received Blob of =>" + stringified);
     }
     
     /**
@@ -248,6 +345,17 @@ public class Blob
      *
      */
     public String getData()
+    {
+        return new String( decodedData );
+    }
+
+    /**
+     * Method getData
+     *
+     * @return String the data contained in the blob element
+     *
+     */
+    public byte[] getDataBytes()
     {
         return decodedData;
     }
@@ -389,26 +497,6 @@ public class Blob
     }
 
     /**
-     * Base64 Help routine so we don't have to expose them
-     * to subclasses and others.
-     *
-     * @todo move to some util class
-     * 
-     * @param data the data to decode
-     * @return String the decoded data.
-     * 
-     * @throws SASLException
-     */
-    private static String decodeData(String data) throws SASLException
-    {
-        try {
-            return new String(decoder.decodeBuffer(data));
-        } catch (Exception x) {
-            throw new SASLException(ERR_BASE64);
-        }
-    }
-
-    /**
      * Method decodeData simply checks values of the blob's
      * status attribute against 'valid' values.
      * 
@@ -441,8 +529,10 @@ public class Blob
      */
     private static boolean validateStatus(int status)
     {
-        if( status < STATUS_NONE || status > STATUS_COMPLETE)
+        if (status < STATUS_NONE || status > STATUS_COMPLETE) {
             return false;
+        }
+
         return true;
     }
 }
