@@ -1,5 +1,5 @@
 /*
- * MessageMSG.java  $Revision: 1.1 $ $Date: 2001/05/07 19:21:57 $
+ * MessageMSG.java  $Revision: 1.2 $ $Date: 2001/05/07 21:21:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,7 +24,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/05/07 19:21:57 $
+ * @version $Revision: 1.2 $, $Date: 2001/05/07 21:21:38 $
  *
  */
 public class MessageMSG extends Message
@@ -48,7 +48,17 @@ public class MessageMSG extends Message
      */
     public MessageStatus sendANS(DataStream stream) throws BEEPException
     {
-        return this.getChannel().sendANS(stream);
+        Message m;
+
+        synchronized (this) {
+            // reusing ansno (initialized to -1) from Message since
+            // this is a MSG
+            ++ansno;
+
+            m = new Message(this.channel, this.msgno, this.ansno, stream);
+        }
+
+        return this.channel.sendMessage(m);
     }
 
     /**
@@ -65,7 +75,10 @@ public class MessageMSG extends Message
      */
     public MessageStatus sendERR(BEEPError error) throws BEEPException
     {
-        return this.getChannel().sendERR(new StringDataStream(error.createErrorMessage()));
+        DataStream stream = new StringDataStream(error.createErrorMessage());
+        Message m =
+            new Message(this.channel, this.msgno, stream, MESSAGE_TYPE_ERR);
+        return this.channel.sendMessage(m);
     }
 
     /**
@@ -83,7 +96,10 @@ public class MessageMSG extends Message
     public MessageStatus sendERR(int code, String diagnostic)
         throws BEEPException
     {
-        return this.getChannel().sendERR(new StringDataStream(BEEPError.createErrorMessage(code, diagnostic)));
+        String error = BEEPError.createErrorMessage(code, diagnostic);
+        Message m = new Message(this.channel, this.msgno,
+                                new StringDataStream(error), MESSAGE_TYPE_ERR);
+        return this.channel.sendMessage(m);
     }
 
     /**
@@ -103,7 +119,10 @@ public class MessageMSG extends Message
     public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
         throws BEEPException
     {
-        return this.getChannel().sendERR(new StringDataStream(BEEPError.createErrorMessage(code, diagnostic, xmlLang)));
+        String error = BEEPError.createErrorMessage(code, diagnostic, xmlLang);
+        Message m = new Message(this.channel, this.msgno,
+                                new StringDataStream(error), MESSAGE_TYPE_ERR);
+        return this.channel.sendMessage(m);
     }
 
     /**
@@ -118,7 +137,9 @@ public class MessageMSG extends Message
      */
     public MessageStatus sendNUL() throws BEEPException
     {
-        return this.getChannel().sendNUL();
+        Message m =
+            new Message(this.channel, this.msgno, null, MESSAGE_TYPE_NUL);
+        return this.channel.sendMessage(m);
     }
 
     /**
@@ -135,8 +156,8 @@ public class MessageMSG extends Message
      */
     public MessageStatus sendRPY(DataStream stream) throws BEEPException
     {
-        return this.getChannel().sendRPY(stream);
+        Message m =
+            new Message(this.channel, this.msgno, stream, MESSAGE_TYPE_RPY);
+        return this.channel.sendMessage(m);
     }
-
-    private int ansno = -1;         // counter of the answer
 }

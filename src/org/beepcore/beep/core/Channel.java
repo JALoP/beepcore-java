@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.7 $ $Date: 2001/05/07 19:21:57 $
+ * Channel.java            $Revision: 1.8 $ $Date: 2001/05/07 21:21:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2001/05/07 19:21:57 $
+ * @version $Revision: 1.8 $, $Date: 2001/05/07 21:21:38 $
  *
  */
 public class Channel {
@@ -776,26 +776,10 @@ public class Channel {
      */
     public MessageStatus sendANS(DataStream stream) throws BEEPException
     {
-        if (state != STATE_OK) {
-            switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
-            case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
-            default :
-                throw new BEEPException(Constants.EMPTY_STRING);
-            }
-        }
+        Message m;
 
-        // put a semaphore increment here to prevent another thread from
-        // calling sendNUL before an answer has been transmitted completely.
         synchronized (this) {
             ++ansno;
-        }
-
-        MessageStatus status;
-
-        synchronized (this) {
 
             // if no previous answer sent for this message then increment
             // the reply number.  Otherwise, just increment the answer number
@@ -806,16 +790,10 @@ public class Channel {
             }
 
             // create a new request
-            status = new MessageStatus(new Message(this, lastAnswerSent,
-                                                   ansno, stream));
+            m = new Message(this, lastAnswerSent, ansno, stream);
         }
 
-        // send it on the session
-        sendToPeer(status);
-
-        // put a semaphore decrement here to signal one answer has been
-        // transmitted
-        return status;
+        return sendMessage(m);
     }
 
     /**
@@ -888,7 +866,7 @@ public class Channel {
      *
      * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendMSG(DataStream stream,
+    MessageStatus sendMSG(DataStream stream,
                                  FrameListener frameListener)
             throws BEEPException
     {
@@ -944,17 +922,6 @@ public class Channel {
      */
     public MessageStatus sendNUL() throws BEEPException
     {
-        if (state != STATE_OK) {
-            switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
-            case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
-            default :
-                throw new BEEPException(Constants.EMPTY_STRING);
-            }
-        }
-
         // what to do to assure that no other ANS follow this NUL
         // for this reply?  Throw an exception if they try and send
         // an ANS after the NUL is being sent?      Block on a mutex until
@@ -965,7 +932,7 @@ public class Channel {
         // done.
         // if no answer sent (only a NUL), then increment the message
         // number
-        MessageStatus status = null;
+        Message m;
 
         synchronized (this) {
             if (msgsPending > 0) {
@@ -979,18 +946,14 @@ public class Channel {
                 }
             }
 
-            // create a new request
-            status = new MessageStatus(new Message(this, lastAnswerSent, null,
-                                                   Message.MESSAGE_TYPE_NUL));
+            m = new Message(this, lastAnswerSent, null,
+                            Message.MESSAGE_TYPE_NUL);
 
             // reset the answer number
             ansno = -1;
         }
 
-        // send it on the session and return it
-        sendToPeer(status);
-
-        return status;
+        return sendMessage(m);
     }
 
     /**
@@ -1008,32 +971,16 @@ public class Channel {
      */
     public MessageStatus sendRPY(DataStream stream) throws BEEPException
     {
-        if (state != STATE_OK) {
-            switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
-            case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
-            default :
-                throw new BEEPException(Constants.EMPTY_STRING);
-            }
-        }
-
-        // create a new request
-        MessageStatus status;
+        Message m;
 
         synchronized (this) {
-            status = new MessageStatus(new Message(this, lastReplySent,
-                                                   stream,
-                                                   Message.MESSAGE_TYPE_RPY));
+            m = new Message(this, lastReplySent, stream,
+                            Message.MESSAGE_TYPE_RPY);
 
             ++lastReplySent;
         }
 
-        // send it on the session
-        sendToPeer(status);
-
-        return status;
+        return sendMessage(m);
     }
 
     /**
@@ -1051,6 +998,20 @@ public class Channel {
      */
     public MessageStatus sendERR(DataStream stream) throws BEEPException
     {
+        Message m;
+
+        synchronized (this) {
+            m = new Message(this, lastReplySent, stream,
+                            Message.MESSAGE_TYPE_ERR);
+
+            ++lastReplySent;
+        }
+
+        return sendMessage(m);
+    }
+
+    MessageStatus sendMessage(Message m) throws BEEPException
+    {
         if (state != STATE_OK) {
             switch (state) {
             case STATE_ERROR :
@@ -1062,17 +1023,8 @@ public class Channel {
             }
         }
 
-        MessageStatus status;
-
-        synchronized (this) {
-
-            // create a new request
-            status = new MessageStatus(new Message(this, lastReplySent,
-                                                   stream,
-                                                   Message.MESSAGE_TYPE_ERR));
-
-            ++lastReplySent;
-        }
+        // create a new request
+        MessageStatus status = new MessageStatus(m);
 
         // send it on the session
         sendToPeer(status);
@@ -1259,13 +1211,6 @@ public class Channel {
         }
     }
 
-    /**
-     * Method setProfile
-     *
-     *
-     * @param profile
-     *
-     */
     void setProfile(String profile)
     {
         this.profile = profile;
@@ -1279,34 +1224,16 @@ public class Channel {
         return this.profile;
     }
 
-    /**
-     * Method getErrorMessage
-     *
-     * @return BEEPError
-     */
     BEEPError getErrorMessage()
     {
         return this.errMessage;
     }
 
-    /**
-     * Method setErrorMessage
-     *
-     * @param message
-     */
     void setErrorMessage(BEEPError message)
     {
         this.errMessage = message;
     }
 
-    /**
-     * Method updatePeerReceiveBufferSize
-     *
-     *
-     * @param lastSeq
-     * @param size
-     *
-     */
     synchronized void updatePeerReceiveBufferSize(long lastSeq, int size)
     {
         int previousPeerWindowSize = peerWindowSize;
@@ -1327,13 +1254,6 @@ public class Channel {
         }
     }
 
-    /**
-     * Method freeReceiveBufferBytes
-     *
-     *
-     * @param size
-     *
-     */
     synchronized void freeReceiveBufferBytes(int size)
     {
         try {
