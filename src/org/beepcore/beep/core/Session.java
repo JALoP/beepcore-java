@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.7 $ $Date: 2001/04/18 05:38:19 $
+ * Session.java            $Revision: 1.8 $ $Date: 2001/04/26 18:34:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2001/04/18 05:38:19 $
+ * @version $Revision: 1.8 $, $Date: 2001/04/26 18:34:06 $
  *
  * @see Channel
  */
@@ -258,6 +258,10 @@ public abstract class Session {
 
             StartChannelListener scl =
                 profileRegistry.getStartChannelListener(ch.getProfile());
+
+            if (scl == null) {
+                continue;
+            }
 
             // check locally first to see if it is ok to close the channel
             try {
