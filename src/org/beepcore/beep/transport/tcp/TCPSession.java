@@ -1,5 +1,5 @@
 /*
- * TCPSession.java            $Revision: 1.4 $ $Date: 2001/04/13 21:42:32 $
+ * TCPSession.java            $Revision: 1.5 $ $Date: 2001/04/16 17:03:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/13 21:42:32 $
+ * @version $Revision, $Date: 2001/04/16 17:03:03 $
  */
 public class TCPSession extends Session {
 
@@ -378,7 +378,7 @@ public class TCPSession extends Session {
             int b = is.read();
 
             if (b == -1) {
-                throw new BEEPException("Malformed BEEP header");
+                throw new BEEPException("Malformed BEEP header, EOS");
             }
 
             headerBuffer[length] = (byte) b;
@@ -391,10 +391,13 @@ public class TCPSession extends Session {
 
             ++length;
             if (length == Frame.MAX_HEADER_SIZE) {
-                throw new BEEPException("Malformed BEEP header");
+                throw new BEEPException("Malformed BEEP header, no CRLF");
             }
         }
 
+        Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                     "Read the following\n" +
+                     new String(headerBuffer, 0, length));
         // If this is not a SEQ frame build a <code>Frame</code> and
         // read in the payload and verify the TRAILER.
         if (headerBuffer[0] != (byte) SEQ_PREFIX.charAt(0)) {
@@ -406,15 +409,18 @@ public class TCPSession extends Session {
             }
 
             Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                         "Read the following\n"
-                         + new String(headerBuffer, 0, length)
-                             + new String(payload));
+                         new String(payload));
 
             for (int i = 0; i < Frame.TRAILER.length(); ++i) {
                 int b = is.read();
 
-                if (b == -1 || ((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
-                    throw new BEEPException("Malformed BEEP header");
+                if (b == -1) {
+                    throw new BEEPException("Malformed BEEP frame, " +
+                                            "trailer not found");
+                }
+                if (((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
+                    throw new BEEPException("Malformed BEEP frame, " +
+                                            "invalid trailer");
                 }
             }
 
