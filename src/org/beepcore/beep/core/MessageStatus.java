@@ -1,5 +1,5 @@
 /*
- * MessageStatus.java            $Revision: 1.3 $ $Date: 2001/11/08 05:51:34 $
+ * MessageStatus.java            $Revision: 1.4 $ $Date: 2002/04/30 04:06:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -23,7 +23,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision, $Date: 2002/04/30 04:06:22 $
  */
 public class MessageStatus {
 
@@ -54,7 +54,7 @@ public class MessageStatus {
     MessageStatus(Channel channel, int messageType, int msgno,
                   OutputDataStream data)
     {
-        this(channel, messageType, msgno, data, null);
+        this(channel, messageType, msgno, -1, data, null);
     }
 
     MessageStatus(Channel channel, int messageType, int msgno,
@@ -63,6 +63,12 @@ public class MessageStatus {
         this(channel, messageType, msgno, -1, data, replyListener);
     }
 
+    MessageStatus(Channel channel, int messageType, int msgno, int ansno,
+                  OutputDataStream data)
+    {
+        this(channel, messageType, msgno, ansno, data, null);
+    }
+    
     MessageStatus(Channel channel, int messageType, int msgno, int ansno,
                   OutputDataStream data, ReplyListener replyListener)
     {
