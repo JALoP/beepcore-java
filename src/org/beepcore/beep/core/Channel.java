@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.11 $ $Date: 2001/07/03 20:51:28 $
+ * Channel.java            $Revision: 1.12 $ $Date: 2001/07/09 13:53:40 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2001/07/03 20:51:28 $
+ * @version $Revision: 1.12 $, $Date: 2001/07/09 13:53:40 $
  *
  */
 public class Channel {
@@ -353,6 +353,275 @@ public class Channel {
     public boolean getNotifyMessageListenerOnFirstFrame()
     {
         return this.notifyOnFirstFrame;
+    }
+
+    /**
+     * Sets the <code>DataListener</code> for this channel.
+     *
+     * @param ml
+     */
+    public void setDataListener(DataListener ml)
+    {
+
+        // @todo can this be called consecutively with different listeners?
+        // if so, should it return the old listener?
+        // if not, should we prevent it?
+        this.listener = ml;
+    }
+
+    /**
+     * Returns the message listener for this channel.
+     *
+     */
+    public DataListener getDataListener()
+    {
+        return this.listener;
+    }
+
+    /**
+     * Returns the session for this channel.
+     *
+     */
+    public Session getSession()
+    {
+        return this.session;
+    }
+
+    /**
+     * Sends a message of type ANS.
+     *
+     * @param stream Data to send in the form of <code>DataStream</code>.
+     *
+     * @see DataStream
+     * @see MessageStatus
+     * @see #sendNUL
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendANS(DataStream stream) throws BEEPException
+    {
+        Message m = (Message)this.sentMSGQueue.get(0);
+
+        return m.sendANS(stream);
+    }
+
+    /**
+     * Sends a message of type MSG.
+     *
+     * @param stream Data to send in the form of <code>DataStream</code>.
+     * @param replyListener A "one-shot" listener that will handle replies
+     * to this sendMSG listener.
+     *
+     * @see DataStream
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     */
+    public MessageStatus sendMSG(DataStream stream,
+                                 ReplyListener replyListener)
+            throws BEEPException
+    {
+        MessageStatus status;
+
+        if (state != STATE_OK) {
+            switch (state) {
+            case STATE_ERROR :
+                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
+            case STATE_UNINITIALISED :
+                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
+            default :
+                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
+            }
+        }
+
+        synchronized (this) {
+
+            // create a new request
+            status =
+                new MessageStatus(new Message(this, lastMessageSent, stream,
+                                              Message.MESSAGE_TYPE_MSG),
+                                  replyListener);
+
+            // message 0 was the greeting, it was already sent, inc the counter
+            ++lastMessageSent;
+        }
+
+        // put this in the list of messages waiting
+        // may want to put an expiration or something in here so they
+        // don't just stay around taking up space.
+        // @todo it's a synchronized list, you don't have to sync
+        synchronized (sentMSGQueue) {
+            sentMSGQueue.add(status);
+        }
+
+        // send it on the session
+        sendToPeer(status);
+
+        return status;
+    }
+
+    /**
+     * Sends a message of type MSG.
+     *
+     * @param stream Data to send in the form of <code>DataStream</code>.
+     * @param frameListener A "one-shot" listener that will handle replies
+     * to this sendMSG listener.
+     *
+     * @see DataStream
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     */
+    MessageStatus sendMSG(DataStream stream,
+                                 FrameListener frameListener)
+            throws BEEPException
+    {
+        MessageStatus status;
+
+        if (state != STATE_OK) {
+            switch (state) {
+            case STATE_ERROR :
+                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
+            case STATE_UNINITIALISED :
+                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
+            default :
+                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
+            }
+        }
+
+        synchronized (this) {
+
+            // create a new request
+            status =
+                new MessageStatus(new Message(this, lastMessageSent, stream,
+                                              Message.MESSAGE_TYPE_MSG),
+                                  frameListener);
+
+            // message 0 was the greeting, it was already sent, inc the counter
+            ++lastMessageSent;
+        }
+
+        // put this in the list of messages waiting
+        // may want to put an expiration or something in here so they
+        // don't just stay around taking up space.
+        // @todo it's a synchronized list, you don't have to sync
+        synchronized (sentMSGQueue) {
+            sentMSGQueue.add(status);
+        }
+
+        // send it on the session
+        sendToPeer(status);
+
+        return status;
+    }
+
+    /**
+     * Sends a message of type NUL.
+     *
+     * @see MessageStatus
+     * @see #sendANS
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendNUL() throws BEEPException
+    {
+        Message m = (Message)this.sentMSGQueue.get(0);
+
+        return m.sendNUL();
+    }
+
+    /**
+     * Sends a message of type RPY.
+     *
+     * @param stream Data to send in the form of <code>DataStream</code>.
+     *
+     * @see DataStream
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendRPY(DataStream stream) throws BEEPException
+    {
+        Message m = (Message)this.sentMSGQueue.get(0);
+
+        return m.sendRPY(stream);
+    }
+
+    /**
+     * Sends a message of type ERR.
+     *
+     * @param error Error to send in the form of <code>BEEPError</code>.
+     *
+     * @see BEEPError
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendERR(BEEPError error) throws BEEPException
+    {
+        Message m = (Message)this.sentMSGQueue.get(0);
+
+        return m.sendERR(error);
+    }
+
+    /**
+     * Sends a message of type ERR.
+     *
+     * @param code <code>code</code> attibute in <code>error</code> element.
+     * @param diagnostic Message for <code>error</code> element.
+     *
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendERR(int code, String diagnostic)
+        throws BEEPException
+    {
+        Message m = (Message)this.sentMSGQueue.get(0);
+
+        return m.sendERR(code, diagnostic);
+    }
+
+    /**
+     * Sends a message of type ERR.
+     *
+     * @param code <code>code</code> attibute in <code>error</code> element.
+     * @param diagnostic Message for <code>error</code> element.
+     * @param xmlLang <code>xml:lang</code> attibute in <code>error</code>
+     *                element.
+     *
+     * @see MessageStatus
+     *
+     * @return MessageStatus
+     *
+     * @throws BEEPException if an error is encoutered.
+     * @deprecated
+     */
+    public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
+        throws BEEPException
+    {
+        Message m = (Message)this.sentMSGQueue.get(0);
+
+        return m.sendERR(code, diagnostic, xmlLang);
     }
 
     /**
@@ -758,275 +1027,6 @@ public class Channel {
         } else {
             previousFrame = frame;
         }
-    }
-
-    /**
-     * Sets the <code>DataListener</code> for this channel.
-     *
-     * @param ml
-     */
-    public void setDataListener(DataListener ml)
-    {
-
-        // @todo can this be called consecutively with different listeners?
-        // if so, should it return the old listener?
-        // if not, should we prevent it?
-        this.listener = ml;
-    }
-
-    /**
-     * Returns the message listener for this channel.
-     *
-     */
-    public DataListener getDataListener()
-    {
-        return this.listener;
-    }
-
-    /**
-     * Returns the session for this channel.
-     *
-     */
-    public Session getSession()
-    {
-        return this.session;
-    }
-
-    /**
-     * Sends a message of type ANS.
-     *
-     * @param stream Data to send in the form of <code>DataStream</code>.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     * @see #sendNUL
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendANS(DataStream stream) throws BEEPException
-    {
-        Message m = (Message)this.sentMSGQueue.get(0);
-
-        return m.sendANS(stream);
-    }
-
-    /**
-     * Sends a message of type MSG.
-     *
-     * @param stream Data to send in the form of <code>DataStream</code>.
-     * @param replyListener A "one-shot" listener that will handle replies
-     * to this sendMSG listener.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     */
-    public MessageStatus sendMSG(DataStream stream,
-                                 ReplyListener replyListener)
-            throws BEEPException
-    {
-        MessageStatus status;
-
-        if (state != STATE_OK) {
-            switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
-            case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
-            default :
-                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
-            }
-        }
-
-        synchronized (this) {
-
-            // create a new request
-            status =
-                new MessageStatus(new Message(this, lastMessageSent, stream,
-                                              Message.MESSAGE_TYPE_MSG),
-                                  replyListener);
-
-            // message 0 was the greeting, it was already sent, inc the counter
-            ++lastMessageSent;
-        }
-
-        // put this in the list of messages waiting
-        // may want to put an expiration or something in here so they
-        // don't just stay around taking up space.
-        // @todo it's a synchronized list, you don't have to sync
-        synchronized (sentMSGQueue) {
-            sentMSGQueue.add(status);
-        }
-
-        // send it on the session
-        sendToPeer(status);
-
-        return status;
-    }
-
-    /**
-     * Sends a message of type MSG.
-     *
-     * @param stream Data to send in the form of <code>DataStream</code>.
-     * @param frameListener A "one-shot" listener that will handle replies
-     * to this sendMSG listener.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     */
-    MessageStatus sendMSG(DataStream stream,
-                                 FrameListener frameListener)
-            throws BEEPException
-    {
-        MessageStatus status;
-
-        if (state != STATE_OK) {
-            switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
-            case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
-            default :
-                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
-            }
-        }
-
-        synchronized (this) {
-
-            // create a new request
-            status =
-                new MessageStatus(new Message(this, lastMessageSent, stream,
-                                              Message.MESSAGE_TYPE_MSG),
-                                  frameListener);
-
-            // message 0 was the greeting, it was already sent, inc the counter
-            ++lastMessageSent;
-        }
-
-        // put this in the list of messages waiting
-        // may want to put an expiration or something in here so they
-        // don't just stay around taking up space.
-        // @todo it's a synchronized list, you don't have to sync
-        synchronized (sentMSGQueue) {
-            sentMSGQueue.add(status);
-        }
-
-        // send it on the session
-        sendToPeer(status);
-
-        return status;
-    }
-
-    /**
-     * Sends a message of type NUL.
-     *
-     * @see MessageStatus
-     * @see #sendANS
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendNUL() throws BEEPException
-    {
-        Message m = (Message)this.sentMSGQueue.get(0);
-
-        return m.sendNUL();
-    }
-
-    /**
-     * Sends a message of type RPY.
-     *
-     * @param stream Data to send in the form of <code>DataStream</code>.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendRPY(DataStream stream) throws BEEPException
-    {
-        Message m = (Message)this.sentMSGQueue.get(0);
-
-        return m.sendRPY(stream);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param error Error to send in the form of <code>BEEPError</code>.
-     *
-     * @see BEEPError
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(BEEPError error) throws BEEPException
-    {
-        Message m = (Message)this.sentMSGQueue.get(0);
-
-        return m.sendERR(error);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(int code, String diagnostic)
-        throws BEEPException
-    {
-        Message m = (Message)this.sentMSGQueue.get(0);
-
-        return m.sendERR(code, diagnostic);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     * @param xmlLang <code>xml:lang</code> attibute in <code>error</code>
-     *                element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
-        throws BEEPException
-    {
-        Message m = (Message)this.sentMSGQueue.get(0);
-
-        return m.sendERR(code, diagnostic, xmlLang);
     }
 
     MessageStatus sendMessage(Message m) throws BEEPException
