@@ -1,6 +1,6 @@
 
 /*
- * AlgorithmImpl.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:34 $
+ * AlgorithmImpl.java            $Revision: 1.3 $ $Date: 2002/10/05 15:11:18 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -20,7 +20,6 @@ package org.beepcore.beep.profile.sasl.otp.algorithm;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.beepcore.beep.profile.sasl.InvalidParameterException;
-import org.beepcore.beep.util.Log;
 
 /**
  *
@@ -28,7 +27,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.3 $, $Date: 2002/10/05 15:11:18 $
  *
  */
 public abstract class AlgorithmImpl implements Algorithm {
