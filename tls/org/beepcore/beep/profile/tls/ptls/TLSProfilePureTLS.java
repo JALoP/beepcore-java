@@ -1,5 +1,5 @@
 /*
- * TLSProfilePureTLS.java  $Revision: 1.5 $ $Date: 2001/11/09 18:41:23 $
+ * TLSProfilePureTLS.java  $Revision: 1.6 $ $Date: 2002/10/05 15:45:56 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -24,11 +24,13 @@ import java.util.*;
 
 import java.security.PrivateKey;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.tls.TLSProfile;
 import org.beepcore.beep.transport.tcp.*;
-import org.beepcore.beep.util.*;
 
 import COM.claymoresystems.ptls.*;
 import COM.claymoresystems.sslg.*;
@@ -108,6 +110,8 @@ public class TLSProfilePureTLS extends TuningProfile
         "Trusted Certificates";
     public static final String PROPERTY_PRIVATE_KEY_ALGORITHM =
         "Private Key Type";
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     // properties set from the configuration
     boolean needPeerAuth = true;
@@ -402,15 +406,15 @@ public class TLSProfilePureTLS extends TuningProfile
                               oldSocket.getInetAddress().getHostName(),
                               oldSocket.getPort(), SSLSocket.SERVER);
         } catch (BEEPException e) {
-            Log.logEntry(Log.SEV_ERROR, e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
             oldSession.terminate(e.getMessage());
         } catch (SSLThrewAlertException e) {
-            Log.logEntry(Log.SEV_ERROR, e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
             oldSession.terminate(e.getMessage());
         } catch (IOException e) {
-            Log.logEntry(Log.SEV_ERROR, e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
             oldSession.terminate(e.getMessage());    
         }
@@ -422,9 +426,7 @@ public class TLSProfilePureTLS extends TuningProfile
             if (needPeerAuth) {
                 cc = newSocket.getCertificateChain();
                 if (cc == null) {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                 "No certificate chain when there should " +
-                                 "be one. ");
+                    log.trace("No certificate chain when there should be one.");
                     throw new StartChannelException(550, "No certificate " +
                                                     "chain when there " +
                                                     "should be one. ");
@@ -434,12 +436,12 @@ public class TLSProfilePureTLS extends TuningProfile
                     X509Cert cert = (X509Cert) enum.nextElement();
                     String subject = cert.getSubjectName().getNameString();
                     String issuer = cert.getIssuerName().getNameString();
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                 "Name = " + subject + " issued by " + issuer);
+                    if (log.isTraceEnabled()) {
+                        log.trace("Name = " + subject + " issued by " + issuer);
+                    }
                 }
             } else {
-                Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                             "No peer authentication needed");
+                log.trace("No peer authentication needed");
             }
 
             int cs = newSocket.getCipherSuite();
@@ -489,7 +491,7 @@ public class TLSProfilePureTLS extends TuningProfile
         } catch (Exception x) {
 
             // @todo should be more detailed
-            Log.logEntry(Log.SEV_ERROR, x.getMessage());
+            log.error(x.getMessage());
             x.printStackTrace();
 
             throw new StartChannelException(450, x.getMessage());
@@ -516,7 +518,7 @@ public class TLSProfilePureTLS extends TuningProfile
      */
     public void closeChannel(Channel channel) throws CloseChannelException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Closing TLS channel.");
+        log.debug("Closing TLS channel.");
     }
 
     /**
@@ -562,7 +564,7 @@ public class TLSProfilePureTLS extends TuningProfile
             throw new BEEPException(ERR_EXPECTED_PROCEED);
         }
 
-        Log.logEntry(Log.SEV_DEBUG, "Staring TLS channel.");
+        log.debug("Staring TLS channel.");
 
         // Freeze IO and get the socket and reset it to TLS
         Socket oldSocket = session.getSocket();
@@ -597,8 +599,7 @@ public class TLSProfilePureTLS extends TuningProfile
             if (needPeerAuth) {
                 cc = newSocket.getCertificateChain();
                 if (cc == null) {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE, "No certificate " +
-                                 "chain when there should be one. ");
+                    log.trace("No certificate chain when there should be one.");
                     throw new BEEPException("No certificate chain when " +
                                             "there should be one. ");
                 }
@@ -607,12 +608,12 @@ public class TLSProfilePureTLS extends TuningProfile
                     X509Cert cert = (X509Cert) enum.nextElement();
                     String subject = cert.getSubjectName().getNameString();
                     String issuer = cert.getIssuerName().getNameString();
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                 "Name = " + subject + " issued by " + issuer);
+                    if (log.isTraceEnabled()) {
+                        log.trace("Name = " + subject + " issued by " + issuer);
+                    }
                 }
             } else {
-                Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                             "No peer authentication needed");
+                log.trace("No peer authentication needed");
             }
 
             int cs = newSocket.getCipherSuite();
