@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.30 $ $Date: 2002/10/05 15:26:30 $
+ * Channel.java  $Revision: 1.31 $ $Date: 2003/03/07 13:01:54 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.30 $, $Date: 2002/10/05 15:26:30 $
+ * @version $Revision: 1.31 $, $Date: 2003/03/07 13:01:54 $
  *
  */
 public class Channel {
@@ -186,6 +186,7 @@ public class Channel {
         // greeting which comes in an unsolicited RPY.
         sentMSGQueue.add(new MessageStatus(this, Message.MESSAGE_TYPE_MSG, 0,
                                            null, rl));
+        recvMSGQueue.add(new MessageMSG(this, 0, null));
 
         state = STATE_ACTIVE;
     }
@@ -454,52 +455,39 @@ public class Channel {
                     }
                 }
 
-                if (m == null) {
-                    m = new MessageMSG(this, frame.getMsgno(),
-                                       new InputDataStream(this));
+                if (m != null) {
+					/// Move this code to DataStream...
+					Iterator i = frame.getPayload();
+					synchronized (m) {
+						while (i.hasNext()) {
+							m.getDataStream().add((BufferSegment) i.next());
+						}
 
-                    recvMSGQueue.addLast(m);
-                    notify = true;
-                }
+						if (frame.isLast()) {
+							m.getDataStream().setComplete();
+						}
+					}
+                    
+                    return;
+				}
+
+				m =	new MessageMSG(this, frame.getMsgno(),
+            						new InputDataStream(this));
+
+				m.setNotified();
 
                 Iterator i = frame.getPayload();
-                synchronized (m) {
-                    while (i.hasNext()) {
-                        m.getDataStream().add((BufferSegment)i.next());
-                    }
-
-                    if (frame.isLast()) {
-                        m.getDataStream().setComplete();
-                    }
-                }
-
-                // The MessageListener interface only allows one message
-                // up to be processed at a time so if this is not the
-                // first message on the queue just return.
-                if (m != recvMSGQueue.getFirst()) {
-                    return;
+                while (i.hasNext()) {
+                    m.getDataStream().add((BufferSegment)i.next());
                 }
 
                 if (frame.isLast()) {
-                    synchronized (m) {
-                        if (m.isNotified()) {
-                            recvMSGQueue.remove(m);
-                        }
-                    }
+                    m.getDataStream().setComplete();
                 }
-            }
 
-            if (notify) {
-                synchronized (recvMSGQueue) {
-                    final MessageMSG m =
-                        (MessageMSG)recvMSGQueue.getFirst();
-                    synchronized (m) {
-                        if (m.getDataStream().isComplete()) {
-                            recvMSGQueue.remove(m);
-                        }
-                        m.setNotified();
-                    }
-
+                recvMSGQueue.addLast(m);
+                
+                if (recvMSGQueue.size() == 1) {
                     try {
                         listener.receiveMSG(m);
                     } catch (BEEPError e) {
@@ -950,6 +938,44 @@ public class Channel {
         } while (ds.availableSegment() == true || ds.isComplete() == false);
 
         status.setMessageStatus(MessageStatus.MESSAGE_STATUS_SENT);
+        
+        if (ds.isComplete() && ds.availableSegment() == false &&
+            (status.getMessageType() == Message.MESSAGE_TYPE_RPY ||
+             status.getMessageType() == Message.MESSAGE_TYPE_NUL))
+		{
+            MessageMSG m;
+			synchronized (recvMSGQueue) {
+				recvMSGQueue.removeFirst();
+
+				if (recvMSGQueue.size() != 0) {
+					m = (MessageMSG) recvMSGQueue.getFirst();
+					synchronized (m) {
+						m.setNotified();
+					}
+                } else {
+                    m = null;
+                }
+			}
+
+            if (m != null) {
+    			try {
+    				listener.receiveMSG(m);
+    			} catch (BEEPError e) {
+    				try {
+    					m.sendERR(e);
+    				} catch (BEEPException e2) {
+    					log.error("Error sending ERR", e2);
+    				}
+    			} catch (AbortChannelException e) {
+    				try {
+    					/* @todo change this to abort or something else */
+    					Channel.this.close();
+    				} catch (BEEPException e2) {
+    					log.error("Error closing channel", e2);
+    				}
+    			}
+            }
+        }
     }
 
     /**
