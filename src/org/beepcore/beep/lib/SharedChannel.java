@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
+ * SharedChannel.java            $Revision: 1.5 $ $Date: 2001/11/09 19:10:58 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
+ * @version $Revision: 1.5 $, $Date: 2001/11/09 19:10:58 $
  */
 public class SharedChannel extends Channel {
 
@@ -142,11 +142,6 @@ public class SharedChannel extends Channel {
         return channel.getMessageListener();
     }
 
-    public boolean getNotifyMessageListenerOnFirstFrame()
-    {
-        return channel.getNotifyMessageListenerOnFirstFrame();
-    }
-
     public int getNumber()
     {
         return channel.getNumber();
@@ -155,11 +150,6 @@ public class SharedChannel extends Channel {
     public Session getSession()
     {
         return channel.getSession();
-    }
-
-    public void setNotifyMessageListenerOnFirstFrame(boolean b)
-    {
-        channel.setNotifyMessageListenerOnFirstFrame(b);
     }
 
     /**

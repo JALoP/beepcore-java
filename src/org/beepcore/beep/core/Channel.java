@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.17 $ $Date: 2001/11/08 05:51:34 $
+ * Channel.java            $Revision: 1.18 $ $Date: 2001/11/09 19:10:58 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -33,7 +33,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.17 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.18 $, $Date: 2001/11/09 19:10:58 $
  *
  */
 public class Channel {
@@ -180,7 +180,7 @@ public class Channel {
         prevWindowUsed = 0;
         peerWindowSize = DEFAULT_WINDOW_SIZE;
         waitTimeForPeer = 0;
-        this.notifyOnFirstFrame = false;
+        this.notifyOnFirstFrame = true;
     }
 
     /**
@@ -332,7 +332,7 @@ public class Channel {
      *
      * @see MessageListener
      */
-    public void setNotifyMessageListenerOnFirstFrame(boolean n)
+    void setNotifyMessageListenerOnFirstFrame(boolean n)
     {
         this.notifyOnFirstFrame = n;
     }
@@ -343,7 +343,7 @@ public class Channel {
      *
      * @see #setNotifyMessageListenerOnFirstFrame
      */
-    public boolean getNotifyMessageListenerOnFirstFrame()
+    boolean getNotifyMessageListenerOnFirstFrame()
     {
         return this.notifyOnFirstFrame;
     }
