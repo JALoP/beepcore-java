@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.13 $ $Date: 2002/01/15 16:14:38 $
+ * EchoProfile.java    $Revision: 1.14 $ $Date: 2002/01/23 18:40:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -33,7 +33,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2002/01/15 16:14:38 $
+ * @version $Revision: 1.14 $, $Date: 2002/01/23 18:40:29 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener
@@ -68,75 +68,46 @@ public class EchoProfile
 
     public void receiveMSG(Message message) throws BEEPError
     {
-        OutputDataStream data = new OutputDataStream();
-        InputDataStream ds = message.getDataStream();
-
-        while (true) {
-            try {
-                BufferSegment b = ds.waitForNextSegment();
-                if (b == null) {
-                    break;
-                }
-                data.add(b);
-            } catch (InterruptedException e) {
-                throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                    "Error reading request");
-            }
-        }
-
-        data.setComplete();
-
-        try {
-            message.sendRPY(data);
-        } catch (BEEPException e) {
-            try {
-                throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                    "Error sending RPY");
-            } catch (BEEPException x) {
-                message.getChannel().getSession().terminate(x.getMessage());
-            }
-            return;
-        }
+        new ReplyThread(message).start();
     }
 
-//      public void receiveMSG(Message message) throws BEEPError
-//      {
-//          new ReplyThread(message).start();
-//      }
+    private class ReplyThread extends Thread {
+        private Message message;
 
-//      private class ReplyThread extends Thread {
-//          private Message message;
+        ReplyThread(Message message) {
+            this.message = message;
+        }
 
-//          ReplyThread(Message message) {
-//              this.message = message;
-//          }
+        public void run() {
+            OutputDataStream data = new OutputDataStream();
+            InputDataStream ds = message.getDataStream();
 
-//          public void run() {
-//              OutputDataStream data = new OutputDataStream();
-//              InputDataStream ds = message.getDataStream();
+            while (true) {
+                try {
+                    BufferSegment b = ds.waitForNextSegment();
+                    if (b == null) {
+                        break;
+                    }
+                    data.add(b);
+                } catch (InterruptedException e) {
+                    message.getChannel().getSession().terminate(e.getMessage());
+                    return;
+                }
+            }
 
-//              while (ds.isComplete() == false || ds.availableSegment()) {
-//                  try {
-//                      data.add(ds.waitForNextSegment());
-//                  } catch (InterruptedException e) {
-//                      message.getChannel().getSession().terminate(e.getMessage());
-//                      return;
-//                  }
-//              }
+            data.setComplete();
 
-//              data.setComplete();
-
-//              try {
-//                  message.sendRPY(data);
-//              } catch (BEEPException e) {
-//                  try {
-//                      message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-//                                      "Error sending RPY");
-//                  } catch (BEEPException x) {
-//                      message.getChannel().getSession().terminate(x.getMessage());
-//                  }
-//                  return;
-//              }
-//          }
-//    }
+            try {
+                message.sendRPY(data);
+            } catch (BEEPException e) {
+                try {
+                    message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                    "Error sending RPY");
+                } catch (BEEPException x) {
+                    message.getChannel().getSession().terminate(x.getMessage());
+                }
+                return;
+            }
+        }
+    }
 }
