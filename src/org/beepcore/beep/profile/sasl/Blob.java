@@ -1,5 +1,5 @@
 /*
- * Blob.java            $Revision: 1.7 $ $Date: 2002/10/05 15:32:22 $
+ * Blob.java            $Revision: 1.8 $ $Date: 2003/04/23 15:23:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -19,13 +19,9 @@ package org.beepcore.beep.profile.sasl;
 
 import java.io.IOException;
 
-import java.util.Hashtable;
-
 import javax.xml.parsers.*;
 
 import org.w3c.dom.*;
-
-import org.xml.sax.SAXException;
 
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
@@ -49,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2002/10/05 15:32:22 $
+ * @version $Revision: 1.8 $, $Date: 2003/04/23 15:23:02 $
  *
  */
 public class Blob

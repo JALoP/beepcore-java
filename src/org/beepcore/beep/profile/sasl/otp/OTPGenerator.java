@@ -1,6 +1,6 @@
 
 /*
- * OTPGenerator.java            $Revision: 1.5 $ $Date: 2002/10/05 15:32:06 $
+ * OTPGenerator.java            $Revision: 1.6 $ $Date: 2003/04/23 15:23:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -30,7 +30,6 @@ import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.profile.ProfileConfiguration;
 import org.beepcore.beep.profile.sasl.SASLException;
 import org.beepcore.beep.profile.sasl.otp.algorithm.Algorithm;
-import org.beepcore.beep.profile.sasl.otp.database.UserDatabase;
 import org.beepcore.beep.profile.sasl.otp.database.UserDatabasePool;
 
 
@@ -43,7 +42,7 @@ import org.beepcore.beep.profile.sasl.otp.database.UserDatabasePool;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2002/10/05 15:32:06 $
+ * @version $Revision: 1.6 $, $Date: 2003/04/23 15:23:03 $
  *
  */
 public class OTPGenerator {

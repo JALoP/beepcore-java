@@ -1,5 +1,5 @@
 /*
- * UserDatabase.java            $Revision: 1.3 $ $Date: 2002/09/07 15:09:38 $
+ * UserDatabase.java            $Revision: 1.4 $ $Date: 2003/04/23 15:23:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,9 +17,6 @@
 package org.beepcore.beep.profile.sasl.otp.database;
 
 import org.beepcore.beep.profile.sasl.SASLException;
-import org.beepcore.beep.profile.sasl.otp.SASLOTPProfile;
-import org.beepcore.beep.profile.sasl.otp.algorithm.md5.MD5;
-import org.beepcore.beep.profile.sasl.otp.algorithm.sha1.SHA1;
 
 
 /**
@@ -32,7 +29,7 @@ import org.beepcore.beep.profile.sasl.otp.algorithm.sha1.SHA1;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2002/09/07 15:09:38 $
+ * @version $Revision: 1.4 $, $Date: 2003/04/23 15:23:05 $
  *
  */
 public interface UserDatabase 

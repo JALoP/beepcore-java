@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.28 $ $Date: 2003/04/21 15:09:11 $
+ * TCPSession.java  $Revision: 1.29 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -23,11 +23,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import java.net.Socket;
-import java.net.SocketException;
-
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
 import org.beepcore.beep.core.Frame;
-import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.SessionImpl;
@@ -53,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.28 $, $Date: 2003/04/21 15:09:11 $
+ * @version $Revision: 1.29 $, $Date: 2003/04/23 15:23:04 $
  */
 public class TCPSession extends SessionImpl {
 

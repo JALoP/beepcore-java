@@ -1,5 +1,5 @@
 /*
- * UserDatabasePool.java            $Revision: 1.3 $ $Date: 2002/10/05 15:11:40 $
+ * UserDatabasePool.java            $Revision: 1.4 $ $Date: 2003/04/23 15:23:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,12 +17,6 @@
 package org.beepcore.beep.profile.sasl.otp.database;
 
 
-import java.io.*;
-
-import java.util.Hashtable;
-import java.util.Properties;
-
-import org.beepcore.beep.core.TuningProfile;
 import org.beepcore.beep.profile.sasl.SASLException;
 
 

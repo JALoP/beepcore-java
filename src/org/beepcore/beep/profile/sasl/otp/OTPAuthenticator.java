@@ -1,5 +1,5 @@
 /*
- * OTPAuthenticator.java  $Revision: 1.12 $ $Date: 2002/10/05 15:32:06 $
+ * OTPAuthenticator.java  $Revision: 1.13 $ $Date: 2003/04/23 15:23:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -19,7 +19,6 @@ package org.beepcore.beep.profile.sasl.otp;
 
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -30,10 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.sasl.*;
 import org.beepcore.beep.profile.sasl.otp.algorithm.*;
-import org.beepcore.beep.profile.sasl.otp.algorithm.md5.*;
-import org.beepcore.beep.profile.sasl.otp.algorithm.sha1.*;
 import org.beepcore.beep.profile.sasl.otp.database.UserDatabase;
-import org.beepcore.beep.profile.sasl.otp.database.*;
 
 /**
  * This class encapsulates the state associated with
@@ -44,7 +40,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2002/10/05 15:32:06 $
+ * @version $Revision: 1.13 $, $Date: 2003/04/23 15:23:03 $
  *
  */
 class OTPAuthenticator implements MessageListener, ReplyListener {
@@ -202,8 +198,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
 
         try
         {
-            database = profile.getUserDatabase().getUser(authenticated);
-            algorithm = profile.getAlgorithm(database.getAlgorithmName());
+            database = SASLOTPProfile.getUserDatabase().getUser(authenticated);
+            algorithm = SASLOTPProfile.getAlgorithm(database.getAlgorithmName());
         }
         catch(SASLException x)
         {
@@ -291,8 +287,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         // times.  By taking it and hashing it once, we should
         // get the last hash and that's how we verify.  Semi-slick.
         // So hooray for assymetric hash functions
-        if (response.indexOf(profile.HEX_INIT) != -1 ||
-            response.indexOf(profile.WORD_INIT) != -1 )
+        if (response.indexOf(SASLOTPProfile.HEX_INIT) != -1 ||
+            response.indexOf(SASLOTPProfile.WORD_INIT) != -1 )
         {
             return validateInitResponse(response);
         }
@@ -301,13 +297,13 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         if (response.indexOf(WORD) != -1) {
             response = response.substring(WORD.length());
             long l = OTPDictionary.convertWordsToHash(response);
-            responseHash = profile.convertLongToBytes(l);
+            responseHash = SASLOTPProfile.convertLongToBytes(l);
             if (log.isDebugEnabled()) {
                 log.debug("Hacked response=>" + response);
             }
         } else if (response.indexOf(HEX) != -1) {
             response = response.substring(HEX.length());
-            responseHash = profile.convertHexToBytes(response);
+            responseHash = SASLOTPProfile.convertHexToBytes(response);
             if (log.isDebugEnabled()) {
                 log.debug("Hacked response=>" + response);
             }
@@ -320,8 +316,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         }
         
         SessionCredential cred = validateHash(responseHash);
-        database.updateLastHash(profile.convertBytesToHex(responseHash));
-        profile.getUserDatabase().updateUserDB(database);
+        database.updateLastHash(SASLOTPProfile.convertBytesToHex(responseHash));
+        SASLOTPProfile.getUserDatabase().updateUserDB(database);
         return cred;
     }
     
@@ -336,8 +332,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         byte nextHash[] = database.getLastHash();
         byte responseHash[] = algorithm.generateHash(hash);
         if (log.isTraceEnabled()) {
-            log.trace("Test====>"+profile.convertBytesToHex(responseHash));
-            log.trace("Control=>"+profile.convertBytesToHex(nextHash));
+            log.trace("Test====>"+SASLOTPProfile.convertBytesToHex(responseHash));
+            log.trace("Control=>"+SASLOTPProfile.convertBytesToHex(nextHash));
         }
         boolean match = true;
         for(int i = 0; i < 8; i++)
@@ -383,22 +379,22 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             }
                         
             // Validate login
-            Algorithm a = profile.getAlgorithm(database.getAlgorithmName());
-            if(profile.HEX_INIT.startsWith(command)) {
-                log.debug("CMD is "+profile.HEX_INIT);
-                oldHash = profile.convertHexToBytes(oldHashData);
-            } else if(profile.WORD_INIT.startsWith(command)) {
-                log.debug("CMD is "+profile.WORD_INIT);
+            Algorithm a = SASLOTPProfile.getAlgorithm(database.getAlgorithmName());
+            if(SASLOTPProfile.HEX_INIT.startsWith(command)) {
+                log.debug("CMD is "+SASLOTPProfile.HEX_INIT);
+                oldHash = SASLOTPProfile.convertHexToBytes(oldHashData);
+            } else if(SASLOTPProfile.WORD_INIT.startsWith(command)) {
+                log.debug("CMD is "+SASLOTPProfile.WORD_INIT);
                 // @todo obviate the 2nd step when you get a chance
                 long l = OTPDictionary.convertWordsToHash(oldHashData);
-                oldHash = profile.convertLongToBytes(l);
+                oldHash = SASLOTPProfile.convertLongToBytes(l);
             } else {
                 abort(ERR_UNKNOWN_COMMAND+command);
             }
 
             if (log.isDebugEnabled()) {
                 log.debug("Retrieved from init-* oldHash=>" +
-                          profile.convertBytesToHex(oldHash));
+                          SASLOTPProfile.convertBytesToHex(oldHash));
             }
             
             // Compare the hash and fail if it doesn't match
@@ -417,8 +413,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                 log.debug("Auth=>"+authenticated);
                 log.debug("Hash=>"+newHashData);
             }
-            profile.getUserDatabase().addUser(authenticated, algorithm,
-                                              newHashData, seed, sequence);
+            SASLOTPProfile.getUserDatabase().addUser(authenticated, algorithm,
+                                                     newHashData, seed,
+                                                     sequence);
             log.debug("Successful Authentication!");
             return cred;            
         }
@@ -454,10 +451,10 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         if (log.isDebugEnabled()) {
             log.debug("Dict.getA()" + database.getAlgorithmName());
             log.debug("Dict.getA()"
-                      + profile.getAlgorithm(database.getAlgorithmName()));
+                      + SASLOTPProfile.getAlgorithm(database.getAlgorithmName()));
         }
 
-        algorithm = profile.getAlgorithm(database.getAlgorithmName());
+        algorithm = SASLOTPProfile.getAlgorithm(database.getAlgorithmName());
         profile = otpProfile;
         password = pwd;
         state = STATE_UNKNOWN;
@@ -574,7 +571,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         }
 
         algo = st.nextToken();
-        algorithm = profile.getAlgorithm(algo);
+        algorithm = SASLOTPProfile.getAlgorithm(algo);
 
         if (algorithm == null) {
             abort("Unrecognized algorithm in server challenge");
@@ -615,8 +612,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         if(initData != null)
         {
             StringBuffer sb = new StringBuffer(128);
-            sb.append(profile.HEX_INIT);
-            sb.append(profile.convertBytesToHex(temp));
+            sb.append(SASLOTPProfile.HEX_INIT);
+            sb.append(SASLOTPProfile.convertBytesToHex(temp));
             sb.append(initData);
             phrase = sb.toString();
             if (log.isDebugEnabled()) {

@@ -1,6 +1,6 @@
 
 /*
- * Reply.java            $Revision: 1.6 $ $Date: 2001/11/08 05:51:34 $
+ * Reply.java            $Revision: 1.7 $ $Date: 2003/04/23 15:23:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -20,7 +20,6 @@ package org.beepcore.beep.lib;
 
 import java.lang.InterruptedException;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
@@ -46,7 +45,7 @@ import org.beepcore.beep.core.ReplyListener;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision, $Date: 2003/04/23 15:23:02 $
  */
 public class Reply implements ReplyListener {
 

@@ -156,7 +156,7 @@ public class MimeHeaders {
                     // don't decrement the length, these are default values
                 } else {
                     this.lenHeaders -= name.length() + value.length()
-                                       + this.HEADER_FORMAT_LENGTH;
+                                       + MimeHeaders.HEADER_FORMAT_LENGTH;
                 }
 
                 return true;
@@ -197,7 +197,7 @@ public class MimeHeaders {
             // these are default values, don't add to len
         } else {
             this.lenHeaders += name.length() + value.length()
-                               + this.HEADER_FORMAT_LENGTH;
+                               + MimeHeaders.HEADER_FORMAT_LENGTH;
         }
     }
 
@@ -253,19 +253,19 @@ public class MimeHeaders {
             offsetHeaders += value.length();
 
             // CRLF
-            System.arraycopy(this.HEADER_SUFFIX.getBytes(), 0,
+            System.arraycopy(MimeHeaders.HEADER_SUFFIX.getBytes(), 0,
                              headersBytes, offsetHeaders,
-                             this.HEADER_SUFFIX.length());
+                             MimeHeaders.HEADER_SUFFIX.length());
 
-            offsetHeaders += this.HEADER_SUFFIX.length();
+            offsetHeaders += MimeHeaders.HEADER_SUFFIX.length();
         }
 
         // read the CRLF that separates the headers and the data
-        System.arraycopy(this.HEADER_SUFFIX.getBytes(), 0,
+        System.arraycopy(MimeHeaders.HEADER_SUFFIX.getBytes(), 0,
                          headersBytes, offsetHeaders,
-                         this.HEADER_SUFFIX.length());
+                         MimeHeaders.HEADER_SUFFIX.length());
 
-        offsetHeaders += this.HEADER_SUFFIX.length();
+        offsetHeaders += MimeHeaders.HEADER_SUFFIX.length();
 
         return new BufferSegment(headersBytes);
     }

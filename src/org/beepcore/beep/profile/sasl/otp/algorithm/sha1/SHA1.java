@@ -1,6 +1,6 @@
 
 /*
- * SHA1.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:34 $
+ * SHA1.java            $Revision: 1.3 $ $Date: 2003/04/23 15:23:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -18,10 +18,7 @@
 package org.beepcore.beep.profile.sasl.otp.algorithm.sha1;
 
 
-import java.security.MessageDigest;
-
 import org.beepcore.beep.profile.sasl.InvalidParameterException;
-import org.beepcore.beep.profile.sasl.otp.algorithm.Algorithm;
 import org.beepcore.beep.profile.sasl.otp.algorithm.AlgorithmImpl;
 
 
@@ -33,7 +30,7 @@ import org.beepcore.beep.profile.sasl.otp.algorithm.AlgorithmImpl;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.3 $, $Date: 2003/04/23 15:23:00 $
  *
  */
 public class SHA1 extends AlgorithmImpl {

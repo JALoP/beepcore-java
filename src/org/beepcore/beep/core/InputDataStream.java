@@ -1,5 +1,5 @@
 /*
- * InputDataStream.java  $Revision: 1.5 $ $Date: 2003/04/21 15:09:10 $
+ * InputDataStream.java  $Revision: 1.6 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
@@ -17,8 +17,6 @@
 package org.beepcore.beep.core;
 
 
-import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.beepcore.beep.util.BufferSegment;
@@ -35,7 +33,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @see org.beepcore.beep.util.BufferSegment
  *
  * @author Huston Franklin
- * @version $Revision: 1.5 $, $Date: 2003/04/21 15:09:10 $
+ * @version $Revision: 1.6 $, $Date: 2003/04/23 15:23:04 $
  */
 public class InputDataStream {
 

@@ -1,5 +1,5 @@
 /*
- * Frame.java  $Revision: 1.20 $ $Date: 2003/04/21 15:09:10 $
+ * Frame.java  $Revision: 1.21 $ $Date: 2003/04/23 15:23:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -20,7 +20,6 @@ package org.beepcore.beep.core;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +39,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.20 $, $Date: 2003/04/21 15:09:10 $
+ * @version $Revision: 1.21 $, $Date: 2003/04/23 15:23:04 $
  *
  * @see BufferSegment
  */
@@ -280,7 +279,7 @@ public class Frame {
             header.append(this.ansno);
         }
 
-        header.append(this.CRLF);
+        header.append(Frame.CRLF);
 
         if (log.isTraceEnabled()) {
             log.trace(header);

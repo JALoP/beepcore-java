@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.15 $ $Date: 2002/10/05 15:31:35 $
+ * EchoProfile.java    $Revision: 1.16 $ $Date: 2003/04/23 15:23:07 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -18,10 +18,6 @@
 package org.beepcore.beep.profile.echo;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,7 +33,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.15 $, $Date: 2002/10/05 15:31:35 $
+ * @version $Revision: 1.16 $, $Date: 2003/04/23 15:23:07 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener

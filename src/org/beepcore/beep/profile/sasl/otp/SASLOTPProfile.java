@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.9 $ $Date: 2002/10/05 15:32:06 $
+ * SASLOTPProfile.java  $Revision: 1.10 $ $Date: 2003/04/23 15:23:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -16,13 +16,7 @@
  */
 package org.beepcore.beep.profile.sasl.otp;
 
-import java.security.MessageDigest;
-
 import java.util.Hashtable;
-import java.util.StringTokenizer;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,7 +28,6 @@ import org.beepcore.beep.profile.sasl.otp.algorithm.*;
 import org.beepcore.beep.profile.sasl.otp.algorithm.md5.MD5;
 import org.beepcore.beep.profile.sasl.otp.algorithm.sha1.SHA1;
 import org.beepcore.beep.profile.sasl.otp.database.*;
-import org.beepcore.beep.transport.tcp.*;
 
 
 /**
@@ -45,7 +38,7 @@ import org.beepcore.beep.transport.tcp.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2002/10/05 15:32:06 $
+ * @version $Revision: 1.10 $, $Date: 2003/04/23 15:23:03 $
  *
  */
 public class SASLOTPProfile
@@ -100,8 +93,8 @@ public class SASLOTPProfile
             instance = this;
             algorithms = new Hashtable();
 
-            algorithms.put(md5.getAlgorithmName(), md5);
-            algorithms.put(sha1.getAlgorithmName(), sha1);
+            algorithms.put(MD5.getAlgorithmName(), md5);
+            algorithms.put(SHA1.getAlgorithmName(), sha1);
             userDatabase = new UserDatabasePool();
         }
 

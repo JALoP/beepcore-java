@@ -1,5 +1,5 @@
 /*
- * SASLProfile.java  $Revision: 1.7 $ $Date: 2001/11/29 04:00:00 $
+ * SASLProfile.java  $Revision: 1.8 $ $Date: 2003/04/23 15:23:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,12 +17,7 @@
 package org.beepcore.beep.profile.sasl;
 
 
-import java.io.*;
-
 import org.beepcore.beep.core.*;
-import org.beepcore.beep.profile.*;
-import org.beepcore.beep.transport.tcp.TCPSession;
-import org.beepcore.beep.util.*;
 
 
 /**
@@ -42,7 +37,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2001/11/29 04:00:00 $
+ * @version $Revision: 1.8 $, $Date: 2003/04/23 15:23:02 $
  *
  */
 public abstract class SASLProfile extends TuningProfile {
