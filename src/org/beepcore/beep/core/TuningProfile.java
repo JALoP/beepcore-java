@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java  $Revision: 1.9 $ $Date: 2003/04/21 15:09:10 $
+ * TuningProfile.java  $Revision: 1.10 $ $Date: 2003/05/27 21:37:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -104,6 +104,7 @@ public abstract class TuningProfile {
 
         try {
             tuningChannels.add(channel);
+            ((ChannelImpl)channel).setState(ChannelImpl.STATE_TUNING);
             session.sendProfile(profile, data, (ChannelImpl)channel);
             session.disableIO();
         } catch (Exception x) {
