@@ -1,6 +1,6 @@
 
 /*
- * TLSProfile.java            $Revision: 1.3 $ $Date: 2001/04/10 14:42:55 $
+ * TLSProfile.java            $Revision: 1.4 $ $Date: 2001/04/11 08:58:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -61,7 +61,7 @@ public class TLSProfile extends TuningProfile
     public static final String PROCEED2 = "<proceed />";
     public static final String READY1 = "<ready/>";
     public static final String READY2 = "<ready />";
-    public static final String URI = "http://xml.resource.org/profiles/TLS";
+    public static final String URI = "http://iana.org/beep/TLS";
 
     // error messages thrown in exceptions
     static final String ERR_SERVER_MUST_HAVE_KEY =
