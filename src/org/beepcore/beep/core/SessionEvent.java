@@ -1,6 +1,6 @@
 
 /*
- * SessionEvent.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * SessionEvent.java            $Revision: 1.2 $ $Date: 2001/04/16 17:05:20 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -30,7 +30,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/16 17:05:20 $
  */
 public class SessionEvent {
 
@@ -40,7 +40,8 @@ public class SessionEvent {
     public final static int GREETING_RECEIVED_EVENT_CODE = 2;
     public final static int CHANNEL_OPENED_EVENT_CODE = 3;
     public final static int CHANNEL_CLOSED_EVENT_CODE = 4;
-    public final static int SESSION_TERMINATED_EVENT_CODE = 5;
+    public final static int SESSION_CLOSED_EVENT_CODE = 5;
+    public final static int SESSION_TERMINATED_EVENT_CODE = 6;
 
     // Data
     protected Object data;
