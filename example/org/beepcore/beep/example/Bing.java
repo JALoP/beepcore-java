@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.5 $ $Date: 2001/10/31 02:03:41 $
+ * Bing.java  $Revision: 1.6 $ $Date: 2001/10/31 16:15:47 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,9 +17,11 @@
 package org.beepcore.beep.example;
 
 import java.io.InputStream;
+import java.io.IOException;
 
 import org.beepcore.beep.core.BEEPError;
 import org.beepcore.beep.core.BEEPException;
+import org.beepcore.beep.core.BEEPInterruptedException;
 import org.beepcore.beep.core.Channel;
 import org.beepcore.beep.core.InputDataStream;
 import org.beepcore.beep.core.ProfileRegistry;
@@ -43,7 +45,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/10/31 02:03:41 $
+ * @version $Revision: 1.6 $, $Date: 2001/10/31 16:15:47 $
  */
 public class Bing {
 
@@ -89,11 +91,12 @@ public class Bing {
                 channel = session.startChannel(EchoProfile.ECHO_URI);
             } catch (BEEPError e) {
                 if (e.getCode() == 550) {
-                    System.err.println("bing: Error host does not support echo " +
-                                       "profile");
+                    System.err.println("bing: Error host does not support " +
+                                       "echo profile");
                 } else {
                     System.err.println("bing: Error starting channel (" +
-                                       e.getCode() + ": " + e.getMessage() + ")");
+                                       e.getCode() + ": " +
+                                       e.getMessage() + ")");
                 }
                 return;
             } catch (BEEPException e) {
@@ -104,17 +107,23 @@ public class Bing {
 
             String request = createRequest(size);
 
-            try {
-                for (int i=0; i<count; ++i) {
-                    long time;
-                    int replyLength = 0;
-                    Reply reply = new Reply();
+            for (int i=0; i<count; ++i) {
+                long time;
+                int replyLength = 0;
+                Reply reply = new Reply();
 
-                    time = System.currentTimeMillis();
+                time = System.currentTimeMillis();
 
+                try {
                     // Send the request
                     channel.sendMSG(new StringDataStream(request), reply);
+                } catch (BEEPException e) {
+                    System.err.println("bing: Error sending request (" +
+                                       e.getMessage() + ")");
+                    return;
+                }
 
+                try {
                     // Get the reply to the request
                     InputDataStream ds = reply.getNextReply().getDataStream();
                     InputStream is = ds.getInputStream();
@@ -124,20 +133,20 @@ public class Bing {
                         is.read();
                         ++replyLength;
                     }
-
-                    System.out.println("Reply from " + host + ": bytes=" +
-                                       replyLength + " time=" +
-                                       (System.currentTimeMillis() - time) +
-                                       "ms");
+                } catch (BEEPInterruptedException e) {
+                    System.err.println("bing: Error receiving reply (" +
+                                       e.getMessage() + ")");
+                    return;
+                } catch (IOException e) {
+                    System.err.println("bing: Error receiving reply (" +
+                                       e.getMessage() + ")");
+                    return;
                 }
-            } catch (BEEPError e) {
-                System.err.println("bing: Error sending request (" + e.getCode() +
-                                   ": " + e.getMessage() + ")");
-                return;
-            } catch (Exception e) {
-                System.err.println("bing: Error sending request (" +
-                                   e.getMessage() + ")");
-                return;
+
+                System.out.println("Reply from " + host + ": bytes=" +
+                                   replyLength + " time=" +
+                                   (System.currentTimeMillis() - time) +
+                                   "ms");
             }
 
             // Cleanup
