@@ -1,6 +1,5 @@
-
 /*
- * TLSProfile.java  $Revision: 1.13 $ $Date: 2001/11/08 05:51:35 $
+ * TLSProfile.java  $Revision: 1.14 $ $Date: 2001/11/09 16:44:43 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,12 +41,6 @@ public abstract class TLSProfile extends TuningProfile implements Profile {
     public static final String URI = "http://iana.org/beep/TLS";
 
     /**
-     * list of known providers
-     */
-    public static final String[] providers = { "TLSProfilePureTLS",
-                                               "TLSProfileJSSE" };
-
-    /**
      * init sets the criteria for which an TLS connection is made when
      * a TLS channel is started for a profile.  It should only be
      * called once.  For the properties, the initiator is defined as
@@ -64,7 +57,8 @@ public abstract class TLSProfile extends TuningProfile implements Profile {
      * set of paramters, you must either recall this method or create another
      * instance of a <code>TLSProfile</code>.
      */
-    abstract public StartChannelListener init(String uri, ProfileConfiguration config)
+    abstract public StartChannelListener init(String uri,
+                                              ProfileConfiguration config)
         throws BEEPException;
 
     /**
@@ -96,13 +90,13 @@ public abstract class TLSProfile extends TuningProfile implements Profile {
     {
         try {
             return
-            getInstance("org.beepcore.beep.profile.tls.ptls.TLSProfilePureTLS");
+            getInstance("org.beepcore.beep.profile.tls.jsse.TLSProfileJSSE");
         } catch (NoClassDefFoundError e) {
         }
 
         try {
             return
-            getInstance("org.beepcore.beep.profile.tls.jsse.TLSProfileJSSE");
+            getInstance("org.beepcore.beep.profile.tls.ptls.TLSProfilePureTLSPemInit");
         } catch (NoClassDefFoundError e) {
             throw new BEEPException("TLS not installed");
         }
