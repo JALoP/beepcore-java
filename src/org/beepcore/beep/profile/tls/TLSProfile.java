@@ -1,6 +1,6 @@
 
 /*
- * TLSProfile.java            $Revision: 1.4 $ $Date: 2001/04/11 08:58:32 $
+ * TLSProfile.java            $Revision: 1.5 $ $Date: 2001/04/16 17:13:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -297,17 +297,24 @@ public class TLSProfile extends TuningProfile
      */
     public void init(ProfileConfiguration config) throws BEEPException
     {
+        KeyManagerFactory kmf = null;
+        KeyManager[] km = null;
+        KeyStore ks = null;
+        TrustManagerFactory tmf = null;
+        TrustManager[] tm = null;
+        KeyStore ts = null;
+        SSLContext ctx;
+
         try {
-            KeyManagerFactory kmf = null;
-            KeyManager[] km = null;
-            KeyStore ks = null;
-            TrustManagerFactory tmf = null;
-            TrustManager[] tm = null;
-            KeyStore ts = null;
-
             // create an SSL context object
-            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx = SSLContext.getInstance("TLS");
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new BEEPException("TLS Algorithm Not Found. Probable " +
+                                    "cause is the JSSE provider has not " +
+                                    "been added to the java.security file.");
+        }
 
+        try {
             // initialize the key managers, trust managers, and
             keyAlgorithm = config.getProperty(PROPERTY_KEY_MANAGER_ALGORITHM,
                                               null);
@@ -415,7 +422,7 @@ public class TLSProfile extends TuningProfile
 
             socketFactory = ctx.getSocketFactory();
         } catch (Exception e) {
-            Log.logEntry(1, "JSSE TLS Profile", e.getMessage());
+            Log.logEntry(Log.SEV_ERROR, e);
 
             throw new BEEPException(e.getMessage());
         }
