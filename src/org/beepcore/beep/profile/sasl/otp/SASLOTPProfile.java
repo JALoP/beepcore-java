@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.13 $ $Date: 2003/09/15 15:23:31 $
+ * SASLOTPProfile.java  $Revision: 1.14 $ $Date: 2003/10/30 14:32:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -39,7 +39,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2003/09/15 15:23:31 $
+ * @version $Revision: 1.14 $, $Date: 2003/10/30 14:32:57 $
  *
  */
 public class SASLOTPProfile
@@ -316,18 +316,19 @@ public class SASLOTPProfile
         try {
             synchronized (auth) {
                 auth.wait();
-
-                SessionCredential cred = session.getLocalCredential();
-
-                if (cred == null) {
-                    auth.abort("Authentication Failed");
-                } else {
-                    success = true;
-                }
             }
         } catch (Exception x) {
             auth.abort(x.getMessage());
         }
+
+        SessionCredential cred = session.getLocalCredential();
+
+        if (cred == null) {
+            auth.abort("Authentication Failed");
+        } else {
+            success = true;
+        }
+
         return session;
     }
 
