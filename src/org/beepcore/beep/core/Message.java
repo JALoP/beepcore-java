@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.8 $ $Date: 2001/11/12 16:12:41 $
+ * Message.java            $Revision: 1.9 $ $Date: 2002/10/04 04:01:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,8 +17,6 @@
 package org.beepcore.beep.core;
 
 
-import org.beepcore.beep.util.Log;
-
 import java.util.Hashtable;
 import java.util.LinkedList;
 
@@ -32,7 +30,7 @@ import java.lang.IndexOutOfBoundsException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2001/11/12 16:12:41 $
+ * @version $Revision: 1.9 $, $Date: 2002/10/04 04:01:00 $
  */
 public class Message {
 
