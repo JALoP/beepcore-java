@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.26 $ $Date: 2002/05/27 17:21:38 $
+ * Session.java  $Revision: 1.27 $ $Date: 2002/05/28 04:50:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,7 +59,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.26 $, $Date: 2002/05/27 17:21:38 $
+ * @version $Revision: 1.27 $, $Date: 2002/05/28 04:50:06 $
  *
  * @see Channel
  */
@@ -614,7 +614,12 @@ public abstract class Session {
 
         try {
             this.changeState(SESSION_STATE_ABORTED);
-            shutdown();
+            this.disableIO();
+            channels.clear();
+
+            zero = null;
+
+            fireSessionTerminated();
         } catch (BEEPException e) {
 
             // Ignore this since we are terminating anyway.
@@ -1254,17 +1259,6 @@ public abstract class Session {
         }
 
         return false;
-    }
-
-    private void shutdown() throws BEEPException
-    {
-        this.disableIO();
-        channels.clear();
-
-        zero = null;
-
-        this.changeState(SESSION_STATE_CLOSED);
-        fireSessionTerminated();
     }
 
     private Element processMessage(Message message) throws BEEPException
