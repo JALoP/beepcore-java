@@ -1,5 +1,5 @@
 /*
- * Beepd.java  $Revision: 1.7 $ $Date: 2001/11/08 05:51:33 $
+ * Beepd.java  $Revision: 1.8 $ $Date: 2002/10/05 15:33:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -33,13 +33,14 @@ import org.w3c.dom.*;
 
 import org.xml.sax.SAXException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.profile.Profile;
 import org.beepcore.beep.profile.ProfileConfiguration;
 import org.beepcore.beep.transport.tcp.TCPSessionCreator;
-import org.beepcore.beep.util.ConsoleLog;
-import org.beepcore.beep.util.Log;
 
 /**
  * Sample BEEP server analogous to inetd. Based on the configuration file
@@ -51,11 +52,14 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2001/11/08 05:51:33 $
+ * @version $Revision: 1.8 $, $Date: 2002/10/05 15:33:22 $
  */
 public class Beepd extends Thread {
     private int port;
     ProfileRegistry reg;
+
+    private Log log = LogFactory.getLog(this.getClass());
+
 
     /**
      * Parses the beepd element in the configuration file and loads the
@@ -198,9 +202,6 @@ public class Beepd extends Thread {
             return;
         }
 
-        ConsoleLog log = new ConsoleLog();
-        Log.setLogService(log);
-
         // Start the servers listening
         Iterator i = servers.iterator();
         while (i.hasNext()) {
@@ -217,8 +218,7 @@ public class Beepd extends Thread {
                 TCPSessionCreator.listen(port, reg);
             }
         } catch (Exception e) {
-            Log.logEntry(Log.SEV_ERROR, e);
-            Log.logEntry(Log.SEV_ERROR, "Listener exiting");
+            log.error("Listener exiting", e);
         }
     }
 
