@@ -1,5 +1,5 @@
 /*
- * SASLSessionTable.java  $Revision: 1.6 $ $Date: 2002/10/05 15:32:22 $
+ * SASLSessionTable.java  $Revision: 1.7 $ $Date: 2003/05/20 22:22:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.SessionCredential;
 import org.beepcore.beep.core.event.SessionEvent;
+import org.beepcore.beep.core.event.SessionResetEvent;
 import org.beepcore.beep.core.event.SessionListener;
 import org.beepcore.beep.profile.sasl.anonymous.SASLAnonymousProfile;
 
@@ -37,7 +38,7 @@ import org.beepcore.beep.profile.sasl.anonymous.SASLAnonymousProfile;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2002/10/05 15:32:22 $
+ * @version $Revision: 1.7 $, $Date: 2003/05/20 22:22:02 $
  *
  */
 public class SASLSessionTable implements SessionListener
@@ -179,6 +180,26 @@ public class SASLSessionTable implements SessionListener
         catch(SASLException x)
         {
             log.error("Error removing entry", x);
+        }
+    }
+    
+    /**
+     * Method receiveEvent is implemented here so the SASLSessionTable
+     * can receive events when a session is reset (so that it
+     * can update its information about what sessions are actively
+     * authenticated etc.
+     * 
+     * @param event event the SessionResetEvent used.
+     */
+    public void sessionReset(SessionResetEvent event)
+    {
+        try {
+            removeEntry((Session)event.getSource());
+            addEntry(event.getNewSession());
+        }
+        catch(SASLException e)
+        {
+            log.error("Error replacing entry", e);
         }
     }
 
