@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.11 $ $Date: 2003/09/14 04:30:15 $
+ * SASLAnonymousProfile.java  $Revision: 1.12 $ $Date: 2003/09/15 15:23:31 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2003/09/14 04:30:15 $
+ * @version $Revision: 1.12 $, $Date: 2003/09/15 15:23:31 $
  *
  */
 public class SASLAnonymousProfile
@@ -103,44 +103,12 @@ public class SASLAnonymousProfile
         clearCredential(channel.getSession(), this);
         Session t = channel.getSession();
 
-        if(data != null)
-        {
-            try {
-                Blob blob = new Blob(data);
-                data = blob.getData();
-
-                if (log.isDebugEnabled()) {
-                    log.debug("SASLAnon...User claims to be=>" + data);
-                }
-                finishListenerAuthentication(SASLAnonymousProfile.generateCredential(data),
-                                             t);
-
-                // Generate a blob indicating that we're done and 
-                // return it in the profile response to the StartChannel request
-                data = null;
-                blob = new Blob(Blob.STATUS_COMPLETE,data);
-                sendProfile(t, uri, blob.toString(), channel);
-                enableIO(channel.getSession());
-            } catch (Exception x) {
-                channel.getSession().terminate(x.getMessage());
-                return;
-            }
-            // Skip standard start channel handling
-            throw new TuningResetException("SASL ANON RESET");
-        }
-        else
-        {
-            try {
-                AnonymousAuthenticator auth = new AnonymousAuthenticator(this);
-                auth.started(channel);
-                sendProfile(t, uri, null, channel);
-                enableIO(channel.getSession());
-            } catch (Exception x) {
-                channel.getSession().terminate(x.getMessage());
-                return;
-            }
-            // Skip standard start channel handling
-            throw new TuningResetException("SASL ANON RESET");
+        try {
+            AnonymousAuthenticator auth = new AnonymousAuthenticator(this);
+            auth.started(channel);
+        } catch (Exception x) {
+            channel.getSession().terminate(x.getMessage());
+            return;
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.12 $ $Date: 2003/09/14 04:29:50 $
+ * SASLOTPProfile.java  $Revision: 1.13 $ $Date: 2003/09/15 15:23:31 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -39,7 +39,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2003/09/14 04:29:50 $
+ * @version $Revision: 1.13 $, $Date: 2003/09/15 15:23:31 $
  *
  */
 public class SASLOTPProfile
@@ -115,7 +115,8 @@ public class SASLOTPProfile
     {
         return userDatabase;
     }
-    
+
+    /// @TODO change this to be not static or add a static initializer for algoriths    
     static Algorithm getAlgorithm(String name)
     {
         Object algo = algorithms.get(name);
@@ -130,62 +131,19 @@ public class SASLOTPProfile
     public void startChannel(Channel channel, String encoding, String data)
             throws StartChannelException
     {
-        Blob blob = null;
-        clearCredential(channel.getSession(), this);
-
-        String authorize, authenticate, challenge = null;
-
         log.debug("SASL-OTP Start Channel CCL");
 
+        clearCredential(channel.getSession(), this);
+
         OTPAuthenticator temp = new OTPAuthenticator(this);
-
         try {
-
-            // Digest the data
-            // and generate a response (challenge) if possible
-            // to embed in the profile back.
-            if (data != null) {
-                temp.started(channel);
-                blob = new Blob(data);
-                data = blob.getData();
-
-                try {
-                    blob = temp.receiveIDs(data);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Challenge is=>" + challenge);
-                    }
-                } catch (SASLException szf) {
-                    temp.abortNoThrow(szf.getMessage());
-                    // Write an error out in the profile
-                    blob = new Blob(Blob.STATUS_ABORT,
-                                    szf.getMessage());
-                    return;
-                }
-                if (log.isDebugEnabled()) {
-                    log.debug("Blobbed64 Challenge is=>" + data);
-                }
-            }
             channel.setRequestHandler(temp);
-            if(blob != null)
-                sendProfile(channel.getSession(), URI, blob.toString(),
-                            channel);
-            else
-                sendProfile(channel.getSession(), URI, null, channel);
-
-            // If we processed piggybacked data then blob will be non-null
-            // otherwise, we need to 'start' the OTPAuthenticator so that
-            // the state transitions remain valid
-            if (blob == null) {
-                temp.started(channel);
-            }
-
-            log.debug("Started an SASL-OTP Channel");
-        } catch (Exception x) {
-            channel.getSession().terminate(x.getMessage());
-            return;
+            temp.started(channel);
+        } catch (SASLException x) {
+            throw new StartChannelException(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN,
+                                            x.getMessage());
         }
-        enableIO(channel.getSession());
-        throw new TuningResetException("SASL ANON RESET");
+        log.debug("Started an SASL-OTP Channel");
     }
 
     public boolean advertiseProfile(Session session)

@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.8 $ $Date: 2003/06/10 18:59:19 $
+ * SessionImpl.java  $Revision: 1.9 $ $Date: 2003/09/15 15:23:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -20,6 +20,7 @@ package org.beepcore.beep.core;
 
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -36,6 +37,8 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.*;
 
 import org.xml.sax.SAXException;
+
+import sun.misc.BASE64Decoder;
 
 import org.beepcore.beep.core.event.ChannelEvent;
 import org.beepcore.beep.core.event.ChannelListener;
@@ -62,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2003/06/10 18:59:19 $
+ * @version $Revision: 1.9 $, $Date: 2003/09/15 15:23:30 $
  *
  * @see Channel
  */
@@ -85,7 +88,7 @@ public abstract class SessionImpl implements Session {
     private static final int DEFAULT_POLL_INTERVAL = 500;
 
     /** @todo check this */
-    private static final int MAX_PCDATA_SIZE = 4096;
+    static final int MAX_PCDATA_SIZE = 4096;
     private static final int MAX_START_CHANNEL_WAIT = 60000;
     private static final int MAX_START_CHANNEL_INTERVAL = 100;
 
@@ -959,7 +962,6 @@ public abstract class SessionImpl implements Session {
                                      StringUtil.stringBufferToAscii(sb));
 
         // Store the Channel
-        ch.setState(ChannelImpl.STATE_ACTIVE);
         channels.put(ch.getNumberAsString(), ch);
         ((MessageMSG)zero.getAppData()).sendRPY(ds);
     }
@@ -976,7 +978,7 @@ public abstract class SessionImpl implements Session {
         }
     }
 
-    private void fireChannelStarted(Channel c)
+    void fireChannelStarted(Channel c)
     {
         ChannelListener[] l = this.channelListeners;
         if (l.length == 0)
@@ -1243,6 +1245,8 @@ public abstract class SessionImpl implements Session {
 
                 return;
             } catch (StartChannelException e) {
+                this.enableIO();
+
                 try {
                     ((MessageMSG)zero.getAppData()).sendERR(e);
                 } catch (BEEPException x) {
@@ -1252,22 +1256,59 @@ public abstract class SessionImpl implements Session {
                 return;
             }
 
-            try {
-                sendProfile(p.uri, ch.getStartData(), ch);
-            } catch (BEEPException e) {
-                terminate("Error sending profile. " + e.getMessage());
+            if (p.data != null && ch.getStartData() == null) {
+                byte[] data;
+                if (p.base64Encoding) {
+                    try {
+                        data = new BASE64Decoder().decodeBuffer(p.data);
+                    } catch (IOException e) {
+                        ch.abort();
+                        this.enableIO();
+                        throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                            "Error parsing piggybacked data.");
+                    }
+                } else {
+                    try {
+                        data = p.data.getBytes("UTF-8"); 
+                    } catch (UnsupportedEncodingException e) {
+                        terminate("UTF-8 not supported");
+                        return;
+                    }
+                }
+                
+                PiggybackedMSG msg = new PiggybackedMSG(ch, data,
+                                                        p.base64Encoding);
 
-                return;
-            }
+                ch.setState(ChannelImpl.STATE_STARTING);
 
-            fireChannelStarted(ch);
+                try {
+                    ch.addPiggybackedMSG(msg);
+                } catch (BEEPException e) {
+                    terminate("Error sending profile. " + e.getMessage());
 
-            if (p.data == null || ch.getState() != ChannelImpl.STATE_TUNING) {
-                this.enableIO();
+                    return;
+                }
+            } else {
+                try {
+                    sendProfile(p.uri, ch.getStartData(), ch);
+                    ch.setState(ChannelImpl.STATE_ACTIVE);
+                } catch (BEEPException e) {
+                    terminate("Error sending profile. " + e.getMessage());
+
+                    return;
+                }
+
+                fireChannelStarted(ch);
+
+                if (p.data == null && ch.getState() != ChannelImpl.STATE_TUNING) {
+                    this.enableIO();
+                }
             }
 
             return;
         }
+
+        this.enableIO();
 
         try {
             ((MessageMSG)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, "all requested profiles are unsupported");
@@ -1916,8 +1957,12 @@ public abstract class SessionImpl implements Session {
 
     static class CLOSED_SessionOperations implements SessionOperations {
         public void changeState(SessionImpl s, int newState) throws BEEPException {
-            throw new BEEPException("Illegal session state transition (" +
-                                    newState + ")");
+            if (newState == Session.SESSION_STATE_ABORTED) {
+                log.equals("Error aborting, session already in a closed state.");
+            } else {
+                throw new BEEPException("Illegal session state transition (" +
+                                        newState + ")");
+            }
         }
 
         public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {

@@ -1,6 +1,5 @@
-
 /*
- * TuningResetException.java            $Revision: 1.3 $ $Date: 2003/06/10 18:59:20 $
+ * TuningResetException.java            $Revision: 1.4 $ $Date: 2003/09/15 15:23:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,7 +25,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2003/06/10 18:59:20 $
+ * @version $Revision, $Date: 2003/09/15 15:23:30 $
  */
 public class TuningResetException extends StartChannelException {
 
@@ -37,6 +36,7 @@ public class TuningResetException extends StartChannelException {
      * @param message
      *
      * @TODO remove this class
+     * @deprecated
      */
     public TuningResetException(String message)
     {

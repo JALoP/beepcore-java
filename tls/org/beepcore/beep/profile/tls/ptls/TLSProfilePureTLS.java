@@ -1,8 +1,8 @@
 /*
- * TLSProfilePureTLS.java  $Revision: 1.7 $ $Date: 2003/06/03 02:50:53 $
+ * TLSProfilePureTLS.java  $Revision: 1.8 $ $Date: 2003/09/15 15:23:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -35,7 +35,9 @@ import COM.claymoresystems.ptls.*;
 import COM.claymoresystems.sslg.*;
 import COM.claymoresystems.cert.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 
 /**
@@ -61,7 +63,7 @@ import java.io.IOException;
  * @see java.util.List
  */
 public class TLSProfilePureTLS extends TuningProfile
-    implements StartChannelListener
+    implements StartChannelListener, RequestHandler
 {
 
     // Constants
@@ -373,26 +375,48 @@ public class TLSProfilePureTLS extends TuningProfile
     public void startChannel(Channel channel, String encoding, String data)
             throws StartChannelException
     {
-        TCPSession oldSession = (TCPSession) channel.getSession();
+        channel.setRequestHandler(this, true);
+    }
 
-            // if the data is <ready/> then respond with <proceed/>
-            if (data != null) {
+    /// @TODO Fix error handling in this method
+    public void receiveMSG(MessageMSG msg)
+    {
+        Channel channel = msg.getChannel();
 
-                // If data is a ready, prepare a message of proceed to
-                // send to the begin call
-                if (data.equals(READY1) || data.equals(READY2)) {
-                    data = PROCEED2;
-                }
+        InputDataStreamAdapter is = msg.getDataStream().getInputStream();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+        String data;
+
+        try {
+            try {
+                data = reader.readLine();
+            } catch (IOException e) {
+                msg.sendERR(BEEPError.CODE_PARAMETER_ERROR,
+                            "Error reading data");
+                return;
             }
 
-        // Freeze this Peer
-        //             SSLDebug.setDebug( SSLDebug.DEBUG_ALL );
+            if (data.equals(READY1) == false && data.equals(READY2) == false) {
+                msg.sendERR(BEEPError.CODE_PARAMETER_INVALID,
+                            "Expected READY element");
+            }
+
+            this.begin(channel);
+
+            msg.sendRPY(new StringOutputDataStream(PROCEED2));
+        } catch (BEEPException e) {
+            log.error("TLS Error", e);
+            channel.getSession().terminate("unable to send ERR");
+            return;
+        }
+
+        TCPSession oldSession = (TCPSession) channel.getSession();
+
         SSLSocket newSocket = null;
         SessionCredential peerCred = null;
         try {
-            // Send a profile back with dat "<proceed />"
-            this.begin(channel, URI, data);
-
             // negotiate TLS over a new socket
             context.setPolicy(policy);
 
@@ -402,32 +426,31 @@ public class TLSProfilePureTLS extends TuningProfile
                               oldSocket.getOutputStream(),
                               oldSocket.getInetAddress().getHostName(),
                               oldSocket.getPort(), SSLSocket.SERVER);
-        } catch (BEEPException e) {
-            log.error(e.getMessage());
-            e.printStackTrace();
-            oldSession.terminate(e.getMessage());
         } catch (SSLThrewAlertException e) {
-            log.error(e.getMessage());
-            e.printStackTrace();
-            oldSession.terminate(e.getMessage());
+            log.error("TLS Error", e);
+            channel.getSession().terminate(e.getMessage());
+            return;
         } catch (IOException e) {
-            log.error(e.getMessage());
-            e.printStackTrace();
-            oldSession.terminate(e.getMessage());    
+            log.error("TLS Error", e);
+            channel.getSession().terminate(e.getMessage());
+            return;
         }
 
+        // get the credentials of the peer
+        Vector cc = null;
+        int cs;
+            
         try {
-            // get the credentials of the peer
-            Vector cc = null;
-
             if (needPeerAuth) {
                 cc = newSocket.getCertificateChain();
                 if (cc == null) {
                     log.trace("No certificate chain when there should be one.");
-                    throw new StartChannelException(550, "No certificate " +
-                                                    "chain when there " +
+                    msg.sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2,
+                                "No certificate chain when there " +
                                                     "should be one. ");
+                    return;
                 }
+
                 Enumeration enum = cc.elements();
                 while (enum.hasMoreElements()) {
                     X509Cert cert = (X509Cert) enum.nextElement();
@@ -441,61 +464,68 @@ public class TLSProfilePureTLS extends TuningProfile
                 log.trace("No peer authentication needed");
             }
 
-            int cs = newSocket.getCipherSuite();
+            cs = newSocket.getCipherSuite();
+        } catch (BEEPException e) {
+            log.error("TLS Error", e);
+            channel.getSession().terminate("unable to send ERR");
+            return;
+        } catch (IOException e) {
+            log.error("TLS Error", e);
+            channel.getSession().terminate(e.getMessage());
+            return;
+        }
 
+        try {
             // verify that this is authenticated and authorized
             if (handshakeListener != null) {
 
                 // default of just putting the certificate and 
                 handshakeListener.handshakeCompleted(oldSession, cc, cs);
             }
-
-            // create the peer credential
-            Hashtable ht = new Hashtable();
-
-            ht.put(SessionCredential.AUTHENTICATOR, URI);
-            ht.put(SessionCredential.ALGORITHM,
-                   SSLPolicyInt.getCipherSuiteName(cs));
-            ht.put(SessionCredential.AUTHENTICATOR_TYPE, "TLS");
-
-            if (cc != null) {
-                ht.put(SessionCredential.REMOTE_CERTIFICATE, cc.elementAt(0));
-            }
-
-            peerCred = new SessionCredential(ht);
-
-            // Consider the Profile Registry
-            ProfileRegistry preg = oldSession.getProfileRegistry();
-
-            preg.removeStartChannelListener(URI);
-
-            if (abortSession) {
-                this.abort(new BEEPError(451, ERR_TLS_NO_AUTHENTICATION),
-                           channel);
-            } else {
-
-                // Cause the session to be recreated and reset
-                Hashtable hash = new Hashtable();
-
-                hash.put(SessionTuningProperties.ENCRYPTION, "true");
-
-                SessionTuningProperties tuning =
-                    new SessionTuningProperties(hash);
-
-                this.complete(channel, generateCredential(), peerCred,
-                              tuning, preg, newSocket);
-            }
-        } catch (Exception x) {
-
-            // @todo should be more detailed
-            log.error(x.getMessage());
-            x.printStackTrace();
-
-            throw new StartChannelException(450, x.getMessage());
+        } catch (BEEPException e) {
+            log.error("BEEP Handshake error", e);
+            channel.getSession().terminate("BEEP Handshake error");
+            return;
         }
 
-        throw new TuningResetException(URI);
+        // create the peer credential
+        Hashtable ht = new Hashtable();
+
+        ht.put(SessionCredential.AUTHENTICATOR, URI);
+        ht.put(SessionCredential.ALGORITHM,
+               SSLPolicyInt.getCipherSuiteName(cs));
+        ht.put(SessionCredential.AUTHENTICATOR_TYPE, "TLS");
+
+        if (cc != null) {
+            ht.put(SessionCredential.REMOTE_CERTIFICATE, cc.elementAt(0));
+        }
+
+        peerCred = new SessionCredential(ht);
+
+        // Cause the session to be recreated and reset
+        Hashtable hash = new Hashtable();
+
+        hash.put(SessionTuningProperties.ENCRYPTION, "true");
+
+        SessionTuningProperties tuning =
+            new SessionTuningProperties(hash);
+
+        // Consider the Profile Registry
+        ProfileRegistry preg = oldSession.getProfileRegistry();
+
+        preg.removeStartChannelListener(URI);
+
+        try {
+            this.complete(channel, generateCredential(), peerCred,
+                          tuning, preg, newSocket);
+        } catch (BEEPException x) {
+            BEEPError error =
+                new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                              ERR_TLS_NO_AUTHENTICATION);
+            abort(error, channel);
+        }
     }
+    
 
     /**
      * Called when the underlying BEEP framework receives
@@ -583,10 +613,10 @@ public class TLSProfilePureTLS extends TuningProfile
 
         } catch (SSLThrewAlertException e) {
             session.terminate(e.getMessage());
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         } catch (IOException e) {
             session.terminate(e.getMessage());
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         }
 
         try {

@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.32 $ $Date: 2003/06/03 02:41:23 $
+ * TCPSession.java  $Revision: 1.33 $ $Date: 2003/09/15 15:23:31 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -47,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.32 $, $Date: 2003/06/03 02:41:23 $
+ * @version $Revision: 1.33 $, $Date: 2003/09/15 15:23:31 $
  */
 public class TCPSession extends SessionImpl {
 
@@ -219,6 +219,7 @@ public class TCPSession extends SessionImpl {
             }
 
             socket = null;
+            running = false;
         }
     }
 
@@ -409,6 +410,11 @@ public class TCPSession extends SessionImpl {
     private void processNextFrame()
     {
         running = true;
+        
+        if (socket == null) {
+            running = false;
+            return;
+        }
 
         try {
             InputStream is = socket.getInputStream();

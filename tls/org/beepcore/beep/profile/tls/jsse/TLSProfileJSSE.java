@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.8 $ $Date: 2003/06/03 02:43:43 $
+ * TLSProfileJSSE.java  $Revision: 1.9 $ $Date: 2003/09/15 15:23:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +54,7 @@ import org.apache.commons.logging.LogFactory;
  * @see org.beepcore.beep.profile.tls.jsse.TLSProfileJSSEHandshakeCompletedListener
  */
 public class TLSProfileJSSE extends TLSProfile
-        implements Profile, StartChannelListener {
+        implements Profile, StartChannelListener, RequestHandler {
 
     // Constants
     public static final String PROCEED1 = "<proceed/>";
@@ -173,6 +176,77 @@ public class TLSProfileJSSE extends TLSProfile
                 }
 
                 notifiedHandshake = true;
+            }
+        }
+    }
+
+    class BeepListenerHCL implements HandshakeCompletedListener {
+
+        Channel channel;
+        boolean notifiedHandshake = false;
+        boolean waitingForHandshake = false;
+        
+        BeepListenerHCL(Channel tuningChannel)
+        {
+            this.channel = tuningChannel;
+        }
+
+        public void handshakeCompleted(HandshakeCompletedEvent event)
+        {
+            Session oldSession = channel.getSession();
+            
+            log.debug("HandshakeCompleted");
+            synchronized (handshakeListeners) {
+                Iterator i = TLSProfileJSSE.handshakeListeners.iterator();
+
+                while (i.hasNext()) {
+                    TLSProfileJSSEHandshakeCompletedListener l =
+                        (TLSProfileJSSEHandshakeCompletedListener) i.next();
+
+                    if (l.handshakeCompleted(oldSession, event) == false) {
+                        BEEPError e =
+                            new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                          ERR_TLS_NO_AUTHENTICATION);
+                        TLSProfileJSSE.this.abort(e, channel);
+
+                        return;
+                    }
+                }
+            }
+
+            Hashtable h = new Hashtable();
+
+            try {
+                h.put(SessionCredential.AUTHENTICATOR,
+                      event.getPeerCertificateChain()[0].getSubjectDN().getName());
+                h.put(SessionCredential.REMOTE_CERTIFICATE,
+                      event.getPeerCertificateChain());
+            } catch (SSLPeerUnverifiedException e) {
+                h.put(SessionCredential.AUTHENTICATOR, "");
+                h.put(SessionCredential.REMOTE_CERTIFICATE, "");
+            }
+
+            ProfileRegistry preg = oldSession.getProfileRegistry();
+
+            preg.removeStartChannelListener(uri);
+
+            Hashtable hash = new Hashtable();
+
+            hash.put(SessionTuningProperties.ENCRYPTION, "true");
+
+            SessionTuningProperties tuning =
+                new SessionTuningProperties(hash);
+
+            // Cause the session to be recreated and reset
+            try {
+                TLSProfileJSSE.this.complete(channel, generateCredential(),
+                                             new SessionCredential(h), tuning,
+                                             preg, event.getSocket());
+            } catch (BEEPException e) {
+                BEEPError error =
+                    new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                  ERR_TLS_NO_AUTHENTICATION);
+                TLSProfileJSSE.this.abort(error, channel);
             }
         }
     }
@@ -458,82 +532,64 @@ public class TLSProfileJSSE extends TLSProfile
     public void startChannel(Channel channel, String encoding, String data)
             throws StartChannelException
     {
+        channel.setRequestHandler(this, true);
+    }
+
+    public void receiveMSG(MessageMSG msg)
+    {
+        Channel channel = msg.getChannel();
+
+        InputDataStreamAdapter is = msg.getDataStream().getInputStream();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+        String data;
+
         try {
-            TCPSession oldSession = (TCPSession) channel.getSession();
-
-            // if the data is <ready/> then respond with <proceed/>
-            if (data != null) {
-
-                // If data is a ready, prepare a message of proceed to
-                // send to the begin call
-                if (data.equals(READY1) || data.equals(READY2)) {
-                    data = PROCEED2;
-                }
+            try {
+                data = reader.readLine();
+            } catch (IOException e) {
+                msg.sendERR(BEEPError.CODE_PARAMETER_ERROR,
+                            "Error reading data");
+                return;
             }
 
-            // Freeze this Peer
-            // Send a profile back with data in the 3rd argument
-            this.begin(channel, uri, data);
+            if (data.equals(READY1) == false && data.equals(READY2) == false) {
+                msg.sendERR(BEEPError.CODE_PARAMETER_INVALID,
+                            "Expected READY element");
+            }
 
-            // Negotiate TLS with the Socket
-            Socket oldSocket = oldSession.getSocket();
+            this.begin(channel);
+
+            msg.sendRPY(new StringOutputDataStream(PROCEED2));
+        } catch (BEEPException e1) {
+            channel.getSession().terminate("unable to send ERR");
+            return;
+        }
+
+        try {
+            Socket oldSocket = ((TCPSession) channel.getSession()).getSocket();
+            /** @TODO add support for serverName */
             SSLSocket newSocket =
                 (SSLSocket) socketFactory.createSocket(oldSocket,
                                                        oldSocket.getInetAddress().getHostName(),
                                                        oldSocket.getPort(),
                                                        true);
-            TLSHandshake l = new TLSHandshake();
+
+            BeepListenerHCL l = new BeepListenerHCL(channel);
 
             newSocket.addHandshakeCompletedListener(l);
             newSocket.setUseClientMode(false);
             newSocket.setNeedClientAuth(needClientAuth);
             newSocket.setEnabledCipherSuites(newSocket.getSupportedCipherSuites());
 
-            l.session = channel.getSession();
-
             newSocket.startHandshake();
-
-            synchronized (l) {
-                if (!l.notifiedHandshake) {
-                    l.waitingForHandshake = true;
-
-                    l.wait();
-
-                    l.waitingForHandshake = false;
-                }
-            }
-
-            // Consider the Profile Registry
-            ProfileRegistry preg = oldSession.getProfileRegistry();
-
-            preg.removeStartChannelListener(uri);
-
-            if (abortSession) {
-                this.abort(new BEEPError(451, ERR_TLS_NO_AUTHENTICATION),
-                           channel);
-            } else {
-                Hashtable hash = new Hashtable();
-
-                hash.put(SessionTuningProperties.ENCRYPTION, "true");
-
-                SessionTuningProperties tuning =
-                    new SessionTuningProperties(hash);
-
-                // Cause the session to be recreated and reset
-                this.complete(channel, generateCredential(), l.cred, tuning,
-                              preg, newSocket);
-            }
-        } catch (Exception x) {
-
-            // @todo should be more detailed
-            log.error(x.getMessage());
-
-            throw new StartChannelException(450, x.getMessage());
+        } catch (IOException e) {
+            channel.getSession().terminate("TLS error: " + e.getMessage());
+            return;
         }
-
-        throw new TuningResetException(uri);
     }
-
+    
     /**
      * Called when the underlying BEEP framework receives
      * a "close" element.<p>
