@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java  $Revision: 1.2 $ $Date: 2001/11/08 05:26:29 $
+ * BufferSegment.java  $Revision: 1.3 $ $Date: 2001/11/23 15:10:56 $
  *
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
@@ -24,7 +24,7 @@ package org.beepcore.beep.util;
  * length from the offset.
  *
  * @author Huston Franklin
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:26:29 $
+ * @version $Revision: 1.3 $, $Date: 2001/11/23 15:10:56 $
  */
 public class BufferSegment {
     /**
