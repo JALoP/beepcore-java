@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.4 $ $Date: 2001/04/10 14:42:54 $
+ * Session.java            $Revision: 1.5 $ $Date: 2001/04/13 21:42:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -53,7 +53,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/04/10 14:42:54 $
+ * @version $Revision: 1.5 $, $Date: 2001/04/13 21:42:32 $
  *
  * @see Channel
  */
@@ -76,7 +76,7 @@ public abstract class Session {
 
     /** @todo check this */
     private static final int MAX_PAYLOAD_SIZE = 4096;
-    protected static final int MAX_FRAME_SIZE = Frame.MAX_HEADER_SIZE
+    private static final int MAX_FRAME_SIZE = Frame.MAX_HEADER_SIZE
     + MAX_PAYLOAD_SIZE + Frame.TRAILER.length();
     private static final String ERR_BEEP_START_CHANNEL_TIMEOUT =
         "Channel start timed out.";
@@ -440,7 +440,6 @@ public abstract class Session {
         return startChannel(l, listener, false);
     }
 
-
     /**
      * Sends a start channel request using the given list of profiles.
      *
@@ -607,106 +606,18 @@ public abstract class Session {
      *
      * @throws BEEPException
      */
-    protected Frame createFrame(int messageType, int channelNum, int msgno,
-                                int seqno, byte[] payload, boolean last)
+    protected Frame createFrame(byte[] header, int headerLength)
             throws BEEPException
     {
-        Channel channel = getValidChannel(channelNum);
+        Frame f = Frame.parseHeader(this, header, headerLength);
 
-        return new Frame(messageType, channel, msgno, seqno, payload, last);
-    }
+        // The window size and frame size have nothing in common.
+        if (f.getSize() > f.getChannel().getAvailableWindow()) {
+            throw new BEEPException("Payload size is greater than channel "
+                                    + "window size");
+        }
 
-    /**
-     * This method is intended for use by tranport specific Sessions to create
-     * a new <code>Frame</code> representing a BEEP MSG, RPY, ERR
-     * or NUL frame.
-     *
-     * @param messageType indicates whether a <code>Frame</code> is a MSG,
-     *    RPY, ERR, ANS or NUL.
-     * @param channelNum Channel on which the <code>Frame</code> was sent.
-     * @param msgno Message number of the <code>Frame</code>.
-     * @param seqno Sequence number of the <code>Frame</code>.
-     * @param payload Payload of the <code>Frame</code>.
-     * @param offset  Starting byte in the payload.
-     * @param length Number of bytes in the payload.
-     * @param last  Indicates if this is the last <code>Frame</code> sent in a
-     *    sequence of frames.
-     *
-     * @return a <code>Frame</code> for the specified values
-     *
-     * @throws BEEPException
-     */
-    protected Frame createFrame(int messageType, int channelNum, int msgno,
-                                int seqno, byte[] payload, int offset,
-                                int length, boolean last)
-            throws BEEPException
-    {
-        Channel channel = getValidChannel(channelNum);
-
-        return new Frame(messageType, channel, msgno, seqno, payload, offset,
-                         length, last);
-    }
-
-    /**
-     * This method is intended for use by tranport specific Sessions to create
-     * a new <code>Frame</code> representing a BEEP ANS frame.
-     *
-     * @param messageType indicates whether a <code>Frame</code> is a MSG,
-     *    RPY, ERR, ANS or NUL.
-     * @param channelNum Channel on which the <code>Frame</code> was sent.
-     * @param msgno Message number of the <code>Frame</code>.
-     * @param seqno Sequence number of the <code>Frame</code>.
-     * @param ansno Answer number of the <code>Frame</code>.
-     * @param payload Payload of the <code>Frame</code>.
-     * @param last  Indicates if this is the last <code>Frame</code> sent in a
-     *    sequence of frames.
-     *
-     * @return a <code>Frame</code> for the specified values
-     *
-     * @throws BEEPException
-     */
-    protected Frame createFrame(int messageType, int channelNum, int msgno,
-                                int seqno, int ansno, byte[] payload,
-                                boolean last)
-            throws BEEPException
-    {
-        Channel channel = getValidChannel(channelNum);
-
-        return new Frame(messageType, channel, msgno, seqno, ansno, payload,
-                         last);
-    }
-
-    /**
-     * This method is intended for use by tranport specific Sessions to create
-     * a new <code>Frame</code> representing a BEEP MSG, RPY, ERR
-     *    or NUL frame.
-     *
-     * @param messageType indicates whether a <code>Frame</code> is a MSG,
-     *    RPY, ERR, ANS or NUL.
-     * @param channelNum Channel on which the <code>Frame</code> was sent.
-     * @param msgno Message number of the <code>Frame</code>.
-     * @param seqno Sequence number of the <code>Frame</code>.
-     * @param ansno Answer number of the <code>Frame</code>.
-     * @param payload Payload of the <code>Frame</code>.
-     * @param offset  Starting byte in the payload.
-     * @param count Number of bytes in the payload.
-     * @param length
-     * @param last  Indicates if this is the last <code>Frame</code> sent in a
-     *    sequence of frames.
-     *
-     * @return a <code>Frame</code> for the specified values
-     *
-     * @throws BEEPException
-     */
-    protected Frame createFrame(int messageType, int channelNum, int msgno,
-                                int seqno, int ansno, byte[] payload,
-                                int offset, int length, boolean last)
-            throws BEEPException
-    {
-        Channel channel = getValidChannel(channelNum);
-
-        return new Frame(messageType, channel, msgno, seqno, ansno, payload,
-                         offset, length, last);
+        return f;
     }
 
     /**
@@ -990,6 +901,17 @@ public abstract class Session {
         waitForResult(channel, Channel.STATE_OK);
     }
 
+    Channel getValidChannel(int number) throws BEEPException
+    {
+        Channel ch = (Channel) channels.get(Integer.toString(number));
+
+        if (ch == null) {
+            throw new BEEPException(ERR_NONEXISTENT_CHANNEL);
+        }
+
+        return ch;
+    }
+
     void sendProfile(String uri, String datum, Channel ch)
             throws BEEPException
     {
@@ -1193,17 +1115,6 @@ public abstract class Session {
 
         // Warning: nextChannelNumber is a long to detect overflow
         return nextChannel;
-    }
-
-    private Channel getValidChannel(int number) throws BEEPException
-    {
-        Channel ch = (Channel) channels.get(Integer.toString(number));
-
-        if (ch == null) {
-            throw new BEEPException(ERR_NONEXISTENT_CHANNEL);
-        }
-
-        return ch;
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * Channel.java            $Revision: 1.2 $ $Date: 2001/04/13 21:42:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/13 21:42:32 $
  *
  */
 public class Channel {
@@ -627,16 +627,16 @@ public class Channel {
                     && (previousFrame.getMessageType()
                         != frame.getMessageType())) {
                 throw new BEEPException(ERR_CHANNEL_INCONSISTENT_FRAME_TYPE_PREFIX
-                                             + Message.getMessageType(frame.getMessageType())
+                                             + frame.getMessageTypeString()
                                              + ERR_CHANNEL_MIDDLE
-                                             + Message.getMessageType(previousFrame.getMessageType()));
+                                             + previousFrame.getMessageTypeString());
             }
         }
 
-        recvSequence += frame.getPayload().getLength();
+        recvSequence += frame.getSize();
 
         // subtract this from the amount available in the buffer
-        recvWindowUsed += frame.getPayload().getLength();
+        recvWindowUsed += frame.getSize();
 
         // make sure we didn't overflow the buffer
         if (recvWindowUsed > recvWindowSize) {
@@ -683,7 +683,7 @@ public class Channel {
             try {
                 frameListener.receiveFrame(frame);
 
-                recvWindowUsed -= frame.getPayload().getLength();
+                recvWindowUsed -= frame.getSize();
 
                 if (session.updateMyReceiveBufferSize(this, prevAckno,
                                                       recvSequence,
@@ -1160,10 +1160,11 @@ public class Channel {
                     frame =
                         new Frame(message.getMessageType(),
                                   message.getChannel(), message.getMsgno(),
-                                  sentSequence, ansno, payload, 0,
-                                  amountToSend,
                                   ((available == 0) && stream.isComplete())
-                                  ? true : false);
+                                  ? true : false,
+                                  sentSequence, ansno,
+                                  new Frame.BufferSegment(payload, 0,
+                                                          amountToSend));
 
                     // update the sequence and peer window size
                     sentSequence += amountToSend;    // update the sequence

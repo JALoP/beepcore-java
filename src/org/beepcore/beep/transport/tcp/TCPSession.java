@@ -1,6 +1,5 @@
-
 /*
- * TCPSession.java            $Revision: 1.3 $ $Date: 2001/04/10 14:46:06 $
+ * TCPSession.java            $Revision: 1.4 $ $Date: 2001/04/13 21:42:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,6 +25,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import org.beepcore.beep.core.BEEPException;
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/10 14:46:06 $
+ * @version $Revision, $Date: 2001/04/13 21:42:32 $
  */
 public class TCPSession extends Session {
 
@@ -58,7 +58,7 @@ public class TCPSession extends Session {
         "Unable to send a frame";
     private static final String ERR_TCP_BUFFER_TOO_LARGE = "";
     private static final String SEQ_PREFIX = "SEQ ";
-    protected static final char NEWLINE_CHAR = '\n';
+    private static final char NEWLINE_CHAR = '\n';
     private static final int DEFAULT_PROPERTIES_SIZE = 4;
     private static final int DEFAULT_RECEIVE_BUFFER_SIZE = 4 * 1024;
     private static final int MAX_RECEIVE_BUFFER_SIZE = 64 * 1024;
@@ -72,13 +72,12 @@ public class TCPSession extends Session {
     // since changed my tune, since we'll be thread/session
     // for probably a while yet...this'll help on performance.
     // reusing fixed size buffers.
-    protected byte headerBuffer[] = new byte[Frame.MAX_HEADER_SIZE];
-    protected byte trailerBuffer[] = new byte[Frame.TRAILER.length()];
+    private byte headerBuffer[] = new byte[Frame.MAX_HEADER_SIZE];
     private Object writerLock;
-    protected Socket socket;
+    private Socket socket;
     private boolean running;
-    protected static int THREAD_COUNT = 0;
-    protected static final String THREAD_NAME = "Session Thread #";
+    private static int THREAD_COUNT = 0;
+    private static final String THREAD_NAME = "TCPSession Thread #";
     private Thread thread;
 
     /**
@@ -219,24 +218,20 @@ public class TCPSession extends Session {
             byte[] header = null;
 
             synchronized (writerLock) {
-
-                // Create header
-                header = f.buildHeader();
-
-                os.write(header);
-
-                // Write message payload
-                Frame.BufferSegment p = f.getPayload();
-
-                os.write(p.getBytes(), p.getOffset(), p.getLength());
-
-                // Write trailer
-                os.write(Frame.TRAILER.getBytes());
-                os.flush();
+                
                 Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                             "Wrote the following\n" + new String(header)
-                             + new String(p.getBytes(), p.getOffset(), p.getLength())
-                             + Frame.TRAILER);
+                             "Wrote the following\n");
+                Iterator i = f.getBytes();
+                while (i.hasNext()) {
+                    Frame.BufferSegment b = (Frame.BufferSegment) i.next();
+                    os.write(b.getBytes(), b.getOffset(), b.getLength());
+
+                    Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                                 new String(b.getBytes(), b.getOffset(),
+                                            b.getLength()));
+                }
+
+                os.flush();
             }
         } catch (IOException e) {
             throw new BEEPException(e.toString());
@@ -343,7 +338,7 @@ public class TCPSession extends Session {
 
             OutputStream os = socket.getOutputStream();
 
-            os.write(sb.toString().getBytes());
+            os.write(sb.toString().getBytes("UTF-8"));
             os.flush();
         } catch (IOException x) {
             throw new BEEPException("Unable to send SEQ" + x.getMessage());
@@ -372,90 +367,99 @@ public class TCPSession extends Session {
      */
     private void processNextFrame() throws BEEPException, IOException
     {
-        int msgType = Message.MESSAGE_TYPE_UNK;
-        int ackNum = 0, msgNum = 0, pos = 0;
-        char isLast = 0;
-        boolean last = false;
-        int channelNum = -1;
-        InputStream is = null;
-        String temp = null;
-
         Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING, "Processing next frame");
 
-        for (int c = 0; c < Frame.MAX_HEADER_SIZE; c++) {
-            headerBuffer[c] = 0;
-        }
-
-        int i = -1;
+        int length = 0;
+        InputStream is = socket.getInputStream();
 
         headerBuffer[SEQ_LENGTH] = 0;
-        is = socket.getInputStream();
 
-        for (i = 0; i < SEQ_LENGTH; i++) {
-            headerBuffer[i] = (byte) is.read();
+        while (true) {
+            int b = is.read();
 
-            if (headerBuffer[i] != (byte) SEQ_PREFIX.charAt(i)) {
+            if (b == -1) {
+                throw new BEEPException("Malformed BEEP header");
+            }
+
+            headerBuffer[length] = (byte) b;
+            if (headerBuffer[length] == '\n') {
+                if (length == 0 || headerBuffer[length-1] != '\r') {
+                    throw new BEEPException("Malformed BEEP header");
+                }
                 break;
+            }
+
+            ++length;
+            if (length == Frame.MAX_HEADER_SIZE) {
+                throw new BEEPException("Malformed BEEP header");
             }
         }
 
-        if (i != SEQ_LENGTH) {
-            processNextFrame(++i);
+        // If this is not a SEQ frame build a <code>Frame</code> and
+        // read in the payload and verify the TRAILER.
+        if (headerBuffer[0] != (byte) SEQ_PREFIX.charAt(0)) {
+            Frame f = super.createFrame(headerBuffer, length);
+            byte[] payload = new byte[f.getSize()];
+
+            for (int count = 0; count < payload.length; ) {
+                count += is.read(payload, count, payload.length - count);
+            }
+
+            Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                         "Read the following\n"
+                         + new String(headerBuffer, 0, length)
+                             + new String(payload));
+
+            for (int i = 0; i < Frame.TRAILER.length(); ++i) {
+                int b = is.read();
+
+                if (b == -1 || ((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
+                    throw new BEEPException("Malformed BEEP header");
+                }
+            }
+
+            f.addPayload(new Frame.BufferSegment(payload));
+
+            super.postFrame(f);
 
             return;
         }
 
         Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING, "Processing SEQ frame");
 
-        // Otherwise it's an SEQ frame
-        // Read the header
-        pos = SEQ_LENGTH;
-
-        while (((pos == 0) || (headerBuffer[pos - 1] != NEWLINE_CHAR))
-               && (pos < Frame.MAX_HEADER_SIZE)) {
-            byte b = (byte) is.read();
-
-            if (b != -1) {
-                headerBuffer[pos++] = b;
-            } else {
-                throw new BEEPException("Malformed BEEP header");
-            }
-        }
-
-        headerBuffer[pos] = 0;
+        //            headerBuffer[pos] = 0;
 
         Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                     new String(headerBuffer, 0, pos));
+                     new String(headerBuffer, 0, length));
 
         // Process the header
         StringTokenizer st = new StringTokenizer(new String(headerBuffer,
-                                                            0, pos));
+                                                            0, length));
 
-        pos = st.countTokens();
-
-        if (!((pos == 4) || (pos == 5) || (pos == 6))) {
+        if (st.countTokens() != 4) {
 
             // This should just shut the session down.
-            Log.logEntry(Log.SEV_ERROR, TCP_MAPPING,
-                         "Malformed BEEP header");
+            Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, "Malformed BEEP header");
 
             throw new BEEPException("Malformed BEEP header");
         }
 
         // Skip the SEQ
-        st.nextToken();
+        if (st.nextToken().equals("SEQ") == false) {
+            throw new BEEPException("Malformed BEEP header");
+        }
 
         // Read the Channel Number
-        channelNum = Integer.parseInt(st.nextToken());
+        int channelNum = Integer.parseInt(st.nextToken());
 
         // Read the Ack Number
-        ackNum = Integer.parseInt(st.nextToken());
+        long ackNum = Long.parseLong(st.nextToken());
 
         // Read the Window Number
-        pos = Integer.parseInt(st.nextToken());
+        int window = Integer.parseInt(st.nextToken());
 
         // update the channel with the new receive window size
-        this.updatePeerReceiveBufferSize(channelNum, ackNum, pos);
+        this.updatePeerReceiveBufferSize(channelNum, ackNum, window);
 
         // We need to recurse from method end to prevent
         // SEQs from being treated as legit frames
@@ -464,158 +468,6 @@ public class TCPSession extends Session {
         if (getState() == SESSION_STATE_ACTIVE) {
             processNextFrame();
         }
-    }
-
-    /**
-     * The arg 'pos' indicates how far another method may have read
-     * into headerBuffer @todo this will hae to be a byte[] or
-     * something if we go beyond the thread per session model.
-     * @param pos the position in the header where we should start reading.
-     *
-     * @throws BEEPException
-     */
-    private void processNextFrame(int pos) throws BEEPException, IOException
-    {
-
-        // @todo
-        // When or if we ever change from thread per session, then bring this
-        // back byte trailerBuffer[] = new byte[ TRAILER.length() ];
-        // byte headerBuffer[] = new byte[ TRAILER.length() ];
-        // If I could declare byte[] on the stack, I would...oh well,
-        // 'C' beckons ;)
-        int msgType = Message.MESSAGE_TYPE_UNK;
-        int msgNum = 0, seqNum = 0, count = 0;
-        int ansNum = 0, size = 0, limit = 0;
-        char isLast = 0;
-        boolean last = false;
-
-        //        Channel     channel = null;
-        int channelNum = -1;
-        InputStream is = null;
-        String temp = null;
-
-        Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                     "Processing normal BEEP frame");
-
-        is = socket.getInputStream();
-
-        // Grok the header
-        // Brutal, but I need to think about how to read the header
-        // nicely...
-        // @todo read ahead in larger chunks, 16-32 bytes or so, and then
-        // remark the stream back a few bytes when you overrun, so as to be
-        // efficient.
-        while (((pos == 0) || (headerBuffer[pos - 1] != NEWLINE_CHAR))
-               && (pos < Frame.MAX_HEADER_SIZE)) {
-            byte b = (byte) is.read();
-
-            if (b != -1) {
-                headerBuffer[pos++] = b;
-            } else {
-                throw new BEEPException("Malfored BEEP Header");
-            }
-        }
-
-        // Process the header
-        headerBuffer[pos] = 0;
-        limit = pos;
-
-        StringTokenizer st = new StringTokenizer(new String(headerBuffer,
-                                                            0, pos));
-
-        count = st.countTokens();
-
-        if (!((count == 6) || (count == 7) || (count == 8))) {
-            Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                         "Illegal header tokens=" + count + "\n"
-                         + new String(headerBuffer));
-
-            throw new BEEPException("Malfored BEEP Header");
-        }
-
-        // Get Message Type
-        // Kick out if we've maxed, or if the type gets set.
-        temp = st.nextToken();
-        msgType = Message.getMessageType(temp);
-
-        // Read the Channel Number
-        channelNum = Integer.parseInt(st.nextToken());
-
-        // Read the Message Number
-        msgNum = Integer.parseInt(st.nextToken());
-
-        // Read the more flag
-        isLast = st.nextToken().charAt(0);
-
-        if (isLast == '*') {
-            last = false;
-        } else if (isLast == '.') {
-            last = true;
-        } else {
-
-            // This should just shut the session down.
-            Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING, "lastFrame=" + last);
-
-            throw new BEEPException("Malfored BEEP Header");
-        }
-
-        // Sequence Number
-        seqNum = Integer.parseInt(st.nextToken());
-
-        // Size
-        pos = Integer.parseInt(st.nextToken());
-
-        if (pos < 0) {
-            throw new BEEPException("Malfored BEEP Header");
-        }
-
-        // The window size and frame size have nothing in common.
-        if (pos > getChannelAvailableWindow(channelNum)) {
-            throw new BEEPException("Payload size is greater than channel "
-                                    + "window size");
-        }
-
-        if (count == 8) {
-
-            // AnsNo
-            ansNum = Integer.parseInt(st.nextToken());
-        }
-
-        // Read the other MIME headers...er...
-        // TBD
-        // Read the payload
-        byte payload[] = new byte[pos];
-
-        // Might come in stages so track it until we get
-        // the full blast length...or some other contraints
-        // kick in.
-        count = 0;
-
-        while (count < pos) {
-            count += is.read(payload, count, pos - count);
-        }
-
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                     "Read the following\n"
-                     + new String(headerBuffer, 0, limit)
-                         + new String(payload, 0, count));
-
-        count = 0;
-        limit = Frame.TRAILER.length();
-
-        while (count < limit) {
-            count += is.read(trailerBuffer, count, limit - count);
-        }
-
-        if (!Frame.TRAILER.equals(new String(trailerBuffer))) {
-            throw new BEEPException("Malfored BEEP frame. No trailer");
-        }
-
-        String p = new String(payload);
-        Frame f = createFrame(msgType, channelNum, msgNum, seqNum,
-                              ansNum, payload, last);
-
-        super.postFrame(f);
     }
 
     private class SessionThread implements Runnable {
