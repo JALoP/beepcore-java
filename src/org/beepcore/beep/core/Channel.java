@@ -1,7 +1,8 @@
 /*
- * Channel.java            $Revision: 1.18 $ $Date: 2001/11/09 19:10:58 $
+ * Channel.java  $Revision: 1.19 $ $Date: 2001/11/12 16:12:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -33,7 +34,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.18 $, $Date: 2001/11/09 19:10:58 $
+ * @version $Revision: 1.19 $, $Date: 2001/11/12 16:12:41 $
  *
  */
 public class Channel {
@@ -59,7 +60,6 @@ public class Channel {
         "Incorrect message type: was ";
     private static final String ERR_REPLY_RECEIVED_FOR_NO_MESSAGE =
         "Reply received for a message never sent.";
-    private static final int MAX_PAYLOAD_SIZE = 4096;
     private static final BufferSegment zeroLengthSegment =
         new BufferSegment(new byte[0]);
 
@@ -103,9 +103,6 @@ public class Channel {
     /** messages queued to be sent */
     private LinkedList pendingSendMessages;
 
-    /** size of the frames */
-    private int frameSize;
-
     /** session this channel sends through. */
     private Session session;
 
@@ -131,14 +128,9 @@ public class Channel {
 
     private int prevWindowUsed;
 
-    private int waitTimeForPeer;
-
-    private boolean notifyOnFirstFrame;
+    private boolean notifyOnFirstFrame = true;
 
     private Object applicationData = null;
-
-    /* this is to support deprecated sendXXX methods */
-    private MessageMSG currentMSG;
 
     // in shutting down the session
     // something for waiting synchronous messages (semaphores or something)
@@ -164,7 +156,6 @@ public class Channel {
         this.number = number;
         this.listener = listener;
         this.session = session;
-        this.frameSize = MAX_PAYLOAD_SIZE;
         sentSequence = 0;
         recvSequence = 0;
         lastMessageSent = 1;
@@ -179,8 +170,6 @@ public class Channel {
         prevAckno = 0;
         prevWindowUsed = 0;
         peerWindowSize = DEFAULT_WINDOW_SIZE;
-        waitTimeForPeer = 0;
-        this.notifyOnFirstFrame = true;
     }
 
     /**
@@ -319,33 +308,6 @@ public class Channel {
                 prevWindowUsed = recvWindowUsed;
             }
         }
-    }
-
-    /**
-     * Determines whether calls to the <code>MessageListener</code> are
-     * made upon receiving the first or last <code>Frame</code> of the message.
-     *
-     * @param n If <code>true</code>, calls to <code>MessageListener</code> are
-     * received on the first <code>Frame</code> of a message.  Otherwise, the
-     * <code>MessageListener</code> will be called once the message is complete
-     * (when the last <code>Frame</code> is received).
-     *
-     * @see MessageListener
-     */
-    void setNotifyMessageListenerOnFirstFrame(boolean n)
-    {
-        this.notifyOnFirstFrame = n;
-    }
-
-    /**
-     * Returns whether or not calls to the <code>MessageListener</code> are
-     * made upon receiving the first or last <code>Frame</code> of the message.
-     *
-     * @see #setNotifyMessageListenerOnFirstFrame
-     */
-    boolean getNotifyMessageListenerOnFirstFrame()
-    {
-        return this.notifyOnFirstFrame;
     }
 
     /**
@@ -519,7 +481,6 @@ public class Channel {
                 m.setNotified();
             }
 
-            this.currentMSG = m;
             ((MessageListener) this.listener).receiveMSG(m);
 
             return;
@@ -847,7 +808,7 @@ public class Channel {
         sendToPeer(m);
     }
 
-    void sendToPeer(MessageStatus status) throws BEEPException
+    private void sendToPeer(MessageStatus status) throws BEEPException
     {
         synchronized (pendingSendMessages) {
             pendingSendMessages.add(status);
@@ -961,163 +922,6 @@ public class Channel {
         } while (ds.availableSegment() == true || ds.isComplete() == false);
 
         status.setMessageStatus(MessageStatus.MESSAGE_STATUS_SENT);
-    }
-
-    /*
-    synchronized void sendToPeer(MessageStatus status) throws BEEPException
-    {
-        Frame frame = null;
-        int available = 0;
-        OutputDataStream stream;
-        byte[] payload;
-        int sessionBufferSize;
-
-        // allocate a shared buffer for this message
-        // @todo This call should be changed
-        sessionBufferSize = session.getMaxFrameSize();
-        payload = new byte[sessionBufferSize];
-
-        // get the message data
-        stream = status.getMessageData();
-
-        if (stream == null ||
-            (stream.availableSegment() == false && stream.isComplete()))
-        {
-            Log.logEntry(Log.SEV_DEBUG, "Sending NUL or size 0 frame");
-            frame = new Frame(status.getMessageType(),
-                              status.getChannel(), status.getMsgno(), true,
-                              sentSequence, 0, status.getAnsno());
-            try {
-                session.sendFrame(frame);
-            } catch (BEEPException e) {
-                Log.logEntry(Log.SEV_ERROR, e);
-                status.setMessageStatus(MessageStatus.MESSAGE_STATUS_NOT_SENT);
-
-                throw e;
-            }
-
-            // set the status to sent and return it
-            status.setMessageStatus(MessageStatus.MESSAGE_STATUS_SENT);
-
-            return;
-        }
-
-        // while we still have data to read
-        available = stream.availableHeadersAndData();
-
-        synchronized (this) {
-            msgsPending++;
-        }
-
-        // for this message, is there anything waiting?
-        boolean done = false;
-        while (!done) {
-            try {
-                synchronized (this) {
-
-                    // make sure the other peer can accept something
-                    if (peerWindowSize == 0) {
-                        wait(waitTimeForPeer);
-
-                        // wait until there is something to send up to
-                        // our timeout
-                        if (peerWindowSize == 0) {
-                            throw new BEEPException("Time expired waiting " +
-                                                    "for peer.");
-                        }
-                    }
-
-                    // how much should we send?
-                    int maxCanRead = 0;
-
-                    // we should send the least of these:
-                    // 1) the size of the send buffer in the session
-                    // (transport specific)
-                    maxCanRead = sessionBufferSize;
-
-                    // 2) the amount our peer can accept
-                    if (maxCanRead > peerWindowSize) {
-                        maxCanRead = peerWindowSize;
-                    }
-
-                    int amountToSend = stream.readHeadersAndData(payload, 0,
-                                                                 maxCanRead);
-                    if ((stream.available() == 0) && stream.isComplete()) {
-                        done = true;
-                    }
-                    else if (amountToSend == -1) {
-                        done = true;
-                        // send an empty payload
-                        payload = new byte[0];
-                        amountToSend = 0;
-                    }
-
-                    // create a frame
-                    frame =
-                        new Frame(status.getMessageType(),
-                                  status.getChannel(), status.getMsgno(),
-                                  done ? true : false,
-                                  sentSequence, status.getAnsno(),
-                                  new BufferSegment(payload, 0,
-                                                    amountToSend));
-
-                    // update the sequence and peer window size
-                    sentSequence += amountToSend;    // update the sequence
-                    peerWindowSize -= amountToSend;
-                }
-
-                // send it
-                if (done) {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                 "Channel.sendToPeer sending last frame on channel "
-                                 + number);
-                } else {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                                 "Channel.sendToPeer sending a frame on channel "
-                                 + number);
-                }
-            } catch (Exception e) {
-                Log.logEntry(Log.SEV_ERROR, e);
-                status.setMessageStatus(MessageStatus.MESSAGE_STATUS_NOT_SENT);
-
-                throw new BEEPException(e.getMessage());
-            }
-
-            try {
-                session.sendFrame(frame);
-            } catch (BEEPException e) {
-                Log.logEntry(Log.SEV_ERROR, e);
-                status.setMessageStatus(MessageStatus.MESSAGE_STATUS_NOT_SENT);
-
-                synchronized (this) {
-                    msgsPending--;
-
-                    if (msgsPending == 0) {
-                        notify();
-                    }
-                }
-
-                return;
-            }
-        }
-
-        // set the status to sent and return it
-        status.setMessageStatus(MessageStatus.MESSAGE_STATUS_SENT);
-
-        synchronized (this) {
-            msgsPending--;
-
-            if (msgsPending == 0) {
-                notify();
-            }
-        }
-    }
-*/
-
-    // used by session to control the frame size of the channel
-    void setFrameSize(int frameSize)
-    {
-        this.frameSize = frameSize;
     }
 
     /**
