@@ -1,8 +1,8 @@
 /*
- * Channel.java  $Revision: 1.24 $ $Date: 2002/05/12 00:34:07 $
+ * Channel.java  $Revision: 1.25 $ $Date: 2002/08/20 03:08:58 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ import java.io.*;
 
 import java.util.*;
 
-import edu.oswego.cs.dl.util.concurrent.PooledExecutor;
-
 import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.Log;
 
@@ -36,16 +34,22 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.24 $, $Date: 2002/05/12 00:34:07 $
+ * @version $Revision: 1.25 $, $Date: 2002/08/20 03:08:58 $
  *
  */
 public class Channel {
 
     // class variables
-    static final int STATE_UNINITIALISED = 1;
-    static final int STATE_OK = 2;
-    static final int STATE_CLOSING = 3;
-    static final int STATE_CLOSED = 4;
+    public static final int STATE_INITIALIZED = 0;
+    public static final int STATE_STARTING = 1;
+    public static final int STATE_ACTIVE = 2;
+    public static final int STATE_TUNING_PENDING = 3;
+    public static final int STATE_TUNING = 4;
+    public static final int STATE_CLOSE_PENDING = 5;
+    public static final int STATE_CLOSING = 6;
+    public static final int STATE_CLOSED = 7;
+    public static final int STATE_ABORTED = 8;
+
     private static final BufferSegment zeroLengthSegment =
         new BufferSegment(new byte[0]);
 
@@ -95,7 +99,7 @@ public class Channel {
     /** message that we are receiving frames */
     private LinkedList recvReplyQueue;
 
-    private int state = STATE_UNINITIALISED;
+    private int state = STATE_INITIALIZED;
 
     private Frame previousFrame;
 
@@ -116,7 +120,7 @@ public class Channel {
 
     private Object applicationData = null;
 
-    private static final PooledExecutor callbackQueue = new PooledExecutor();
+    private boolean blockingMessageListener = false;
 
     // in shutting down the session
     // something for waiting synchronous messages (semaphores or something)
@@ -135,12 +139,12 @@ public class Channel {
      * @see org.beepcore.beep.core.DataListener
      */
     protected Channel(String profile, String number, MessageListener listener,
-                      Session session)
+                      boolean blocking, Session session)
     {
         this.profile = profile;
         this.encoding = Constants.ENCODING_DEFAULT;
         this.number = number;
-        this.listener = listener;
+        this.setMessageListener(listener, blocking);
         this.session = session;
         sentSequence = 0;
         recvSequence = 0;
@@ -150,12 +154,17 @@ public class Channel {
         sentMSGQueue = Collections.synchronizedList(new LinkedList());
         recvMSGQueue = new LinkedList();
         recvReplyQueue = new LinkedList();
-        state = STATE_UNINITIALISED;
+        state = STATE_INITIALIZED;
         recvWindowUsed = 0;
         recvWindowSize = DEFAULT_WINDOW_SIZE;
         prevAckno = 0;
         prevWindowUsed = 0;
         peerWindowSize = DEFAULT_WINDOW_SIZE;
+    }
+
+    protected Channel(String profile, String number, Session session)
+    {
+        this(profile, number, null, false, session);
     }
 
     /**
@@ -167,14 +176,14 @@ public class Channel {
      */
     Channel(Session session, String number, ReplyListener rl)
     {
-        this(null, number, null, session);
+        this(null, number, null, false, session);
 
         // Add a MSG to the SentMSGQueue to fake channel into accepting the
         // greeting which comes in an unsolicited RPY.
         sentMSGQueue.add(new MessageStatus(this, Message.MESSAGE_TYPE_MSG, 0,
                                            null, rl));
 
-        state = STATE_OK;
+        state = STATE_ACTIVE;
     }
 
     /**
@@ -265,7 +274,7 @@ public class Channel {
     public void setReceiveBufferSize(int size) throws BEEPException
     {
         synchronized (this) {
-            if ((state != STATE_OK) && (state != STATE_UNINITIALISED)) {
+            if ((state != STATE_ACTIVE) && (state != STATE_INITIALIZED)) {
                 throw new BEEPException("Channel in a bad state.");
             }
 
@@ -305,8 +314,27 @@ public class Channel {
      */
     public MessageListener setMessageListener(MessageListener ml)
     {
-        MessageListener tmp = this.listener;
-        this.listener = ml;
+        return setMessageListener(ml, true);
+    }
+    
+    MessageListener setMessageListener(MessageListener ml,
+                                       boolean blocking)
+    {
+        MessageListener tmp = getMessageListener();
+
+        if (ml == null) {
+            this.listener = null;
+            this.blockingMessageListener = false;
+            return tmp;
+        }
+        
+        if (blocking) {
+            this.listener = new ThreadedMessageListener(this, ml);
+        } else {
+            this.listener = ml;
+        }
+
+        this.blockingMessageListener = blocking;
         return tmp;
     }
 
@@ -315,7 +343,12 @@ public class Channel {
      */
     public MessageListener getMessageListener()
     {
-        return this.listener;
+        if (this.blockingMessageListener) {
+            return
+                ((ThreadedMessageListener)this.listener).getMessageListener();
+        } else {
+            return this.listener;
+        }
     }
 
     /**
@@ -347,9 +380,9 @@ public class Channel {
     {
         MessageStatus status;
 
-        if (state != STATE_OK) {
+        if (state != STATE_ACTIVE && state != STATE_TUNING) {
             switch (state) {
-            case STATE_UNINITIALISED :
+            case STATE_INITIALIZED :
                 throw new BEEPException("Channel is uninitialised.");
             default :
                 throw new BEEPException("Channel is in an unknown state.");
@@ -392,9 +425,6 @@ public class Channel {
     /**
      * returns the state of the <code>Channel</code>
      * The possible states are (all defined as Channel.STATE_*):
-     * STATE_UNINITIALISED - after a channel is created
-     * STATE_OK - a channel is acknowledged by the other session
-     * STATE_CLOSED - the channel has been closed
      */
     int getState()
     {
@@ -455,39 +485,31 @@ public class Channel {
             }
 
             if (notify) {
-                try {
-                    callbackQueue.execute(new Runnable() {
-                            public void run() {
-                                MessageMSG m;
-                                synchronized (recvMSGQueue) {
-                                    m = (MessageMSG)recvMSGQueue.getFirst();
-                                    synchronized (m) {
-                                        if (m.getDataStream().isComplete()) {
-                                            recvMSGQueue.remove(m);
-                                        }
-                                        m.setNotified();
-                                    }
-                                }
+                synchronized (recvMSGQueue) {
+                    final MessageMSG m =
+                        (MessageMSG)recvMSGQueue.getFirst();
+                    synchronized (m) {
+                        if (m.getDataStream().isComplete()) {
+                            recvMSGQueue.remove(m);
+                        }
+                        m.setNotified();
+                    }
 
-                                try {
-                                    listener.receiveMSG(m);
-                                } catch (BEEPError e) {
-                                    try {
-                                        m.sendERR(e);
-                                    } catch (BEEPException e2) {
-                                        Log.logEntry(Log.SEV_ERROR, e2);
-                                    }
-                                } catch (AbortChannelException e) {
-                                    try {
-                                        Channel.this.close();
-                                    } catch (BEEPException e2) {
-                                        Log.logEntry(Log.SEV_ERROR, e2);
-                                    }
-                                }
-                            }
-                        });
-                } catch (InterruptedException e) {
-                    throw new BEEPException(e);
+                    try {
+                        listener.receiveMSG(m);
+                    } catch (BEEPError e) {
+                        try {
+                            m.sendERR(e);
+                        } catch (BEEPException e2) {
+                            Log.logEntry(Log.SEV_ERROR, e2);
+                        }
+                    } catch (AbortChannelException e) {
+                        try {
+                            Channel.this.close();
+                        } catch (BEEPException e2) {
+                            Log.logEntry(Log.SEV_ERROR, e2);
+                        }
+                    }
                 }
             }
 
@@ -529,6 +551,10 @@ public class Channel {
         if (replyListener == null) {
 
             // @todo should we check this on sendMSG instead?
+        }
+
+        if (frame.isLast() && getState() == STATE_TUNING) {
+            this.session.disableIO();
         }
 
         if (frame.getMessageType() == Message.MESSAGE_TYPE_NUL) {
@@ -679,7 +705,7 @@ public class Channel {
         Message currentMessage = null;
         int msgno = frame.getMsgno();
 
-        if (state != STATE_OK) {
+        if (state != STATE_ACTIVE && state != STATE_TUNING) {
             throw new BEEPException("State is " + state);
         }
 
@@ -800,9 +826,9 @@ public class Channel {
 
     void sendMessage(MessageStatus m) throws BEEPException
     {
-        if (state != STATE_OK) {
+        if (state != STATE_ACTIVE && state != STATE_TUNING) {
             switch (state) {
-            case STATE_UNINITIALISED :
+            case STATE_INITIALIZED :
                 throw new BEEPException("Channel is uninitialised.");
             default :
                 throw new BEEPException("Channel is in an unknown state.");
