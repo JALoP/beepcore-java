@@ -182,7 +182,7 @@
         </javac>
     </target>
 
-    <target name="sasl-compile" depends="core">
+    <target name="sasl-compile" depends="core-jar">
         <mkdir dir="${sasl.build.dir}"/>
         <javac srcdir="${sasl.src.dir}/"
 	       destdir="${sasl.build.dir}"
