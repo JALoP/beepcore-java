@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.30 $ $Date: 2003/05/20 16:06:16 $
+ * TCPSession.java  $Revision: 1.31 $ $Date: 2003/05/27 21:38:01 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -47,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.30 $, $Date: 2003/05/20 16:06:16 $
+ * @version $Revision: 1.31 $, $Date: 2003/05/27 21:38:01 $
  */
 public class TCPSession extends SessionImpl {
 
@@ -373,33 +373,13 @@ public class TCPSession extends SessionImpl {
      *
      */
     protected boolean updateMyReceiveBufferSize(Channel channel,
-                                                long previouslySeq,
                                                 long currentSeq,
-                                                int previouslyUsed,
-                                                int currentlyUsed,
-                                                int bufferSize)
+                                                int currentAvail)
             throws BEEPException
     {
-        if (log.isDebugEnabled()) {
-            log.debug("update SEQ channel=" + channel.getNumber()
-                      + " prevSeq=" + previouslySeq + " curSeq="
-                      + currentSeq + " prevUsed=" + previouslyUsed
-                      + " curUsed=" + currentlyUsed + " bufSize="
-                      + bufferSize);
-        }
-
         // If IO is disabled don't send SEQ
         if (running == false)
             return false;
-        // @todo update the java-doc to correctly identify the params
-        /*
-        if (currentSeq > 0) {    // don't send it the first time
-            if (((currentSeq - previouslySeq) < (bufferSize / 2))
-                    || (currentlyUsed > (bufferSize / 2))) {
-                return false;
-            }
-        }
-        */
 
         StringBuffer sb = new StringBuffer(Frame.MAX_HEADER_SIZE);
 
@@ -409,7 +389,7 @@ public class TCPSession extends SessionImpl {
         sb.append(' ');
         sb.append(Long.toString(currentSeq));
         sb.append(' ');
-        sb.append(Integer.toString(bufferSize - currentlyUsed));
+        sb.append(Integer.toString(currentAvail));
         sb.append(CRLF);
 
         try {

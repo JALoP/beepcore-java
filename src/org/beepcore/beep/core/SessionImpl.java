@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.4 $ $Date: 2003/05/20 17:10:51 $
+ * Session.java  $Revision: 1.5 $ $Date: 2003/05/27 21:37:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -62,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2003/05/20 17:10:51 $
+ * @version $Revision: 1.5 $, $Date: 2003/05/27 21:37:41 $
  *
  * @see Channel
  */
@@ -853,11 +853,8 @@ public abstract class SessionImpl implements Session {
      * @throws BEEPException
      */
     protected abstract boolean updateMyReceiveBufferSize(Channel channel,
-                                                         long previouslySeq,
                                                          long currentSeq,
-                                                         int previouslyUsed,
-                                                         int currentlyUsed,
-                                                         int bufferSize)
+                                                         int currentAvail)
         throws BEEPException;
 
     // @todo update the java-doc to correctly identify the params

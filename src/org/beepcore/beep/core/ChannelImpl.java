@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.3 $ $Date: 2003/05/16 16:44:29 $
+ * ChannelImpl.java  $Revision: 1.4 $ $Date: 2003/05/27 21:37:40 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2003/05/16 16:44:29 $
+ * @version $Revision: 1.4 $, $Date: 2003/05/27 21:37:40 $
  *
  */
 class ChannelImpl implements Channel {
@@ -114,9 +114,7 @@ class ChannelImpl implements Channel {
     /** amount of the buffer in use */
     private int recvWindowUsed;
 
-    private long prevAckno;
-
-    private int prevWindowUsed;
+    private int recvWindowFreed;
 
     private boolean notifyOnFirstFrame = true;
 
@@ -158,9 +156,8 @@ class ChannelImpl implements Channel {
         recvReplyQueue = new LinkedList();
         state = STATE_INITIALIZED;
         recvWindowUsed = 0;
+        recvWindowFreed = 0;
         recvWindowSize = DEFAULT_WINDOW_SIZE;
-        prevAckno = 0;
-        prevWindowUsed = 0;
         peerWindowSize = DEFAULT_WINDOW_SIZE;
     }
 
@@ -234,15 +231,6 @@ class ChannelImpl implements Channel {
     }
 
     /**
-     * Returns the size of the used portion of the receive buffer for this
-     * channel.
-     */
-    public synchronized int getBufferUsed()
-    {
-        return recvWindowUsed;
-    }
-
-    /**
      * Returns the encoding used on this <code>Channel</code>
      * @todo look at removing this and adding the information to getProfile()
      */
@@ -284,12 +272,10 @@ class ChannelImpl implements Channel {
             // make sure we aren't setting the size less than what is currently
             // in the buffer right now.
             if (size < recvWindowUsed) {
-                throw new BEEPException("Size must be less than what is " +
+                throw new BEEPException("New size is less than what is " +
                     "currently in use.");
             }
 
-            // @TODO what if they decide to shrink the buffer?  Is that even
-            // allowed?
             // set the new size and copy the buffer
             recvWindowSize = size;
 
@@ -298,15 +284,7 @@ class ChannelImpl implements Channel {
                           + recvWindowSize);
             }
 
-            // send a new SEQ message to update the buffer size
-            if (session.updateMyReceiveBufferSize(this, prevAckno,
-                                                  recvSequence,
-                                                  prevWindowUsed,
-                                                  recvWindowUsed,
-                                                  recvWindowSize)) {
-                prevAckno = recvSequence;
-                prevWindowUsed = recvWindowUsed;
-            }
+            sendWindowUpdate();
         }
     }
 
@@ -652,16 +630,7 @@ class ChannelImpl implements Channel {
         // notified before and notifyOnFirstFrame is set, the
         // window is full, this is the last frame.
         synchronized (m) {
-            if (m.isNotified() || ((this.notifyOnFirstFrame == false)
-                && (recvSequence - prevAckno)
-                    != (recvWindowSize - prevWindowUsed) &&
-                (frame.isLast() == false)))
-            {
-                if (log.isDebugEnabled()) {
-                    log.debug("recvWindowUsed = " + recvWindowUsed
-                              + " recvWindowSize = " + recvWindowSize
-                              + "\t\r\nNot notifying frame listener.");
-                }
+            if (m.isNotified()) {
                 return;
             }
 
@@ -748,6 +717,10 @@ class ChannelImpl implements Channel {
                 status = (MessageStatus) pendingSendMessages.removeFirst();
             }
 
+            if (this.recvWindowFreed != 0) {
+                sendWindowUpdate();
+            }
+            
             sendFrames(status);
 
             if (status.getMessageStatus() !=
@@ -868,6 +841,18 @@ class ChannelImpl implements Channel {
                     }
                 }
             }
+        }
+    }
+
+    private void sendWindowUpdate() throws BEEPException
+    {
+        if (session.updateMyReceiveBufferSize(this, recvSequence,
+                                              recvWindowSize -
+                                              (recvWindowUsed -
+                                               recvWindowFreed)))
+        {
+            recvWindowUsed -= recvWindowFreed;
+            recvWindowFreed = 0;
         }
     }
 
@@ -1026,29 +1011,26 @@ class ChannelImpl implements Channel {
     
     synchronized void freeReceiveBufferBytes(int size)
     {
-        try {
-            if (log.isTraceEnabled()) {
-                log.trace("Freed up " + size + " bytes on channel " + number);
+        if (log.isTraceEnabled()) {
+            log.trace("Freed up " + size + " bytes on channel " + number);
+        }
+
+        recvWindowFreed += size;
+
+        if (log.isTraceEnabled()) {
+            log.trace("recvWindowUsed = " + recvWindowUsed +
+                      " recvWindowFreed = " + recvWindowFreed +
+                      " recvWindowSize = " + recvWindowSize);
+        }
+
+        if (state == ChannelImpl.STATE_ACTIVE) {
+            try {
+                sendWindowUpdate();
+            } catch (BEEPException e) {
+
+                // do nothing
+                log.fatal("Error updating receive buffer size", e);
             }
-
-            recvWindowUsed -= size;
-
-            if (log.isTraceEnabled()) {
-                log.trace("recvWindowUsed = " + recvWindowUsed);
-            }
-
-            if (session.updateMyReceiveBufferSize(this, prevAckno,
-                                                  recvSequence,
-                                                  prevWindowUsed,
-                                                  recvWindowUsed,
-                                                  recvWindowSize)) {
-                prevAckno = recvSequence;
-                prevWindowUsed = recvWindowUsed;
-            }
-        } catch (BEEPException e) {
-
-            // do nothing
-            log.fatal("Error updating receive buffer size", e);
         }
     }
 
