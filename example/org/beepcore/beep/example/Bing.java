@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
+ * Bing.java  $Revision: 1.5 $ $Date: 2001/10/31 02:03:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -28,7 +28,7 @@ import org.beepcore.beep.core.StringDataStream;
 import org.beepcore.beep.lib.Reply;
 import org.beepcore.beep.profile.echo.EchoProfile;
 import org.beepcore.beep.profile.tls.TLSProfile;
-import org.beepcore.beep.transport.tcp.AutomatedTCPSessionCreator;
+import org.beepcore.beep.transport.tcp.TCPSessionCreator;
 import org.beepcore.beep.transport.tcp.TCPSession;
 import org.beepcore.beep.util.ConsoleLog;
 import org.beepcore.beep.util.Log;
@@ -43,7 +43,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
+ * @version $Revision: 1.5 $, $Date: 2001/10/31 02:03:41 $
  */
 public class Bing {
 
@@ -61,9 +61,8 @@ public class Bing {
         try {
             // a empty ProfileRegistry is used since this application
             // isn't intended to listen for start channel requests.
-            session =
-                AutomatedTCPSessionCreator.initiate(host, port,
-                                                    new ProfileRegistry());
+            session = TCPSessionCreator.initiate(host, port,
+                                                 new ProfileRegistry());
         } catch (BEEPException e) {
             System.err.println("bing: Error connecting to " + host + ":" +
                                port + "\n\t" + e.getMessage());

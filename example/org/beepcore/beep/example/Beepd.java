@@ -1,5 +1,5 @@
 /*
- * Beepd.java  $Revision: 1.5 $ $Date: 2001/10/31 00:08:45 $
+ * Beepd.java  $Revision: 1.6 $ $Date: 2001/10/31 02:03:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -37,7 +37,7 @@ import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.profile.Profile;
 import org.beepcore.beep.profile.ProfileConfiguration;
-import org.beepcore.beep.transport.tcp.AutomatedTCPSessionCreator;
+import org.beepcore.beep.transport.tcp.TCPSessionCreator;
 import org.beepcore.beep.util.ConsoleLog;
 import org.beepcore.beep.util.Log;
 
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/10/31 00:08:45 $
+ * @version $Revision: 1.6 $, $Date: 2001/10/31 02:03:41 $
  */
 public class Beepd extends Thread {
     private int port;
@@ -214,7 +214,7 @@ public class Beepd extends Thread {
         try {
             // Loop listening for new Sessions
             while (true) {
-                AutomatedTCPSessionCreator.listen(port, reg);
+                TCPSessionCreator.listen(port, reg);
             }
         } catch (Exception e) {
             Log.logEntry(Log.SEV_ERROR, e);
