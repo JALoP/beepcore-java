@@ -1,6 +1,6 @@
 
 /*
- * FrameDataStream.java            $Revision: 1.3 $ $Date: 2001/04/18 01:43:50 $
+ * FrameDataStream.java            $Revision: 1.4 $ $Date: 2001/04/24 22:53:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +44,7 @@ import java.util.Iterator;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/18 01:43:50 $
+ * @version $Revision, $Date: 2001/04/24 22:53:30 $
  */
 public class FrameDataStream extends DataStream {
 
@@ -281,15 +281,15 @@ public class FrameDataStream extends DataStream {
             return;
         }
 
-        this.frames.add(frame);
-
-        this.length += frame.getPayload().length;
-
-        if (frame.isLast()) {
-            haveLast = true;
-        }
-
         synchronized (this) {
+            this.frames.add(frame);
+
+            this.length += frame.getPayload().length;
+
+            if (frame.isLast()) {
+                haveLast = true;
+            }
+
             notify();
         }
     }
@@ -314,9 +314,7 @@ public class FrameDataStream extends DataStream {
         try {
 
             // we are expecting more bytes wait for a byte to become available
-            synchronized (this) {
-                this.wait();    // notify() is called from add()
-            }
+            this.wait();    // notify() is called from add()
         } catch (InterruptedException e) {
             BEEPInterruptedException ie =
                 new BEEPInterruptedException(e.getMessage());
@@ -333,22 +331,26 @@ public class FrameDataStream extends DataStream {
             parseHeaders();
         }
 
-        if (available() == 0) {
+        Frame f;
+        synchronized (this) {
+            if (available() == 0) {
 
-            // caller wants to read bytes despite the fact there are no
-            // bytes currently available.
-            if ((this.haveLast == true) && (this.frames.size() == 0)) {
+                // caller wants to read bytes despite the fact there are no
+                // bytes currently available.
+                if ((this.haveLast == true) && (this.frames.size() == 0)) {
 
-                // no more bytes to read() and none are expected, return -1
-                return -1;
+                    // no more bytes to read() and none are expected, return -1
+                    return -1;
+                }
+
+                // no bytes available to read, but more are expected... block
+                waitForFrame(0);
             }
 
-            // no bytes available to read, but more are expected... block
-            waitForFrame(0);
+            // for ease of reading
+            f = (Frame) this.frames.getFirst();
         }
 
-        // for ease of reading
-        Frame f = (Frame) this.frames.getFirst();
         int pos = this.offset;    // index for reading the byte
 
         this.offset++;
@@ -358,11 +360,12 @@ public class FrameDataStream extends DataStream {
             this.offset = 0;
 
             // now check if we should free the frame from our list
-            this.frames.removeFirst();
+            synchronized (this) {
+                this.frames.removeFirst();
+            }
 
             // call channel to free the bytes from its buffer
-            if( this.release )
-            {
+            if (this.release) {
               f.getChannel().freeReceiveBufferBytes(f.getPayload().length);
             }
         }
@@ -398,7 +401,6 @@ public class FrameDataStream extends DataStream {
         if ((this.haveLast == true) && (this.frames.size() == 0)) {
 
             // no more bytes to read() and none are expected, return -1
-            // System.out.println("done reading returning -1 ");
             return -1;
         }
 
@@ -407,25 +409,30 @@ public class FrameDataStream extends DataStream {
 
         // while count is less then dest buffer length, fill the buffer
         while (count < destLen) {
+            Frame f;
 
             // if the legth of the stream equals the number of bytes read plus
             // the entity headers, check if we are done reading
-            if ((this.length - this.bytesRead) == 0) {
+            synchronized (this) {
+                if ((this.length - this.bytesRead) == 0) {
 
-                // are there more bytes expected?
-                // if we have the last frame and we've read it (index >= size),
-                // return -1
-                if ((this.haveLast == true) && (this.frames.size() == 0)) {
+                    // are there more bytes expected?
+                    // if we have the last frame and we've read it
+                    // (index >= size),
+                    // return -1
+                    if ((this.haveLast == true) && (this.frames.size() == 0)) {
 
-                    // no more bytes to read() and none are expected
-                    return count;
+                        // no more bytes to read() and none are expected
+                        return count;
+                    }
+
+                    // no bytes available to read, but more are expected...
+                    // block
+                    waitForFrame(count);
                 }
 
-                // no bytes available to read, but more are expected... block
-                waitForFrame(count);
+                f = (Frame) this.frames.getFirst();
             }
-
-            Frame f = (Frame) this.frames.getFirst();
 
             // let exceptions handle arraycopy() error cases
             bytesAvailable = f.getPayload().length - this.offset;
@@ -438,7 +445,7 @@ public class FrameDataStream extends DataStream {
                                  dest, destOffset + count, bytesAvailable);
 
                 this.offset = 0;
-                count += bytesAvailable;    // set count to number of bytes copied
+                count += bytesAvailable; // set count to number of bytes copied
                 this.bytesRead += bytesAvailable;
 
                 // call channel to free the bytes from its buffer
@@ -446,7 +453,9 @@ public class FrameDataStream extends DataStream {
                 {
                   f.getChannel().freeReceiveBufferBytes(f.getPayload().length);
                 }
-                this.frames.removeFirst();
+                synchronized (this) {
+                    this.frames.removeFirst();
+                }
             } else {
                 System.arraycopy(f.getPayload().data,
                                  f.getPayload().offset + this.offset,
@@ -586,7 +595,9 @@ public class FrameDataStream extends DataStream {
                 if (this.offset == f.getPayload().length) {
                     this.offset = 0;
 
-                    frames.removeFirst();
+                    synchronized (this) {
+                        frames.removeFirst();
+                    }
                     if( this.release )
                     {
                       f.getChannel().freeReceiveBufferBytes(f.getPayload().length);

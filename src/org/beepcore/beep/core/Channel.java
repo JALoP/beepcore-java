@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.4 $ $Date: 2001/04/18 05:38:19 $
+ * Channel.java            $Revision: 1.5 $ $Date: 2001/04/24 22:53:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/04/18 05:38:19 $
+ * @version $Revision: 1.5 $, $Date: 2001/04/24 22:53:30 $
  *
  */
 public class Channel {
@@ -348,7 +348,6 @@ public class Channel {
     private void receiveFrame(Frame frame) throws BEEPException
     {
         Message m = null;
-        ;
 
         // if this is an incoming message rather than a reply to a
         // previously sent message
@@ -382,6 +381,10 @@ public class Channel {
                 if (m != recvMSGQueue.getFirst()) {
                     return;
                 }
+
+                if (frame.isLast()) {
+                    recvMSGQueue.remove(m);
+                }
             }
 
             // notify message listener if this message has not been
@@ -399,10 +402,6 @@ public class Channel {
             }
 
             ((MessageListener) this.listener).receiveMSG(m);
-
-            synchronized (recvMSGQueue) {
-                recvMSGQueue.remove(m);
-            }
 
             return;
         }
@@ -1121,7 +1120,8 @@ public class Channel {
         }
 
         // for this message, is there anything waiting?
-        while ((available > 0) ||!stream.isComplete()) {
+        boolean done = false;
+        while (!done) {
             try {
                 synchronized (this) {
 
@@ -1137,48 +1137,35 @@ public class Channel {
                     }
 
                     // how much should we send?
-                    int maxCanSend = 0;
+                    int maxCanRead = 0;
 
                     // we should send the least of these:
                     // 1) the size of the send buffer in the session
                     // (transport specific)
-                    maxCanSend = sessionBufferSize;
+                    maxCanRead = sessionBufferSize;
 
                     // 2) the amount our peer can accept
-                    if (maxCanSend > peerWindowSize) {
-                        maxCanSend = peerWindowSize;
+                    if (maxCanRead > peerWindowSize) {
+                        maxCanRead = peerWindowSize;
                     }
 
-                    // 3) the amount left in the message
-                    // read (up to) that much from the message stream
-                    int totalRead = 0;
-
-                    while ((totalRead < maxCanSend)
-                            && ((available > 0) ||!stream.isComplete())) {
-                        int lastRead = stream.readHeadersAndData(payload, 0,
-                                                                 maxCanSend);
-
-                        if (lastRead != -1) {
-                            totalRead += lastRead;
-                        }
-
-                        available = stream.availableHeadersAndData();
+                    int amountToSend = stream.readHeadersAndData(payload, 0,
+                                                                 maxCanRead);
+                    if ((stream.available() == 0) && stream.isComplete()) {
+                        done = true;
                     }
-
-                    int amountToSend = 0;
-
-                    if (maxCanSend > totalRead) {
-                        amountToSend = totalRead;
-                    } else {
-                        amountToSend = maxCanSend;
+                    else if (amountToSend == -1) {
+                        done = true;
+                        // send an empty payload
+                        payload = new byte[0];
+                        amountToSend = 0;
                     }
 
                     // create a frame
                     frame =
                         new Frame(message.getMessageType(),
                                   message.getChannel(), message.getMsgno(),
-                                  ((available == 0) && stream.isComplete())
-                                  ? true : false,
+                                  done ? true : false,
                                   sentSequence, ansno,
                                   new Frame.BufferSegment(payload, 0,
                                                           amountToSend));
@@ -1189,7 +1176,7 @@ public class Channel {
                 }
 
                 // send it
-                if ((available == 0) && stream.isComplete()) {
+                if (done) {
                     Log.logEntry(Log.SEV_DEBUG_VERBOSE,
                                  "Channel.sendToPeer sending last frame on channel "
                                  + number);
@@ -1317,14 +1304,14 @@ public class Channel {
     {
         int previousPeerWindowSize = peerWindowSize;
 
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+        Log.logEntry(Log.SEV_DEBUG,
                      "Channel.updatePeerReceiveBufferSize: size = " + size
                      + " lastSeq = " + lastSeq + " sentSequence = "
                      + sentSequence + " peerWindowSize = " + peerWindowSize);
 
         peerWindowSize = size - (int) (sentSequence - lastSeq);
 
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+        Log.logEntry(Log.SEV_DEBUG,
                      "Channel.updatePeerReceiveBufferSize: New window size = "
                      + peerWindowSize);
 
