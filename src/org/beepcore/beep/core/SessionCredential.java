@@ -1,6 +1,5 @@
-
 /*
- * SessionCredential.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * SessionCredential.java  $Revision: 1.2 $ $Date: 2001/05/16 18:00:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -30,7 +29,7 @@ import java.util.Hashtable;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/05/16 18:00:29 $
  */
 public class SessionCredential {
 
@@ -43,7 +42,6 @@ public class SessionCredential {
     public final static String NO_CREDENTIALS = "Peer has no credentials.";
     public final static String REMOTE_ADDRESS = "REMOTE_ADDRESS";
     public final static String REMOTE_CERTIFICATE = "REMOTE_CERTIFICATE";
-    public final static String USERNAME = "USERNAME";
 
     // Pretty Print Crap
     public static final String LEFT = "[";
@@ -134,16 +132,6 @@ public class SessionCredential {
     public Object getRemoteCertificate()
     {
         return properties.get(REMOTE_CERTIFICATE);
-    }
-
-    /**
-     * Method getUsername
-     *
-     *
-     */
-    public String getUsername()
-    {
-        return (String) properties.get(USERNAME);
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * TLSProfile.java  $Revision: 1.7 $ $Date: 2001/05/10 04:46:35 $
+ * TLSProfile.java  $Revision: 1.8 $ $Date: 2001/05/16 18:00:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -155,14 +155,14 @@ public class TLSProfile
             
             Hashtable h = new Hashtable();
             try {
-                h.put( SessionCredential.USERNAME, 
+                h.put( SessionCredential.AUTHENTICATOR, 
                        event.getPeerCertificateChain()[0].getSubjectDN().
                        getName());
                 h.put( SessionCredential.REMOTE_CERTIFICATE, 
                        event.getPeerCertificateChain() );
             }
             catch( SSLPeerUnverifiedException e ) {
-                h.put( SessionCredential.USERNAME, "" );
+                h.put( SessionCredential.AUTHENTICATOR, "" );
                 h.put( SessionCredential.REMOTE_CERTIFICATE, "" );
             }
             cred = new SessionCredential( h );
