@@ -1,6 +1,5 @@
-
 /*
- * FrameDataStream.java            $Revision: 1.4 $ $Date: 2001/04/24 22:53:30 $
+ * FrameDataStream.java  $Revision: 1.5 $ $Date: 2001/04/26 16:29:42 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +43,7 @@ import java.util.Iterator;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/24 22:53:30 $
+ * @version $Revision: 1.5 $, $Date: 2001/04/26 16:29:42 $
  */
 public class FrameDataStream extends DataStream {
 
