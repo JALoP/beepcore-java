@@ -1,5 +1,5 @@
 /*
- * Frame.java  $Revision: 1.19 $ $Date: 2002/10/05 15:26:51 $
+ * Frame.java  $Revision: 1.20 $ $Date: 2003/04/21 15:09:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -40,7 +40,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.19 $, $Date: 2002/10/05 15:26:51 $
+ * @version $Revision: 1.20 $, $Date: 2003/04/21 15:09:10 $
  *
  * @see BufferSegment
  */
@@ -92,7 +92,7 @@ public class Frame {
     private int messageType;
 
     /** <code>Channel</code> to which <code>Frame</code> belongs. */
-    private Channel channel;
+    private ChannelImpl channel;
 
     /** Message number of <code>Frame</code>. */
     private int msgno;
@@ -123,7 +123,7 @@ public class Frame {
      */
     private LinkedList payload = new LinkedList();
 
-    Frame(int messageType, Channel channel, int msgno, boolean last,
+    Frame(int messageType, ChannelImpl channel, int msgno, boolean last,
           long seqno, int size, int ansno)
     {
         this.messageType = messageType;
@@ -288,7 +288,7 @@ public class Frame {
         return StringUtil.stringBufferToAscii(header);
     }
 
-    static Frame parseHeader(Session session, byte[] headerBuffer, int length)
+    static Frame parseHeader(SessionImpl session, byte[] headerBuffer, int length)
         throws BEEPException
     {
         HeaderParser header = new HeaderParser(headerBuffer, length);

@@ -1,5 +1,5 @@
 /*
- * InputDataStream.java  $Revision: 1.4 $ $Date: 2002/09/07 14:59:30 $
+ * InputDataStream.java  $Revision: 1.5 $ $Date: 2003/04/21 15:09:10 $
  *
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @see org.beepcore.beep.util.BufferSegment
  *
  * @author Huston Franklin
- * @version $Revision: 1.4 $, $Date: 2002/09/07 14:59:30 $
+ * @version $Revision: 1.5 $, $Date: 2003/04/21 15:09:10 $
  */
 public class InputDataStream {
 
@@ -53,7 +53,7 @@ public class InputDataStream {
      * @param channel Is notified as BufferSegments are read this allows the
      *                Channel to update the receive window.
      */
-    InputDataStream(Channel channel)
+    InputDataStream(ChannelImpl channel)
     {
         this.channel = channel;
     }
@@ -201,7 +201,7 @@ public class InputDataStream {
 
     LinkedList buffers = new LinkedList();
     private int availableBytes = 0;
-    private Channel channel = null;
+    private ChannelImpl channel = null;
     private boolean closed = false;
     private boolean complete = false;
     private InputDataStreamAdapter stream = null;

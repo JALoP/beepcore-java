@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.27 $ $Date: 2003/03/08 16:39:18 $
+ * TCPSession.java  $Revision: 1.28 $ $Date: 2003/04/21 15:09:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -38,6 +38,7 @@ import org.beepcore.beep.core.Frame;
 import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
+import org.beepcore.beep.core.SessionImpl;
 import org.beepcore.beep.core.SessionCredential;
 import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.util.BufferSegment;
@@ -52,9 +53,9 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.27 $, $Date: 2003/03/08 16:39:18 $
+ * @version $Revision: 1.28 $, $Date: 2003/04/21 15:09:11 $
  */
-public class TCPSession extends Session {
+public class TCPSession extends SessionImpl {
 
     // Constants
     private static final char[] MESSAGE_TYPE_SEQ = new char[] {'S', 'E', 'Q'};
@@ -319,9 +320,9 @@ public class TCPSession extends Session {
                 }
             }
         } catch (IOException e) {
-            throw new BEEPException(e.toString());
+            throw new BEEPException(e);
         } catch (Exception e) {
-            throw new BEEPException(e.toString());
+            throw new BEEPException(e);
         }
     }
 

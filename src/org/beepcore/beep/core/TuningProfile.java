@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java  $Revision: 1.8 $ $Date: 2002/10/05 15:29:47 $
+ * TuningProfile.java  $Revision: 1.9 $ $Date: 2003/04/21 15:09:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -100,11 +100,11 @@ public abstract class TuningProfile {
     {
         log.debug("TuningProfile.begin");
 
-        Session session = channel.getSession();
+        SessionImpl session = (SessionImpl)channel.getSession();
 
         try {
             tuningChannels.add(channel);
-            session.sendProfile(profile, data, channel);
+            session.sendProfile(profile, data, (ChannelImpl)channel);
             session.disableIO();
         } catch (Exception x) {
 
@@ -113,7 +113,8 @@ public abstract class TuningProfile {
             BEEPError error = new BEEPError(451,
                                             "UnknownError" + x.getMessage());
 
-            session.sendProfile(profile, error.createErrorMessage(), channel);
+            session.sendProfile(profile, error.createErrorMessage(),
+                                (ChannelImpl)channel);
             abort(error, channel);
         }
     }
@@ -131,17 +132,17 @@ public abstract class TuningProfile {
      *
      */
     public void complete(Channel channel,
-                         SessionCredential localCred,
-                         SessionCredential peerCred,
-                         SessionTuningProperties tuning,
-                         ProfileRegistry registry,
-                         Object argument)
-            throws BEEPException
+                          SessionCredential localCred,
+                          SessionCredential peerCred,
+                          SessionTuningProperties tuning,
+                          ProfileRegistry registry,
+                          Object argument)
+        throws BEEPException
     {
         try {
             log.debug("TuningProfile.complete");
 
-            Session s = channel.getSession();
+            SessionImpl s = (SessionImpl)channel.getSession();
 
             s.reset(localCred, peerCred, tuning, registry, argument);
             tuningChannels.remove(channel);
@@ -162,7 +163,7 @@ public abstract class TuningProfile {
      */
     protected static void disableIO(Session session)
     {
-        session.disableIO();
+        ((SessionImpl)session).disableIO();
     }
 
     /**
@@ -174,7 +175,7 @@ public abstract class TuningProfile {
      */
     protected static void enableIO(Session session)
     {
-        session.enableIO();
+        ((SessionImpl)session).enableIO();
     }
 
     /**
@@ -188,7 +189,7 @@ public abstract class TuningProfile {
     protected static void setLocalCredential(Session session,
                                              SessionCredential credential)
     {
-        session.setLocalCredential(credential);
+        ((SessionImpl)session).setLocalCredential(credential);
     }
 
     /**
@@ -202,7 +203,7 @@ public abstract class TuningProfile {
     protected static void setPeerCredential(Session session,
                                             SessionCredential credential)
     {
-        session.setPeerCredential(credential);
+        ((SessionImpl)session).setPeerCredential(credential);
     }
 
     /**
@@ -225,7 +226,7 @@ public abstract class TuningProfile {
                                    Object argument)
             throws BEEPException
     {
-        return session.reset(localCred, peerCred, tuning, registry, argument);
+        return ((SessionImpl)session).reset(localCred, peerCred, tuning, registry, argument);
     }
 
     /**
@@ -241,10 +242,10 @@ public abstract class TuningProfile {
      *
      */
     protected static void sendProfile(Session session, String uri, String data,
-                                      Channel channel)
+                                        Channel channel)
             throws BEEPException
     {
-        session.sendProfile(uri, data, channel);
+        ((SessionImpl)session).sendProfile(uri, data, (ChannelImpl)channel);
     }
 
     public Channel startChannel(Session session, String profile,
@@ -258,6 +259,6 @@ public abstract class TuningProfile {
 
         l.add(p);
 
-        return session.startChannelRequest(l, listener, true);
+        return ((SessionImpl)session).startChannelRequest(l, listener, true);
     }
 }
