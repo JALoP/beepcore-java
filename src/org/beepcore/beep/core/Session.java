@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.2 $ $Date: 2001/04/02 21:39:45 $
+ * Session.java            $Revision: 1.3 $ $Date: 2001/04/09 13:29:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -53,7 +53,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/02 21:39:45 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/09 13:29:04 $
  *
  * @see Channel
  */
@@ -1265,6 +1265,7 @@ public abstract class Session {
         zeroListener = null;
         zero = null;
         this.changeState(SESSION_STATE_CLOSED);
+        fireEvent(SessionEvent.SESSION_TERMINATED_EVENT_CODE,this);
     }
 
     private void waitForResult(Channel ch, int expectedState)
