@@ -124,6 +124,7 @@
         <mkdir dir="${example.build.dir}"/>
         <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
             <include name="**/*.java"/>
+            <exclude name="**/util/Log4JLog.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
@@ -132,7 +133,7 @@
         </javac>
     </target>
 
-    <target name="example" depends="example-compile">
+    <target name="example" depends="example-compile,log4jlog">
         <mkdir dir="${release.dir}/lib"/>
         <jar jarfile="${release.dir}/lib/${example.jar.name}"
 	     basedir="${example.build.dir}">
@@ -312,4 +313,22 @@
         <delete dir="${build.dir}" />
         <delete dir="${doc.dir}" />
     </target>
+
+    <target name="log4jCheck">
+      <available classname="org.apache.log4j.Category"
+         property="log4j-present"
+         classpath="${java.class.path}"/>
+    </target>
+
+    <target name="log4jlog" depends="init,log4jCheck" if="log4j-present">
+        <mkdir dir="${example.build.dir}"/>
+        <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
+            <include name="**/util/Log4JLog.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+            </classpath>
+        </javac>
+    </target>
+
 </project>
