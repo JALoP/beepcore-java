@@ -1,5 +1,5 @@
 /*
- * Beepd.java            $Revision: 1.2 $ $Date: 2001/05/07 23:17:10 $
+ * Beepd.java            $Revision: 1.3 $ $Date: 2001/05/23 13:56:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -34,6 +34,7 @@ import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.profile.Profile;
 import org.beepcore.beep.profile.ProfileConfiguration;
 import org.beepcore.beep.transport.tcp.AutomatedTCPSessionCreator;
+import org.beepcore.beep.util.ConsoleLog;
 import org.beepcore.beep.util.Log;
 
 /**
@@ -46,7 +47,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/05/07 23:17:10 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/23 13:56:08 $
  */
 public class Beepd extends Thread {
     private int port;
@@ -164,6 +165,9 @@ public class Beepd extends Thread {
             System.err.println(e.getMessage());
             return;
         }
+
+        ConsoleLog log = new ConsoleLog();
+        Log.setLogService(log);
 
         // Start the servers listening
         Iterator i = servers.iterator();
