@@ -1,5 +1,5 @@
 /*
- * MessageMSG.java  $Revision: 1.2 $ $Date: 2001/05/07 21:21:38 $
+ * MessageMSG.java  $Revision: 1.3 $ $Date: 2001/05/10 04:43:52 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,10 +24,10 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/05/07 21:21:38 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/10 04:43:52 $
  *
  */
-public class MessageMSG extends Message
+class MessageMSG extends Message
 {
     MessageMSG(Channel channel, int msgno, DataStream data) {
         super(channel, msgno, data, MESSAGE_TYPE_MSG);

@@ -1,5 +1,5 @@
 /*
- * MessageQueue.java            $Revision: 1.2 $ $Date: 2001/05/07 19:21:57 $
+ * MessageQueue.java            $Revision: 1.3 $ $Date: 2001/05/10 04:43:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -19,7 +19,7 @@ package org.beepcore.beep.lib;
 
 import java.util.LinkedList;
 
-import org.beepcore.beep.core.MessageMSG;
+import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.MessageListener;
 import org.beepcore.beep.util.Log;
 
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/05/07 19:21:57 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/10 04:43:53 $
  */
 public class MessageQueue implements MessageListener {
 
@@ -45,18 +45,18 @@ public class MessageQueue implements MessageListener {
     /**
      * Gets the next message on the queue blocking if none are available.
      */
-    public MessageMSG getNextMessage() throws InterruptedException
+    public Message getNextMessage() throws InterruptedException
     {
         Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Entry");
         synchronized (this) {
             if (queue.size() == 0) {
                 this.wait();
             }
-            return (MessageMSG) queue.removeFirst();
+            return (Message) queue.removeFirst();
         }
     }
 
-    public void receiveMSG(MessageMSG message)
+    public void receiveMSG(Message message)
     {
         Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Entry");
         synchronized (this) {
