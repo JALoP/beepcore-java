@@ -1,6 +1,6 @@
 
 /*
- * AlgorithmImpl.java            $Revision: 1.3 $ $Date: 2002/10/05 15:11:18 $
+ * AlgorithmImpl.java            $Revision: 1.4 $ $Date: 2003/09/13 21:19:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -27,7 +27,7 @@ import org.beepcore.beep.profile.sasl.InvalidParameterException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2002/10/05 15:11:18 $
+ * @version $Revision: 1.4 $, $Date: 2003/09/13 21:19:10 $
  *
  */
 public abstract class AlgorithmImpl implements Algorithm {
@@ -73,7 +73,7 @@ public abstract class AlgorithmImpl implements Algorithm {
     public byte[] generateHash(String s) 
         throws InvalidParameterException
     {
-        return generateHash(s.getBytes());
+        return generateHash(s.toLowerCase().getBytes()); ///@TODO use encoding
     }
 
     /**
