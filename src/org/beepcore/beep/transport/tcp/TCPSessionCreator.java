@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java  $Revision: 1.5 $ $Date: 2001/11/08 05:26:29 $
+ * TCPSessionCreator.java  $Revision: 1.6 $ $Date: 2003/03/08 16:39:18 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -41,7 +41,7 @@ import org.beepcore.beep.core.SessionTuningProperties;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/11/08 05:26:29 $
+ * @version $Revision: 1.6 $, $Date: 2003/03/08 16:39:18 $
  */
 public class TCPSessionCreator {
 
@@ -86,22 +86,42 @@ public class TCPSessionCreator {
      * @param host
      * @param port
      * @param registry
+     * @param servername
+     *
+     * @throws BEEPException
+     *
+     */
+    public static TCPSession initiate(InetAddress host, int port,
+                                      ProfileRegistry registry,
+                                      String servername)
+            throws BEEPException
+    {
+        try {
+            return TCPSession.createInitiator(new Socket(host, port),
+                                              registry, servername);
+        } catch (IOException x) {
+            throw new BEEPException(x.getMessage());
+        }
+    }
+
+    /**
+     * Method initiate
+     *
+     *
+     * @param host
+     * @param port
+     * @param registry
      *
      * @throws BEEPException
      *
      */
     public static TCPSession initiate(InetAddress host, int port,
                                       ProfileRegistry registry)
-            throws BEEPException
+        throws BEEPException
     {
-        try {
-            return TCPSession.createInitiator(new Socket(host, port),
-                                              registry);
-        } catch (IOException x) {
-            throw new BEEPException(x.getMessage());
-        }
+        return initiate(host, port, registry, null);
     }
-
+    
     /**
      * Method initiate
      *
@@ -142,6 +162,19 @@ public class TCPSessionCreator {
     {
         try {
             return initiate(InetAddress.getByName(host), port, registry);
+        } catch (UnknownHostException x) {
+            throw new BEEPException("Unable to connect, unkown host");
+        }
+    }
+
+    public static TCPSession initiate(String host, int port,
+                                      ProfileRegistry registry,
+                                      String servername)
+        throws BEEPException
+    {
+        try {
+            return initiate(InetAddress.getByName(host), port, registry,
+                            servername);
         } catch (UnknownHostException x) {
             throw new BEEPException("Unable to connect, unkown host");
         }

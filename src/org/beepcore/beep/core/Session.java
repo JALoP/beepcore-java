@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.32 $ $Date: 2002/10/05 15:29:24 $
+ * Session.java  $Revision: 1.33 $ $Date: 2003/03/08 16:39:18 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -62,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.32 $, $Date: 2002/10/05 15:29:24 $
+ * @version $Revision: 1.33 $, $Date: 2003/03/08 16:39:18 $
  *
  * @see Channel
  */
@@ -129,6 +129,8 @@ public abstract class Session {
     private boolean overflow;
     private boolean allowChannelWindowUpdates;
     private DocumentBuilder builder;    // generic XML parser
+    private String serverName;
+    private boolean sentServerName = false;
 
     /**
      * Default Session Constructor.  A relationship between peers - a session -
@@ -145,7 +147,7 @@ public abstract class Session {
      */
     protected Session(ProfileRegistry registry, int firstChannel,
                       SessionCredential localCred, SessionCredential peerCred,
-                      SessionTuningProperties tuning)
+                      SessionTuningProperties tuning, String servername)
         throws BEEPException
     {
         state = SESSION_STATE_INITIALIZED;
@@ -158,6 +160,7 @@ public abstract class Session {
         channels = new Hashtable(DEFAULT_CHANNELS_SIZE);
         properties = new Hashtable(DEFAULT_PROPERTIES_SIZE);
         tuningProperties = tuning;
+        serverName = servername;
 
         try {
             builder =
@@ -542,6 +545,10 @@ public abstract class Session {
 
         startBuffer.append("<start number='");
         startBuffer.append(channelNumber);
+        if (serverName != null && !sentServerName) {
+            startBuffer.append("' serverName='");
+            startBuffer.append(serverName);
+        }
         startBuffer.append("'>");
 
         Iterator i = profiles.iterator();
@@ -611,6 +618,10 @@ public abstract class Session {
             ch.setState(Channel.STATE_TUNING);
         }
 
+        if (serverName != null) {
+            sentServerName = true;
+        }
+	
         fireChannelStarted(ch);
         return ch;
     }
@@ -815,6 +826,11 @@ public abstract class Session {
         return tuningProperties;
     }
 
+    public String getServerName()
+    {
+        return serverName;
+    }
+    
     /**
      * This method is designed to allow for flow control across the multiplexed
      * connection we have. <p> The idea is to throttle data being sent over
@@ -1349,7 +1365,7 @@ public abstract class Session {
                 }
 
                 // this attribute is implied
-                String serverName = topElement.getAttribute("serverName");
+                serverName = topElement.getAttribute("serverName");
                 NodeList profiles =
                     topElement.getElementsByTagName("profile");
 
