@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.4 $ $Date: 2001/05/07 19:21:57 $
+ * SASLOTPProfile.java  $Revision: 1.5 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/05/07 19:21:57 $
+ * @version $Revision: 1.5 $, $Date: 2001/06/28 15:42:49 $
  *
  */
 public class SASLOTPProfile
@@ -81,8 +81,6 @@ public class SASLOTPProfile
     private static SASLOTPProfile instance;
     private static UserDatabasePool userDatabase;
     
-    public SASLOTPProfile() {}
-
     /**
      * Method init is used to construct various static data
      * used in the SASL OTP profile.
@@ -187,6 +185,11 @@ public class SASLOTPProfile
             return;
         }
         throw new TuningResetException("SASL ANON RESET");
+    }
+
+    public boolean advertiseProfile(Session session)
+    {
+        return true;
     }
 
     protected synchronized boolean validateIdentity(String authenticateId, 

@@ -1,5 +1,6 @@
+
 /*
- * TuningProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
+ * TuningProfile.java  $Revision: 1.4 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -16,11 +17,13 @@
  */
 package org.beepcore.beep.core;
 
+
 import java.util.*;
 
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.tls.*;
 import org.beepcore.beep.util.*;
+
 
 /**
  * TuningProfiles change the security of a Session, either by
@@ -40,8 +43,7 @@ import org.beepcore.beep.util.*;
  * (continue)
  *
  */
-public abstract class TuningProfile
-{
+public abstract class TuningProfile {
 
     // Constants
     private static final String TLS_URI = "http://iana.org/beep/TLS";
@@ -127,10 +129,11 @@ public abstract class TuningProfile
      * @throws BEEPException
      *
      */
-    public void complete(Channel channel, 
-                         SessionCredential localCred, 
-                         SessionCredential peerCred, 
-                         ProfileRegistry registry, 
+    public void complete(Channel channel,
+                         SessionCredential localCred,
+                         SessionCredential peerCred,
+                         SessionTuningProperties tuning,
+                         ProfileRegistry registry,
                          Object argument)
             throws BEEPException
     {
@@ -139,7 +142,7 @@ public abstract class TuningProfile
 
             Session s = channel.getSession();
 
-            s.reset(localCred, peerCred, registry, argument);
+            s.reset(localCred, peerCred, tuning, registry, argument);
             tuningChannels.remove(channel);
         } catch (Exception x) {
             abort(new BEEPError(451, "TuningProfile.complete failure\n"
@@ -213,14 +216,15 @@ public abstract class TuningProfile
      * @throws BEEPException
      *
      */
-    protected static Session reset(Session session, 
-                                   SessionCredential localCred, 
-                                   SessionCredential peerCred, 
-                                   ProfileRegistry registry, 
+    protected static Session reset(Session session,
+                                   SessionCredential localCred,
+                                   SessionCredential peerCred,
+                                   SessionTuningProperties tuning,
+                                   ProfileRegistry registry,
                                    Object argument)
             throws BEEPException
     {
-        return session.reset(localCred, peerCred, registry, argument);
+        return session.reset(localCred, peerCred, tuning, registry, argument);
     }
 
     /**

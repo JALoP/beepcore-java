@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
+ * SASLAnonymousProfile.java  $Revision: 1.4 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +44,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/05/03 21:56:49 $
+ * @version $Revision: 1.4 $, $Date: 2001/06/28 15:42:49 $
  *
  */
 public class SASLAnonymousProfile
@@ -144,6 +144,11 @@ public class SASLAnonymousProfile
     public void closeChannel(Channel channel) 
         throws CloseChannelException 
     {}
+
+    public boolean advertiseProfile(Session session)
+    {
+        return true;
+    }
 
     /**
      * Method authencitateSASLAnonymous is an Initiator routine designed

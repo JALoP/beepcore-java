@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.12 $ $Date: 2001/05/27 23:49:09 $
+ * Session.java  $Revision: 1.13 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2001/05/27 23:49:09 $
+ * @version $Revision: 1.13 $, $Date: 2001/06/28 15:42:49 $
  *
  * @see Channel
  */
@@ -146,11 +146,11 @@ public abstract class Session {
     private Hashtable eventTable = null;
     private ProfileRegistry profileRegistry = null;
     private SessionCredential localCredential, peerCredential;
+    private SessionTuningProperties tuningProperties = null;
     private Collection peerSupportedProfiles;
     private boolean overflow;
     private boolean allowChannelWindowUpdates;
     private DocumentBuilder builder;    // generic XML parser
-
 
     /**
      * Default Session Constructor.  A relationship between peers - a session -
@@ -166,8 +166,8 @@ public abstract class Session {
      *        ordinality of the channels this peer can start, odd, or even.
      */
     protected Session(ProfileRegistry registry, int firstChannel,
-                      SessionCredential localCred,
-                      SessionCredential peerCred)
+                      SessionCredential localCred, SessionCredential peerCred,
+                      SessionTuningProperties tuning)
         throws BEEPException
     {
         state = SESSION_STATE_UNINITIALIZED;
@@ -180,12 +180,12 @@ public abstract class Session {
         channels = new Hashtable(DEFAULT_CHANNELS_SIZE);
         eventTable = new Hashtable(DEFAULT_CHANNELS_SIZE);
         properties = new Hashtable(DEFAULT_PROPERTIES_SIZE);
+        tuningProperties = tuning;
 
         try {
             builder =
                 DocumentBuilderFactory.newInstance().newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-
             throw new BEEPException("Invalid parser configuration");
         }
 
@@ -203,10 +203,12 @@ public abstract class Session {
     protected void init() throws BEEPException
     {
         this.peerSupportedProfiles = null;
-        GreetingListener greetingListener = new GreetingListener();
-        zero = new Channel(this, CHANNEL_ZERO, greetingListener);
 
+        GreetingListener greetingListener = new GreetingListener();
+
+        zero = new Channel(this, CHANNEL_ZERO, greetingListener);
         zeroListener = new ChannelZeroListener();
+
         zero.setDataListener(zeroListener);
         channels.put(CHANNEL_ZERO, zero);
 
@@ -221,7 +223,7 @@ public abstract class Session {
         int waitCount = 0;
 
         while ((state < SESSION_STATE_ACTIVE)
-               && (waitCount < MAX_START_CHANNEL_WAIT)) {
+                && (waitCount < MAX_START_CHANNEL_WAIT)) {
             try {
                 synchronized (greetingListener) {
 
@@ -253,7 +255,9 @@ public abstract class Session {
         Log.logEntry(Log.SEV_DEBUG, CORE, "Session.tuningInit");
 
         this.peerSupportedProfiles = null;
+
         GreetingListener greetingListener = new GreetingListener();
+
         zeroListener = new ChannelZeroListener();
         zero = new Channel(this, CHANNEL_ZERO, greetingListener);
 
@@ -283,7 +287,6 @@ public abstract class Session {
                      "Closing Session with " + channels.size() + " channels");
 
         //        changeState(SESSION_STATE_CLOSING);
-
         Iterator i = channels.values().iterator();
 
         while (i.hasNext()) {
@@ -295,7 +298,8 @@ public abstract class Session {
             }
 
             StartChannelListener scl =
-                profileRegistry.getStartChannelListener(ch.getProfile());
+                profileRegistry.getStartChannelListener(this.tuningProperties,
+                                                        ch.getProfile());
 
             if (scl == null) {
                 continue;
@@ -321,7 +325,7 @@ public abstract class Session {
      *
      * @return May return <code>null</code> if this session has not
      *         been authenticated
-     * */
+     */
     public SessionCredential getLocalCredential()
     {
         return localCredential;
@@ -333,7 +337,7 @@ public abstract class Session {
      *
      * @return May return <code>null</code> if this session has not
      *         been authenticated
-     * */
+     */
     public SessionCredential getPeerCredential()
     {
         return peerCredential;
@@ -508,7 +512,7 @@ public abstract class Session {
      * You should not see this.
      */
     Channel startChannel(Collection profiles, DataListener listener,
-                                boolean disableIO) 
+                         boolean disableIO)
             throws BEEPException, BEEPError
     {
 
@@ -565,7 +569,7 @@ public abstract class Session {
         // Tell Channel Zero to start us up
         this.zero.sendMSG(ds, new StartReplyListener(ch, disableIO));
         waitForResult(ch, Channel.STATE_UNINITIALISED);
-        
+
         return ch;
     }
 
@@ -580,10 +584,12 @@ public abstract class Session {
     public void terminate(String reason)
     {
         Log.logEntry(Log.SEV_ERROR, reason);
+
         try {
             this.changeState(SESSION_STATE_TERMINATING);
             shutdown();
         } catch (BEEPException e) {
+
             // Ignore this since we are terminating anyway.
         }
     }
@@ -614,10 +620,10 @@ public abstract class Session {
             throw new BEEPException(ERR_STATE_CHANGE);
         }
 
-        if (state == SESSION_STATE_ACTIVE
-            && newState != SESSION_STATE_CLOSED
-            && newState != SESSION_STATE_TERMINATING
-            && newState != SESSION_STATE_CLOSING) {
+        if ((state == SESSION_STATE_ACTIVE)
+                && (newState != SESSION_STATE_CLOSED)
+                && (newState != SESSION_STATE_TERMINATING)
+                && (newState != SESSION_STATE_CLOSING)) {
             throw new BEEPException(ERR_STATE_CHANGE);
         }
 
@@ -676,7 +682,8 @@ public abstract class Session {
     protected abstract void enableIO();
 
     /**
-     * Publish a session event to registered <code>SessionEventListener</code>s.
+     * Publish a session event to registered
+     * <code>SessionEventListener</code>s.
      *
      * @param event Event to be passed to <code>SessionEventListener</code>s.
      * @param arg Data associated with event.
@@ -766,16 +773,20 @@ public abstract class Session {
                     f.getChannel().postFrame(f);
                 }
             } else {
+
                 // If we're in an error state
                 Log.logEntry(Log.SEV_DEBUG,
-                             "Dropping a frame because the Session state is no longer active.");
+                             "Dropping a frame because the Session state is " +
+                             "no longer active.");
             }
         } catch (BEEPException e) {
             this.terminate(e.getMessage());
+
             return;
         } catch (Throwable e) {
             Log.logEntry(Log.SEV_ERROR, e);
             this.terminate("Uncaught exception, terminating session");
+
             return;
         }
     }
@@ -800,6 +811,7 @@ public abstract class Session {
      */
     protected abstract Session reset(SessionCredential localCred,
                                      SessionCredential peerCred,
+                                     SessionTuningProperties tuning,
                                      ProfileRegistry registry, Object argument)
         throws BEEPException;
 
@@ -839,6 +851,21 @@ public abstract class Session {
     }
 
     /**
+     * sets the tuning properties for this session
+     * @param tuning
+     * @see SessionTuningProperties
+     */
+    protected void setTuningProperties(SessionTuningProperties tuning)
+    {
+        tuningProperties = tuning;
+    }
+
+    public SessionTuningProperties getTuningProperties()
+    {
+        return tuningProperties;
+    }
+
+    /**
      * This method is designed to allow for flow control across the multiplexed
      * connection we have. <p> The idea is to throttle data being sent over
      * this session to be manageable per Channel, so that a given Channel
@@ -873,7 +900,8 @@ public abstract class Session {
                                                          int currentlyUsed,
                                                          int bufferSize)
         throws BEEPException;
-      // @todo update the java-doc to correctly identify the params
+
+    // @todo update the java-doc to correctly identify the params
 
     /**
      * Method updatePeerReceiveBufferSize
@@ -1000,6 +1028,7 @@ public abstract class Session {
         // @todo fix close channel
         if (channelNumber.equals(CHANNEL_ZERO)) {
             receiveCloseChannelZero();
+
             return;
         }
 
@@ -1012,13 +1041,14 @@ public abstract class Session {
 
         try {
             StartChannelListener scl =
-                profileRegistry.getStartChannelListener(channel.getProfile());
+                profileRegistry.getStartChannelListener(this.tuningProperties,
+                                                        channel.getProfile());
 
             scl.closeChannel(channel);
             channel.setState(Channel.STATE_CLOSING);
         } catch (BEEPError x) {
-
             channel.setState(Channel.STATE_CLOSING);
+
             throw x;
         }
 
@@ -1031,6 +1061,7 @@ public abstract class Session {
             zero.sendRPY(sds);
         } catch (BEEPException x) {
             terminate("Error sending RPY for <close>");
+
             return;
         }
 
@@ -1041,8 +1072,10 @@ public abstract class Session {
 
     private void receiveCloseChannelZero() throws BEEPError
     {
+
         // closing the session
         // @todo fireEvent(SESSION_STATE_CLOSING);
+
         /*
         try {
             if (!changeState(SESSION_STATE_CLOSING)) {
@@ -1055,7 +1088,6 @@ public abstract class Session {
                                 e.getMessage());
         }
         */
-
         Log.logEntry(Log.SEV_DEBUG,
                      "Closing Session with " + channels.size() + " channels");
 
@@ -1067,7 +1099,6 @@ public abstract class Session {
             return;
         }
         */
-
         Iterator i = channels.values().iterator();
 
         while (i.hasNext()) {
@@ -1079,7 +1110,8 @@ public abstract class Session {
             }
 
             StartChannelListener scl =
-                profileRegistry.getStartChannelListener(ch.getProfile());
+                profileRegistry.getStartChannelListener(this.tuningProperties,
+                                                        ch.getProfile());
 
             // check locally first to see if it is ok to close the channel
             try {
@@ -1093,6 +1125,7 @@ public abstract class Session {
                 } catch (BEEPException x) {
                     terminate("Error changing Session state from closing " +
                               "to active");
+
                     return;
                 }
             }
@@ -1106,6 +1139,7 @@ public abstract class Session {
             zero.sendRPY(sds);
         } catch (BEEPException x) {
             terminate("Error sending RPY for <close> for channel 0");
+
             return;
         }
 
@@ -1117,7 +1151,7 @@ public abstract class Session {
             Log.logEntry(Log.SEV_ERROR, e);
         }
 
-        fireEvent(SessionEvent.SESSION_CLOSED_EVENT_CODE,this);
+        fireEvent(SessionEvent.SESSION_CLOSED_EVENT_CODE, this);
     }
 
     private void receiveStartChannelResultOk(Channel channel, String data)
@@ -1159,6 +1193,7 @@ public abstract class Session {
         /**
          * @todo CCL
          */
+
         /*
         StartChannelListener scl =
             profileRegistry.getStartChannelListener(channel.getProfile());
@@ -1167,8 +1202,8 @@ public abstract class Session {
             scl.closeChannel(channel);
         }
         */
-        // @todo we should fire an event instead.
 
+        // @todo we should fire an event instead.
         // set the state
         channel.setState(Channel.STATE_CLOSING);
         channels.remove(channel.getNumberAsString());
@@ -1208,8 +1243,7 @@ public abstract class Session {
 
         // Insane bounds check that will probably never happen
         if (nextChannelNumber > Frame.MAX_CHANNEL_NUMBER) {
-            nextChannelNumber = nextChannelNumber
-                                % Frame.MAX_CHANNEL_NUMBER;
+            nextChannelNumber = nextChannelNumber % Frame.MAX_CHANNEL_NUMBER;
             overflow = true;
         }
 
@@ -1232,7 +1266,9 @@ public abstract class Session {
         while (i.hasNext()) {
             StartChannelProfile p = (StartChannelProfile) i.next();
 
-            scl = profileRegistry.getStartChannelListener(p.uri);
+            scl =
+                profileRegistry.getStartChannelListener(this.tuningProperties,
+                                                        p.uri);
 
             if (scl == null) {
                 continue;
@@ -1264,6 +1300,7 @@ public abstract class Session {
                 sendProfile(p.uri, ch.getStartData(), ch);
             } catch (BEEPException e) {
                 terminate("Error sending profile. " + e.getMessage());
+
                 return false;
             }
 
@@ -1286,8 +1323,9 @@ public abstract class Session {
 
         zeroListener = null;
         zero = null;
+
         this.changeState(SESSION_STATE_CLOSED);
-        fireEvent(SessionEvent.SESSION_TERMINATED_EVENT_CODE,this);
+        fireEvent(SessionEvent.SESSION_TERMINATED_EVENT_CODE, this);
     }
 
     private void waitForResult(Channel ch, int expectedState)
@@ -1369,9 +1407,9 @@ public abstract class Session {
         Log.logEntry(Log.SEV_DEBUG, CORE, "sendGreeting");
 
         // get the greeting from the session
-        byte[] greeting = Session.this.getProfileRegistry().getGreeting();
-        ByteDataStream f = new ByteDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
-                                              greeting);
+        byte[] greeting = Session.this.getProfileRegistry().getGreeting(this);
+        ByteDataStream f =
+            new ByteDataStream(DataStream.BEEP_XML_CONTENT_TYPE, greeting);
 
         // send the greeting
         this.zero.sendRPY(f);
@@ -1383,6 +1421,7 @@ public abstract class Session {
             throws BEEPError, AbortChannelException
         {
             Element topElement;
+
             try {
                 topElement = processMessage(message);
             } catch (BEEPException e) {
@@ -1459,8 +1498,7 @@ public abstract class Session {
                     profileList.add(new StartChannelProfile(uri, b64, data));
                 }
 
-                Session.this.processStartChannel(channelNumber,
-                                                 profileList);
+                Session.this.processStartChannel(channelNumber, profileList);
             }
 
             // is this MSG a <close>
@@ -1468,8 +1506,7 @@ public abstract class Session {
                 Log.logEntry(Log.SEV_DEBUG, CORE,
                              "Received a channel close request");
 
-                String channelNumber =
-                    topElement.getAttribute(TAG_NUMBER);
+                String channelNumber = topElement.getAttribute(TAG_NUMBER);
 
                 if (channelNumber == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
@@ -1484,8 +1521,7 @@ public abstract class Session {
                 }
 
                 // this attribute is implied
-                String xmlLang =
-                    topElement.getAttribute(TAG_XML_LANG);
+                String xmlLang = topElement.getAttribute(TAG_XML_LANG);
                 String data = null;
                 Node dataNode = topElement.getFirstChild();
 
@@ -1508,6 +1544,7 @@ public abstract class Session {
     }
 
     private class GreetingListener implements ReplyListener {
+
         public void receiveRPY(Message message)
         {
             try {
@@ -1525,12 +1562,10 @@ public abstract class Session {
                 Log.logEntry(Log.SEV_DEBUG, CORE, "Received a greeting");
 
                 // this attribute is implied
-                String features =
-                    topElement.getAttribute(TAG_FEATURES);
+                String features = topElement.getAttribute(TAG_FEATURES);
 
                 // This attribute has a default value
-                String localize =
-                    topElement.getAttribute(TAG_LOCALIZE);
+                String localize = topElement.getAttribute(TAG_LOCALIZE);
 
                 if (localize == null) {
                     localize = Constants.LOCALIZE_DEFAULT;
@@ -1552,8 +1587,7 @@ public abstract class Session {
                             throw new BEEPException(ERR_MALFORMED_PROFILE_MSG);
                         }
 
-                        String encoding =
-                            profile.getAttribute(TAG_ENCODING);
+                        String encoding = profile.getAttribute(TAG_ENCODING);
 
                         // encoding is not allowed in greetings
                         if (encoding != null) {
@@ -1612,6 +1646,7 @@ public abstract class Session {
                 if (disableIO) {
                     Session.this.disableIO();
                 }
+
                 Element topElement = processMessage(message);
 
                 // is this RPY a <greeting>
@@ -1619,7 +1654,8 @@ public abstract class Session {
 
                 if (elementName == null) {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
-                // is this RPY a <profile>
+
+                    // is this RPY a <profile>
                 } else if (elementName.equals(TAG_PROFILE)) {
                     try {
                         String uri = topElement.getAttribute(TAG_URI);
@@ -1653,7 +1689,6 @@ public abstract class Session {
                         channel.setErrorMessage(null);
                         Session.this.receiveStartChannelResultOk(channel,
                                                                  data);
-                        
                     } catch (Exception x) {
                         throw new BEEPException(x.getMessage());
                     }
@@ -1673,6 +1708,7 @@ public abstract class Session {
                 err = BEEPError.convertMessageERRToException(message);
             } catch (BEEPException e) {
                 terminate(e.getMessage());
+
                 return;
             }
 
@@ -1686,7 +1722,6 @@ public abstract class Session {
 
             // set the state
             channel.setState(Channel.STATE_ERROR);
-
             channels.remove(channel.getNumberAsString());
 
             // release the block waiting for the channel to start or close
@@ -1707,6 +1742,7 @@ public abstract class Session {
     }
 
     private class CloseReplyListener implements ReplyListener {
+
         Channel channel;
 
         CloseReplyListener(Channel channel)
@@ -1718,17 +1754,16 @@ public abstract class Session {
         {
             try {
                 Element topElement = processMessage(message);
-
                 String elementName = topElement.getTagName();
 
                 if (elementName == null) {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
-                // is this RPY an <ok> (the positive response to a
-                // channel close)
+
+                    // is this RPY an <ok> (the positive response to a
+                    // channel close)
                 } else if (elementName.equals(TAG_OK)) {
                     Log.logEntry(Log.SEV_DEBUG, CORE,
                                  "Received an OK for channel close");
-
                     channel.setErrorMessage(null);
                     Session.this.receiveCloseChannelResultOk(channel);
                 } else {
@@ -1747,6 +1782,7 @@ public abstract class Session {
                 err = BEEPError.convertMessageERRToException(message);
             } catch (BEEPException e) {
                 terminate(e.getMessage());
+
                 return;
             }
 
@@ -1760,7 +1796,6 @@ public abstract class Session {
 
             // set the state
             channel.setState(Channel.STATE_ERROR);
-
             channels.remove(channel.getNumberAsString());
 
             // release the block waiting for the channel to start or close

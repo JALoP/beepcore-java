@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.5 $ $Date: 2001/05/03 21:56:49 $
+ * EchoProfile.java    $Revision: 1.6 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/05/03 21:56:49 $
+ * @version $Revision: 1.6 $, $Date: 2001/06/28 15:42:49 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, FrameListener
@@ -51,17 +51,6 @@ public class EchoProfile
         return this;
     }
 
-    /**
-     * Method startChannel
-     *
-     *
-     * @param channel
-     * @param encoding
-     * @param data
-     *
-     * @throws StartChannelException
-     *
-     */
     public void startChannel(Channel channel, String encoding, String data)
             throws StartChannelException
     {
@@ -69,20 +58,16 @@ public class EchoProfile
         channel.setDataListener(this);
     }
 
-    /**
-     * Method closeChannel
-     *
-     *
-     * @param channel
-     *
-     * @throws CloseChannelException
-     *
-     */
     public void closeChannel(Channel channel) throws CloseChannelException
     {
         Log.logEntry(Log.SEV_DEBUG, "EchoCCL CloseChannel Callback");
         channel.setDataListener(null);
         channel.setAppData(null);
+    }
+
+    public boolean advertiseProfile(Session session)
+    {
+        return true;
     }
 
     public void receiveFrame(Frame frame) throws BEEPException

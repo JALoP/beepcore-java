@@ -1,5 +1,5 @@
 /*
- * TLSProfile.java  $Revision: 1.8 $ $Date: 2001/05/16 18:00:29 $
+ * TLSProfile.java  $Revision: 1.9 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -197,11 +197,10 @@ public class TLSProfile
             Log.logEntry(1, "JSSE TLS Profile", e.getMessage());
         }
 
-        if ( handshakeListeners == null) {
-             handshakeListeners =
+        if (handshakeListeners == null) {
+            handshakeListeners =
                 Collections.synchronizedList(new LinkedList());
         }
-
     }
 
     /**
@@ -476,7 +475,7 @@ public class TLSProfile
                                                        true);
 
             TLSHandshake l = new TLSHandshake();
-            newSocket.addHandshakeCompletedListener( l );
+            newSocket.addHandshakeCompletedListener(l);
             newSocket.setUseClientMode(false);
             newSocket.setNeedClientAuth(needClientAuth);
             newSocket.setEnabledCipherSuites(newSocket.getSupportedCipherSuites());
@@ -501,10 +500,16 @@ public class TLSProfile
                 this.abort(new BEEPError(451, ERR_TLS_NO_AUTHENTICATION),
                            channel);
             } else {
+                Hashtable hash = new Hashtable();
+
+                hash.put(SessionTuningProperties.ENCRYPTION, "true");
+
+                SessionTuningProperties tuning =
+                    new SessionTuningProperties(hash);
 
                 // Cause the session to be recreated and reset
-                this.complete(channel, generateCredential(), l.cred, preg,
-                              newSocket);
+                this.complete(channel, generateCredential(), l.cred, tuning,
+                              preg, newSocket);
             }
         } catch (Exception x) {
 
@@ -515,6 +520,11 @@ public class TLSProfile
         }
 
         throw new TuningResetException(URI);
+    }
+
+    public boolean advertiseProfile(Session session)
+    {
+        return true;
     }
 
     /**
@@ -562,7 +572,7 @@ public class TLSProfile
         // See if we got start data back
         String data = ch.getStartData();
 
-        Log.logEntry( Log.SEV_DEBUG, "Got start data of " + data );
+        Log.logEntry(Log.SEV_DEBUG, "Got start data of " + data);
 
         // Consider the data (see if it's proceed)
         if ((data == null)
@@ -582,7 +592,7 @@ public class TLSProfile
                                                        oldSocket.getInetAddress().getHostName(),
                                                        oldSocket.getPort(),
                                                        true);
-            newSocket.addHandshakeCompletedListener( l );
+            newSocket.addHandshakeCompletedListener(l);
             newSocket.setUseClientMode(true);
             newSocket.setNeedClientAuth(needClientAuth);
             newSocket.setEnabledCipherSuites(newSocket.getSupportedCipherSuites());
@@ -615,8 +625,16 @@ public class TLSProfile
             session.close();
             throw new BEEPException( ERR_TLS_NO_AUTHENTICATION );
         } else {
+            Hashtable hash = new Hashtable();
+
+            hash.put(SessionTuningProperties.ENCRYPTION, "true");
+
+            SessionTuningProperties tuning =
+                new SessionTuningProperties(hash);
+
             return (TCPSession) reset(session, generateCredential(), l.cred,
-                                      session.getProfileRegistry(), newSocket);
+                                      tuning, session.getProfileRegistry(),
+                                      newSocket);
         }
     }
 

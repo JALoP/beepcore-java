@@ -1,5 +1,5 @@
 /*
- * StartChannelListener.java  $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * StartChannelListener.java  $Revision: 1.2 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -23,15 +23,27 @@ package org.beepcore.beep.core;
  * StartChannelListener is an interface specifying the methods that must
  * be implemented by any class that implements logic managing the start and
  * close events on a channel, as well as any other events that may eventually
- * be associated with Channels.
+ * be associated with profiles.
  *
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/06/28 15:42:49 $
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
  */
 public interface StartChannelListener {
+
+    /**
+     * Callback that determines if a profile should be advertised or not.  The
+     * {@link SessionTuningProperties} can be used to determine if
+     * certain attributes are in effect before a profile is advertised,
+     * such as encryption or authentication.
+     * @param session to check other properties such as the credentials of
+     * of the session
+     * @param tuning properties in effect on the session
+     * @see SessionTuningProperties for standard properties and their values
+     */
+    public boolean advertiseProfile(Session session) throws BEEPException;
 
     /**
      * Called when the underlying BEEP framework receives

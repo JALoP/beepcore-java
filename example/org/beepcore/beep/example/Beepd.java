@@ -1,5 +1,5 @@
 /*
- * Beepd.java            $Revision: 1.3 $ $Date: 2001/05/23 13:56:08 $
+ * Beepd.java  $Revision: 1.4 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 import javax.xml.parsers.*;
 
@@ -31,6 +34,7 @@ import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import org.beepcore.beep.core.ProfileRegistry;
+import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.profile.Profile;
 import org.beepcore.beep.profile.ProfileConfiguration;
 import org.beepcore.beep.transport.tcp.AutomatedTCPSessionCreator;
@@ -47,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/05/23 13:56:08 $
+ * @version $Revision: 1.4 $, $Date: 2001/06/28 15:42:49 $
  */
 public class Beepd extends Thread {
     private int port;
@@ -84,6 +88,7 @@ public class Beepd extends Thread {
             String uri;
             String className;
             String requiredProperites;
+            String tuningProperties;
 
             if (profile.hasAttribute("uri") == false) {
                 throw new Exception("Invalid configuration, no uri specified");
@@ -115,8 +120,35 @@ public class Beepd extends Thread {
                                     "interface");
             }
 
+            SessionTuningProperties tuning = null;
+
+            if (profile.hasAttribute("tuning")) {
+                String tuningString = profile.getAttribute("tuning");
+                Hashtable hash = new Hashtable();
+                StringTokenizer tokens = new StringTokenizer(tuningString,
+                                                             ":=");
+
+                try {
+                    while (tokens.hasMoreTokens()) {
+                        String parameter = tokens.nextToken();
+                        String value = tokens.nextToken();
+
+                        hash.put(parameter, value);
+                    }
+                } catch (NoSuchElementException e) {
+                    e.printStackTrace();
+
+                    throw new Exception("Error parsing tuning property on " +
+                                        "profile " + uri);
+                }
+
+                tuning = new SessionTuningProperties(hash);
+            }
+
             // Initialize the profile and add it to the advertised profiles
-            reg.addStartChannelListener(uri, p.init(uri, profileConfig));
+            reg.addStartChannelListener(uri,
+                                        p.init(uri, profileConfig),
+                                        tuning);
         }
     }
 

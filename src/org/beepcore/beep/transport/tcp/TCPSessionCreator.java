@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * TCPSessionCreator.java  $Revision: 1.2 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -22,6 +22,7 @@ import java.net.Socket;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.SessionCredential;
+import org.beepcore.beep.core.SessionTuningProperties;
 
 
 /**
@@ -42,7 +43,7 @@ import org.beepcore.beep.core.SessionCredential;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:53 $
+ * @version $Revision: 1.2 $, $Date: 2001/06/28 15:42:49 $
  */
 public class TCPSessionCreator {
 
@@ -63,7 +64,7 @@ public class TCPSessionCreator {
             throws BEEPException
     {
         return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_ODD, null, null);
+                              CHANNEL_START_ODD, null, null, null);
     }
 
     /**
@@ -71,11 +72,12 @@ public class TCPSessionCreator {
      */
     static TCPSession initiate(Socket sock, ProfileRegistry registry,
                                SessionCredential localCred,
-                               SessionCredential peerCred)
+                               SessionCredential peerCred,
+                               SessionTuningProperties tuning)
             throws BEEPException
     {
         return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_ODD, localCred, peerCred);
+                              CHANNEL_START_ODD, localCred, peerCred, tuning);
     }
 
     /**
@@ -92,18 +94,20 @@ public class TCPSessionCreator {
             throws BEEPException
     {
         return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_EVEN, null, null);
+                              CHANNEL_START_EVEN, null, null, null);
     }
 
     /**
      * Accessible only from TCPSession (reset() specifically)
      */
     static TCPSession listen(Socket sock, ProfileRegistry registry,
-                               SessionCredential localCred,
-                               SessionCredential peerCred)
+                             SessionCredential localCred,
+                             SessionCredential peerCred,
+                             SessionTuningProperties tuning)
             throws BEEPException
     {
         return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_EVEN, localCred, peerCred);
+                              CHANNEL_START_EVEN, localCred, peerCred,
+                              tuning);
     }
 }

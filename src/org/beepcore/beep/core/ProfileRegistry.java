@@ -1,5 +1,5 @@
 /*
- * ProfileRegistry.java  $Revision: 1.2 $ $Date: 2001/05/27 23:49:09 $
+ * ProfileRegistry.java  $Revision: 1.3 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -31,12 +31,11 @@ import java.util.Hashtable;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/05/27 23:49:09 $
+ * @version $Revision, $Date: 2001/06/28 15:42:49 $
  */
 public class ProfileRegistry implements Cloneable {
 
     private static final String SPACE = " ";
-
     private static final String FRAGMENT_ANGLE_SUFFIX = ">";
     private static final String FRAGMENT_FEATURES_PREFIX = "features='";
     private static final String FRAGMENT_GREETING_PREFIX = "<greeting";
@@ -56,6 +55,11 @@ public class ProfileRegistry implements Cloneable {
         + FRAGMENT_QUOTE_ANGLE_SUFFIX.length();
 
     // Instance Data
+    private class InternalProfile {
+        StartChannelListener listener;
+        SessionTuningProperties tuning;
+    }
+
     private Hashtable profileListeners;
     String greeting;
     String localize;
@@ -76,8 +80,8 @@ public class ProfileRegistry implements Cloneable {
         this.profileListeners = new Hashtable();
     }
 
-    private ProfileRegistry(String greeting, String localize, String features,
-                            Hashtable profiles)
+    private ProfileRegistry(String greeting, String localize,
+                            String features, Hashtable profiles)
     {
         this.greeting = greeting;
         this.features = features;
@@ -87,7 +91,8 @@ public class ProfileRegistry implements Cloneable {
 
     public Object clone()
     {
-        return new ProfileRegistry(this.greeting, this.localize, this.features,
+        return new ProfileRegistry(this.greeting, this.localize,
+                                   this.features,
                                    (Hashtable) this.profileListeners.clone());
     }
 
@@ -110,9 +115,46 @@ public class ProfileRegistry implements Cloneable {
      * @param uri
      *
      */
-    public StartChannelListener getStartChannelListener(String uri)
+    public StartChannelListener getStartChannelListener(SessionTuningProperties tuning,
+                                                        String uri)
     {
-        return (StartChannelListener) profileListeners.get(uri);
+
+        InternalProfile profile = (InternalProfile) profileListeners.get(uri);
+
+        // if there are no qualifications, then just return the listener
+        if (profile.tuning == null) {
+            return ((InternalProfile) profileListeners.get(uri)).listener;
+        }
+
+        // so the profile requires something, but if the session doesn't
+        // have anything, then return null
+        if (tuning == null) {
+            return null;
+        }
+
+        // if the profile requires any of the standard properties, then
+        // make sure they are set on the session before returning the listener
+        int i = 0;
+
+        for (i = 0; i < SessionTuningProperties.STANDARD_PROPERTIES.length;
+                i++)
+        {
+            if ((profile.tuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i]) != null)
+                    && (tuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i])
+                        == null))
+            {
+                return null;
+            }
+        }
+
+        // all the ones the profile requested must be there so we return the
+        // listener
+        return ((InternalProfile) profileListeners.get(uri)).listener;
+    }
+
+    public SessionTuningProperties getSessionProperties(String uri)
+    {
+        return ((InternalProfile) profileListeners.get(uri)).tuning;
     }
 
     /**
@@ -126,15 +168,22 @@ public class ProfileRegistry implements Cloneable {
      *
      */
     public synchronized StartChannelListener addStartChannelListener(String profile,
-            StartChannelListener listener)
+            StartChannelListener listener, SessionTuningProperties tuning)
     {
 
         // Replace semantics - change this if we want to prevent clobbering.
-        StartChannelListener temp =
-            (StartChannelListener) profileListeners.get(profile);
+        StartChannelListener temp = null;
 
-        profileListeners.put(profile, listener);
-        changeGreeting();
+        if (profileListeners.get(profile) != null) {
+            temp = ((InternalProfile) profileListeners.get(profile)).listener;
+        }
+
+        InternalProfile tempProfile = new InternalProfile();
+
+        tempProfile.listener = listener;
+        tempProfile.tuning = tuning;
+
+        profileListeners.put(profile, tempProfile);
 
         return temp;
     }
@@ -151,21 +200,10 @@ public class ProfileRegistry implements Cloneable {
      */
     public synchronized StartChannelListener removeStartChannelListener(String profile)
     {
-        StartChannelListener temp =
-            (StartChannelListener) profileListeners.remove(profile);
+        InternalProfile temp =
+            (InternalProfile) profileListeners.remove(profile);
 
-        changeGreeting();
-
-        return temp;
-    }
-
-    byte[] getGreeting()
-    {
-        if (greeting == null) {
-            changeGreeting();
-        }
-
-        return greeting.getBytes();
+        return temp.listener;
     }
 
     /**
@@ -190,7 +228,7 @@ public class ProfileRegistry implements Cloneable {
         return this.localize;
     }
 
-    private void changeGreeting()
+    public byte[] getGreeting(Session session)
     {
         int bufferSize = FRAGMENT_GREETING_LENGTH;
         int profileCount = 0;
@@ -231,14 +269,49 @@ public class ProfileRegistry implements Cloneable {
         sb.append(FRAGMENT_ANGLE_SUFFIX);
 
         while (f.hasMoreElements()) {
-            sb.append(FRAGMENT_PROFILE_PREFIX);
-            sb.append(FRAGMENT_URI_PREFIX);
-            sb.append((String) f.nextElement());
-            sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+
+            // make sure this profile wants to be advertised
+            try {
+                String profileName = (String) f.nextElement();
+                InternalProfile profile =
+                    (InternalProfile) profileListeners.get(profileName);
+                boolean callAdvertise = false;
+                SessionTuningProperties sessionTuning =
+                    session.getTuningProperties();
+
+                // check the standard tuning settings first
+                for (int i = 0;
+                        i < SessionTuningProperties.STANDARD_PROPERTIES.length;
+                        i++) {
+
+                    if ((profile.tuning != null) && (sessionTuning != null) &&
+                        (profile.tuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i]) != null) &&
+                        (sessionTuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i]) != null))
+                    {
+                        callAdvertise = true;
+                    }
+                }
+
+                if ((profile.tuning == null) ||
+                    (callAdvertise &&
+                     profile.listener.advertiseProfile(session)))
+                {
+                    sb.append(FRAGMENT_PROFILE_PREFIX);
+                    sb.append(FRAGMENT_URI_PREFIX);
+                    sb.append((String) profileName);
+                    sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+                }
+            } catch (BEEPException x) {
+                x.printStackTrace();
+
+                continue;
+            }
         }
 
         sb.append(FRAGMENT_GREETING_SUFFIX);
 
         greeting = sb.toString();
+
+        return greeting.getBytes();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.9 $ $Date: 2001/05/23 13:51:53 $
+ * TCPSession.java  $Revision: 1.10 $ $Date: 2001/06/28 15:42:49 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,6 +35,7 @@ import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.SessionCredential;
+import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.util.Log;
 
 
@@ -49,7 +50,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2001/05/23 13:51:53 $
+ * @version $Revision: 1.10 $, $Date: 2001/06/28 15:42:49 $
  */
 public class TCPSession extends Session {
 
@@ -106,16 +107,17 @@ public class TCPSession extends Session {
      *
      * @throws BEEPException
      */
-    TCPSession(Socket sock, ProfileRegistry registry, int firstChannel, 
-               SessionCredential localCred, SessionCredential peerCred)
+    TCPSession(Socket sock, ProfileRegistry registry, int firstChannel,
+               SessionCredential localCred, SessionCredential peerCred,
+               SessionTuningProperties tuning)
             throws BEEPException
     {
-        super(registry, firstChannel, localCred, peerCred);
+        super(registry, firstChannel, localCred, peerCred, tuning);
 
         socket = sock;
         writerLock = new Object();
 
-        if (peerCred != null || localCred != null) {
+        if ((peerCred != null) || (localCred != null) || (tuning != null)) {
             tuningInit();
         } else {
             init();
@@ -124,7 +126,8 @@ public class TCPSession extends Session {
         try {
             socket.setReceiveBufferSize(MAX_RECEIVE_BUFFER_SIZE);
         } catch (Exception x) {
-            throw new BEEPException("Error allocating TCP Buffers");
+            Log.logEntry(Log.SEV_ERROR,
+                         "Socket doesn't support setting receive buffer size");
         }
     }
 
@@ -132,11 +135,13 @@ public class TCPSession extends Session {
     public synchronized void close() throws BEEPException
     {
         super.close();
+
         if (socket != null) {
             try {
                 socket.close();
             } catch (IOException e) {
             }
+
             socket = null;
         }
     }
@@ -150,11 +155,13 @@ public class TCPSession extends Session {
     public void terminate(String reason)
     {
         super.terminate(reason);
+
         if (socket != null) {
             try {
-            socket.close();
+                socket.close();
             } catch (IOException e) {
             }
+
             socket = null;
         }
     }
@@ -192,7 +199,6 @@ public class TCPSession extends Session {
          * @todo - test this and find an optimal frame size, key it up
          * to approximate ethernet packet size, less header, trailer
          */
-
         return 1400;
     }
 
@@ -219,20 +225,21 @@ public class TCPSession extends Session {
             byte[] header = null;
 
             synchronized (writerLock) {
-                
                 if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
                     Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
                                  "Wrote the following\n");
                 }
+
                 Iterator i = f.getBytes();
+
                 while (i.hasNext()) {
                     Frame.BufferSegment b = (Frame.BufferSegment) i.next();
+
                     os.write(b.data, b.offset, b.length);
 
                     if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
                         Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                     new String(b.data, b.offset,
-                                                b.length));
+                                     new String(b.data, b.offset, b.length));
                     }
                 }
 
@@ -247,9 +254,9 @@ public class TCPSession extends Session {
 
     // Implementation of method declared in Session
     protected Session reset(SessionCredential localCred,
-                            SessionCredential peerCred, 
-                            ProfileRegistry reg,
-                            Object argument)
+                            SessionCredential peerCred,
+                            SessionTuningProperties tuning,
+                            ProfileRegistry reg, Object argument)
             throws BEEPException
     {
         Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
@@ -269,11 +276,11 @@ public class TCPSession extends Session {
         }
 
         if (isInitiator()) {
-            return TCPSessionCreator.initiate(s, reg, 
-                                              localCred, peerCred);
+            return TCPSessionCreator.initiate(s, reg, localCred, peerCred,
+                                              tuning);
         } else {
-            return TCPSessionCreator.listen(s, reg, 
-                                            localCred, peerCred);
+            return TCPSessionCreator.listen(s, reg, localCred, peerCred,
+                                            tuning);
         }
     }
 
@@ -321,14 +328,14 @@ public class TCPSession extends Session {
     {
         if (Log.isLogged(Log.SEV_DEBUG)) {
             Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                         "update SEQ channel=" + channel.getNumber() +
-                         " prevSeq=" + previouslySeq +
-                         " curSeq=" + currentSeq +
-                         " prevUsed=" + previouslyUsed +
-                         " curUsed=" + currentlyUsed +
-                         " bufSize=" + bufferSize);
+                         "update SEQ channel=" + channel.getNumber()
+                         + " prevSeq=" + previouslySeq + " curSeq="
+                         + currentSeq + " prevUsed=" + previouslyUsed
+                         + " curUsed=" + currentlyUsed + " bufSize="
+                         + bufferSize);
         }
-      // @todo update the java-doc to correctly identify the params
+
+        // @todo update the java-doc to correctly identify the params
         if (currentSeq > 0) {    // don't send it the first time
             if (((currentSeq - previouslySeq) < (bufferSize / 2))
                     || (currentlyUsed > (bufferSize / 2))) {
@@ -403,23 +410,28 @@ public class TCPSession extends Session {
             }
 
             headerBuffer[length] = (byte) b;
+
             if (headerBuffer[length] == '\n') {
-                if (length == 0 || headerBuffer[length-1] != '\r') {
+                if ((length == 0) || (headerBuffer[length - 1] != '\r')) {
                     throw new BEEPException("Malformed BEEP header");
                 }
+
                 break;
             }
 
             ++length;
+
             if (length == Frame.MAX_HEADER_SIZE) {
                 throw new BEEPException("Malformed BEEP header, no CRLF");
             }
         }
 
         if (Log.isLogged(Log.SEV_DEBUG)) {
-            Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING, "Processing: " +
-                         new String(headerBuffer, 0, length));
+            Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
+                         "Processing: "
+                         + new String(headerBuffer, 0, length));
         }
+
         // If this is not a SEQ frame build a <code>Frame</code> and
         // read in the payload and verify the TRAILER.
         if (headerBuffer[0] != (byte) SEQ_PREFIX.charAt(0)) {
@@ -439,25 +451,25 @@ public class TCPSession extends Session {
                 int b = is.read();
 
                 if (b == -1) {
-                    throw new BEEPException("Malformed BEEP frame, " +
-                                            "trailer not found");
+                    throw new BEEPException("Malformed BEEP frame, "
+                                            + "trailer not found");
                 }
+
                 if (((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
-                    throw new BEEPException("Malformed BEEP frame, " +
-                                            "invalid trailer");
+                    throw new BEEPException("Malformed BEEP frame, "
+                                            + "invalid trailer");
                 }
             }
 
             f.addPayload(new Frame.BufferSegment(payload));
-
             super.postFrame(f);
 
             return;
         }
 
         // Process the header
-        StringTokenizer st = new StringTokenizer(new String(headerBuffer,
-                                                            0, length));
+        StringTokenizer st = new StringTokenizer(new String(headerBuffer, 0,
+                                                            length));
 
         if (st.countTokens() != 4) {
 
@@ -503,7 +515,9 @@ public class TCPSession extends Session {
                 }
             } catch (IOException e) {
                 Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, e);
+
                 socket = null;
+
                 terminate(e.getMessage());
             } catch (Throwable e) {
                 Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, e);
