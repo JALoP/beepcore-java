@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.10 $ $Date: 2003/04/23 15:23:03 $
+ * SASLOTPProfile.java  $Revision: 1.11 $ $Date: 2003/06/10 18:59:24 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -38,7 +38,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2003/04/23 15:23:03 $
+ * @version $Revision: 1.11 $, $Date: 2003/06/10 18:59:24 $
  *
  */
 public class SASLOTPProfile
@@ -164,7 +164,7 @@ public class SASLOTPProfile
                     log.debug("Blobbed64 Challenge is=>" + data);
                 }
             }
-            channel.setMessageListener(temp);
+            channel.setRequestHandler(temp);
             if(blob != null)
                 sendProfile(channel.getSession(), URI, blob.toString(),
                             channel);
@@ -321,8 +321,7 @@ public class SASLOTPProfile
         String startData = null;
         try
         {
-            ch = session.startChannel(SASLOTPProfile.URI, false, null,
-                                              auth);
+            ch = session.startChannel(SASLOTPProfile.URI, auth);
             startData = ch.getStartData();
         }
         catch(BEEPException x)
@@ -414,8 +413,7 @@ public class SASLOTPProfile
         String startData = null;
         try
         {
-            ch = session.startChannel(SASLOTPProfile.URI, false, null,
-                                              auth);
+            ch = session.startChannel(SASLOTPProfile.URI, auth);
             startData = ch.getStartData();
         }
         catch(BEEPException x)
@@ -528,8 +526,7 @@ public class SASLOTPProfile
         String startData = null;
         try
         {
-            ch = session.startChannel(SASLOTPProfile.URI, false, null,
-                                              auth);
+            ch = session.startChannel(SASLOTPProfile.URI, auth);
             startData = ch.getStartData();
         }
         catch(BEEPException x)

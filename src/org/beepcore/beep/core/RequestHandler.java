@@ -1,8 +1,7 @@
-
 /*
- * TuningResetException.java            $Revision: 1.3 $ $Date: 2003/06/10 18:59:20 $
+ * RequestHandler.java  $Revision: 1.1 $ $Date: 2003/06/10 18:59:19 $
  *
- * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -17,29 +16,21 @@
  */
 package org.beepcore.beep.core;
 
-
 /**
- * Class TuningResetException
+ * This interface is used by profiles to receive MSG messages. This handler is
+ * registered with a channel using the <code>setRequestHandler()</code> method.
  *
- *
- * @author Eric Dixon
  * @author Huston Franklin
- * @author Jay Kint
- * @author Scott Pead
- * @version $Revision, $Date: 2003/06/10 18:59:20 $
+ * @version $Revision: 1.1 $, $Date: 2003/06/10 18:59:19 $
+ *
  */
-public class TuningResetException extends StartChannelException {
-
+public interface RequestHandler {
     /**
-     * Constructor TuningResetException
+     * Called to process the request in received MSG message.
      *
+     * @param message MSG Message received.
      *
-     * @param message
-     *
-     * @TODO remove this class
+     * @see MessageMSG
      */
-    public TuningResetException(String message)
-    {
-        super(0);
-    }
+    public void receiveMSG(MessageMSG message);
 }

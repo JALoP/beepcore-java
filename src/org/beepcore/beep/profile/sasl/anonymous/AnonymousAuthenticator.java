@@ -1,7 +1,8 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.14 $ $Date: 2003/04/23 15:23:03 $
+ * AnonymousAuthenticator.java  $Revision: 1.15 $ $Date: 2003/06/10 18:59:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -43,11 +44,11 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2003/04/23 15:23:03 $
+ * @version $Revision: 1.15 $, $Date: 2003/06/10 18:59:22 $
  *
  */
 class AnonymousAuthenticator
-    implements MessageListener, ReplyListener {
+    implements RequestHandler, ReplyListener {
 
     // Constants
     // Authentication States
@@ -131,7 +132,7 @@ class AnonymousAuthenticator
             throw new SASLException(ERR_ANON_STATE);
         }
         state = STATE_STARTED;
-        ch.setMessageListener(this);
+        ch.setRequestHandler(this);
         channel = ch;
     }
 
@@ -277,7 +278,7 @@ class AnonymousAuthenticator
      *
      * @throws BEEPError if an ERR message is generated
      */
-    public void receiveMSG(Message message) throws BEEPError
+    public void receiveMSG(MessageMSG message)
     {
         try
         {

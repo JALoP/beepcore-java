@@ -1,8 +1,8 @@
 /*
- * ChannelPool.java  $Revision: 1.8 $ $Date: 2003/04/23 15:23:02 $
+ * ChannelPool.java  $Revision: 1.9 $ $Date: 2003/06/10 18:59:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2002,2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ package org.beepcore.beep.lib;
 
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.MessageListener;
+import org.beepcore.beep.core.RequestHandler;
 import org.beepcore.beep.core.Session;
 
 import java.util.LinkedList;
@@ -41,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2003/04/23 15:23:02 $
+ * @version $Revision: 1.9 $, $Date: 2003/06/10 18:59:22 $
  */
 public class ChannelPool {
 
@@ -124,9 +125,8 @@ public class ChannelPool {
 
         // nothing found, so create one and return it
         if (!found) {
-            sharedCh =
-                new SharedChannel(this.session.startChannel(profile, null),
-                                  this);
+            sharedCh = new SharedChannel(this.session.startChannel(profile),
+                                         this);
         }
 
         // clean up channels that have expired
@@ -156,6 +156,7 @@ public class ChannelPool {
      * @see SharedChannel
      *
      * @throws BEEPException
+     * @deprecated
      */
     synchronized public SharedChannel
         getSharedChannel(String profile, MessageListener listener)
@@ -197,6 +198,65 @@ public class ChannelPool {
         return sharedCh;
     }
 
+    /**
+     * Returns a <code>SharedChannel</code> which supports the specified
+     * <code>profile</code> and calls back on the specified
+     * <code>DataListener</code>.  Once it is no longer needed, call
+     * <code>release</code> on the <code>SharedChannel</code>
+     * to return it to the pool of available channels.
+     *
+     * @param profile Name of profile for the requested
+     * <code>SharedChannel</code>.
+     * @param listener <code>DataListener</code> for the requested
+     * <code>SharedChannel</code>.
+     *
+     * @return A <code>SharedChannel</code>.
+     *
+     * @see MessageListener
+     * @see SharedChannel
+     *
+     * @throws BEEPException
+     * @deprecated
+     */
+    synchronized
+    public SharedChannel getSharedChannel(String profile, RequestHandler handler)
+            throws BEEPException
+    {
+        SharedChannel sharedCh = null;
+        boolean found = false;
+
+        synchronized (availableChannels) {
+            Iterator i = availableChannels.iterator();
+
+            while (i.hasNext()) {
+                sharedCh = (SharedChannel) i.next();
+
+                if (sharedCh.getProfile().equals(profile)) {
+                    log.trace("Found an available channel for sharing");
+                    i.remove();
+
+                    found = true;
+
+                    break;
+                }
+            }
+        }
+
+        // nothing found, so create one and return it
+        if (!found) {
+            sharedCh =
+                new SharedChannel(this.session.startChannel(profile, handler),
+                                  this);
+        }
+
+        // clean up channels that have expired
+        garbageCollect();
+        if (log.isTraceEnabled()) {
+            log.trace("Sharing channel number:" + sharedCh.getNumber());
+        }
+
+        return sharedCh;
+    }
     /**
      * Called from <code>SharedChannel</code>.  Releases the sharedCh and adds
      * it to the list of available SharedChannels.

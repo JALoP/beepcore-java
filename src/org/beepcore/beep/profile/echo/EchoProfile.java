@@ -1,8 +1,8 @@
 /*
- * EchoProfile.java    $Revision: 1.16 $ $Date: 2003/04/23 15:23:07 $
+ * EchoProfile.java    $Revision: 1.17 $ $Date: 2003/06/10 18:59:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2002,2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.16 $, $Date: 2003/04/23 15:23:07 $
+ * @version $Revision: 1.17 $, $Date: 2003/06/10 18:59:21 $
  */
 public class EchoProfile
-    implements Profile, StartChannelListener, MessageListener
+    implements Profile, StartChannelListener, RequestHandler
 {
 
     public static final String ECHO_URI =
@@ -54,13 +54,13 @@ public class EchoProfile
             throws StartChannelException
     {
         log.debug("EchoCCL StartChannel Callback");
-        channel.setMessageListener(this);
+        channel.setRequestHandler(this);
     }
 
     public void closeChannel(Channel channel) throws CloseChannelException
     {
         log.debug("EchoCCL CloseChannel Callback");
-        channel.setMessageListener(null);
+        channel.setRequestHandler(null);
     }
 
     public boolean advertiseProfile(Session session)
@@ -68,15 +68,15 @@ public class EchoProfile
         return true;
     }
 
-    public void receiveMSG(Message message) throws BEEPError
+    public void receiveMSG(MessageMSG message)
     {
         new ReplyThread(message).start();
     }
 
     private class ReplyThread extends Thread {
-        private Message message;
+        private MessageMSG message;
 
-        ReplyThread(Message message) {
+        ReplyThread(MessageMSG message) {
             this.message = message;
         }
 

@@ -1,7 +1,8 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.9 $ $Date: 2003/04/23 15:23:03 $
+ * SASLAnonymousProfile.java  $Revision: 1.10 $ $Date: 2003/06/10 18:59:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -42,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/04/23 15:23:03 $
+ * @version $Revision: 1.10 $, $Date: 2003/06/10 18:59:22 $
  *
  */
 public class SASLAnonymousProfile
@@ -216,9 +217,8 @@ public class SASLAnonymousProfile
         clearCredential(session, null);
 
         Channel ch = session.startChannel(SASLAnonymousProfile.uri,
-                                          false,    // true, ??
-                                          new Blob(Blob.STATUS_NONE, id).toString(),
-                                          null);
+                                          false,
+                                          new Blob(Blob.STATUS_NONE, id).toString());
 
         if ((ch.getStartData() != null)
                 && (ch.getStartData().indexOf("<error ") != -1)) {

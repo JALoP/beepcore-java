@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.35 $ $Date: 2003/04/23 15:23:04 $
+ * Session.java  $Revision: 1.36 $ $Date: 2003/06/10 18:59:18 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -29,7 +29,7 @@ import org.beepcore.beep.core.event.SessionListener;
  * A BEEP Session encapsulates a connection for a given transport.
  *
  * @author Huston Franklin
- * @version $Revision: 1.35 $, $Date: 2003/04/23 15:23:04 $
+ * @version $Revision: 1.36 $, $Date: 2003/06/10 18:59:18 $
  *
  * @see Channel
  */
@@ -162,8 +162,29 @@ public interface Session {
      *                        the BEEP protocol (e.g. the Session is not in a
      *                        state to create a new Channel).
      * @see MessageListener
+     * @deprecated
      */
     public Channel startChannel(String profile, MessageListener listener)
+            throws BEEPException, BEEPError;
+
+    /**
+     * Sends a request to start a new Channel on this Session for the
+     * specified profile. This version of <code>startChannel</code> allows a
+     * <code>RequestHandler</code> to be specified to be registered once the
+     * Channel is started. This is useful for profiles that are peer-to-peer in
+     * nature.
+     *
+     * @param profile The URI of the profile for the new Channel.
+     * @param handler A <code>RequestHandler</code> to receive MSG messages
+     *                sent by the remote peer of this Session.
+     *
+     * @throws BEEPError Thrown if the remote peer is unable or refuses to
+     *                   start a new Channel for the requested profile.
+     * @throws BEEPException Thrown for errors other than those defined by
+     *                       the BEEP protocol (e.g. the Session is not in a
+     *                       state to create a new Channel).
+     */
+    public Channel startChannel(String profile, RequestHandler handler)
             throws BEEPException, BEEPError;
 
     /**
@@ -217,9 +238,29 @@ public interface Session {
      *                        the BEEP protocol (e.g. the Session is not in a
      *                        state to create a new Channel).
      * @see MessageListener
+     * @deprecated
      */
     public Channel startChannel(String profile, boolean base64Encoding,
                                 String data, MessageListener listener)
+            throws BEEPException, BEEPError;
+
+    /**
+     * Sends a request to start a new Channel on this Session for the
+     * specified profile. This version of <code>startChannel</code> allows a
+     * <code>RequestHandler</code> to be specified to be registered once the
+     * Channel is started.
+     *
+     * @param profile
+     * @param handler A <code>RequestHandler</code> to receive MSG messages
+     *                sent by the remote peer of this Session.
+     *
+     * @throws BEEPError Thrown if the remote peer is unable or refuses to
+     *                   start a new Channel for the requested profile.
+     * @throws BEEPException Thrown for errors other than those defined by
+     *                       the BEEP protocol (e.g. the Session is not in a
+     *                       state to create a new Channel).
+     */
+    public Channel startChannel(StartChannelProfile profile, RequestHandler handler)
             throws BEEPException, BEEPError;
 
     /**
@@ -236,10 +277,28 @@ public interface Session {
      *                        state to create a new Channel).
      * @see StartChannelProfile
      * @see MessageListener
+     * @deprecated
      */
     public Channel startChannel(Collection profiles, MessageListener listener)
         throws BEEPException, BEEPError;
 
+    /**
+     * Sends a start channel request using the given list of profiles.
+     *
+     * @param profiles A collection of <code>StartChannelProfile</code>(s).
+     * @param handler A <code>RequestHandler</code> to receive MSG messages
+     *                sent by the remote peer of this Session.
+     *
+     * @throws BEEPError Thrown if the remote peer is unable or refuses to
+     *                   start a new Channel for the requested profile.
+     * @throws BEEPException Thrown for errors other than those defined by
+     *                       the BEEP protocol (e.g. the Session is not in a
+     *                       state to create a new Channel).
+     * @see StartChannelProfile
+     * @see RequestHandler
+     */
+    public Channel startChannel(Collection profiles, RequestHandler handler)
+        throws BEEPException, BEEPError;
 
     /**
      * This method is used to terminate the session when there is an

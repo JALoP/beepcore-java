@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.32 $ $Date: 2003/04/21 15:09:10 $
+ * Channel.java  $Revision: 1.33 $ $Date: 2003/06/10 18:59:16 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -21,7 +21,7 @@ package org.beepcore.beep.core;
  * This interface represents the operations available for all BEEP Channels.
  *
  * @author Huston Franklin
- * @version $Revision: 1.32 $, $Date: 2003/04/21 15:09:10 $
+ * @version $Revision: 1.33 $, $Date: 2003/06/10 18:59:16 $
  *
  */
 public interface Channel {
@@ -59,13 +59,44 @@ public interface Channel {
      *
      * @param listener
      * @return The previous MessageListener or null if none was set.
+     * @deprecated
      */
     public MessageListener setMessageListener(MessageListener listener);
 
     /**
      * Returns the message listener for this channel.
+     * @deprecated
      */
     public MessageListener getMessageListener();
+
+    /**
+     * Returns the <code>RequestHandler</code> registered with this channel.
+     */
+    public RequestHandler getRequestHandler();
+    
+    /**
+     * Sets the MSG handler for this <code>Channel</code>.
+     * 
+     * @param handler <code>RequestHandler</code> to handle received
+     *                MSG messages.
+     * @return The previous <code>RequestHandler</code> or <code>null</code> if
+     *         one wasn't set.
+     */
+    public RequestHandler setRequestHandler(RequestHandler handler);
+    
+    /**
+     * Sets the MSG handler for this <code>Channel</code>.
+     * 
+     * @param handler <code>RequestHandler</code> to handle received
+     *                MSG messages.
+     * @param tuningReset flag indicating that the profile will request a
+     *                    tuning reset.
+     * 
+     * @return The previous <code>RequestHandler</code> or <code>null</code> if
+     *         one wasn't set.
+     */
+    public RequestHandler setRequestHandler(RequestHandler handler,
+                                            boolean tuningReset);
 
     /**
      * Returns the session for this channel.
@@ -91,8 +122,14 @@ public interface Channel {
                                  ReplyListener replyListener)
             throws BEEPException;
 
+    /**
+     * @deprecated
+     */
     public void setStartData(String data);
 
+    /**
+     * @deprecated
+     */
     public String getStartData();
 
     public String getProfile();

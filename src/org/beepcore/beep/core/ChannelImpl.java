@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.6 $ $Date: 2003/06/03 16:38:35 $
+ * ChannelImpl.java  $Revision: 1.7 $ $Date: 2003/06/10 18:59:17 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -20,6 +20,8 @@ package org.beepcore.beep.core;
 
 import java.util.*;
 
+import edu.oswego.cs.dl.util.concurrent.PooledExecutor;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,10 +36,10 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2003/06/03 16:38:35 $
+ * @version $Revision: 1.7 $, $Date: 2003/06/10 18:59:17 $
  *
  */
-class ChannelImpl implements Channel {
+class ChannelImpl implements Channel, Runnable {
 
     // class variables
     public static final int STATE_INITIALIZED = 0;
@@ -53,10 +55,15 @@ class ChannelImpl implements Channel {
     private static final BufferSegment zeroLengthSegment =
         new BufferSegment(new byte[0]);
 
+    private static final PooledExecutor callbackQueue =
+        new PooledExecutor();
+
     /** @todo check this */
 
     // default values for some variables
     static final int DEFAULT_WINDOW_SIZE = 4096;
+
+    static final RequestHandler defaultHandler = new DefaultMSGHandler();
 
     // instance variables
 
@@ -74,8 +81,8 @@ class ChannelImpl implements Channel {
     /** Used to pass data sent on the Start Channel request */
     private String startData;
 
-    /** receiver of messages (or partial messages) */
-    private MessageListener listener;
+    /** receiver of MSG messages */
+    private RequestHandler handler;
 
     /** number of last message sent */
     private int lastMessageSent;
@@ -116,39 +123,19 @@ class ChannelImpl implements Channel {
 
     private int recvWindowFreed;
 
-    private boolean notifyOnFirstFrame = true;
-
     private Object applicationData = null;
-
-    private boolean blockingMessageListener = false;
 
     // tuningProfile indicates that the profile for this channel will
     // request a tuning reset
     private boolean tuningProfile = false;
 
-    // in shutting down the session
-    // something for waiting synchronous messages (semaphores or something)
-
-    /**
-     * Create a <code>Channel</code> object.
-     *
-     * @param profile URI string of the profile that this channel will "speak".
-     * @param number The channel number.
-     * @param listener message listener that will receive callbacks for
-     *    messages received on this channel
-     * @param session <code>Session</code> over which this channel
-     *                sends/receives messages
-     *
-     * @see org.beepcore.beep.core.Session
-     * @see org.beepcore.beep.core.MessageListener
-     */
-    protected ChannelImpl(String profile, String number, MessageListener listener,
-                      boolean blocking, SessionImpl session)
+    ChannelImpl(String profile, String number,
+                RequestHandler handler, boolean tuningReset, SessionImpl session)
     {
         this.profile = profile;
         this.encoding = Constants.ENCODING_DEFAULT;
         this.number = number;
-        this.setMessageListener(listener, blocking);
+        this.setRequestHandler(handler, tuningReset);
         this.session = session;
         sentSequence = 0;
         recvSequence = 0;
@@ -165,29 +152,28 @@ class ChannelImpl implements Channel {
         peerWindowSize = DEFAULT_WINDOW_SIZE;
     }
 
-    protected ChannelImpl(String profile, String number, SessionImpl session)
+    ChannelImpl(String profile, String number, SessionImpl session)
     {
-        this(profile, number, null, false, session);
+        this(profile, number, defaultHandler, false, session);
     }
 
-    /**
-     * This is a special constructor for Channel Zero
-     *
-     * @param Session
-     * @param ReplyListener
-     *
-     */
-    ChannelImpl(SessionImpl session, String number, ReplyListener rl)
+    static ChannelImpl createChannelZero(SessionImpl session,
+                                         ReplyListener reply,
+                                         RequestHandler handler)
     {
-        this(null, number, null, false, session);
+        ChannelImpl channel = new ChannelImpl(null, "0", handler,
+                                              true, session);
 
         // Add a MSG to the SentMSGQueue to fake channel into accepting the
         // greeting which comes in an unsolicited RPY.
-        sentMSGQueue.add(new MessageStatus(this, Message.MESSAGE_TYPE_MSG, 0,
-                                           null, rl));
-        recvMSGQueue.add(new MessageMSGImpl(this, 0, null));
+        channel.sentMSGQueue.add(new MessageStatus(channel,
+                                                   Message.MESSAGE_TYPE_MSG, 0,
+                                                   null, reply));
+        channel.recvMSGQueue.add(new MessageMSGImpl(channel, 0, null));
 
-        state = STATE_ACTIVE;
+        channel.state = STATE_ACTIVE;
+
+        return channel;
     }
 
     /**
@@ -300,27 +286,10 @@ class ChannelImpl implements Channel {
      */
     public MessageListener setMessageListener(MessageListener ml)
     {
-        return setMessageListener(ml, true);
-    }
-    
-    MessageListener setMessageListener(MessageListener ml,
-                                       boolean blocking)
-    {
         MessageListener tmp = getMessageListener();
 
-        if (ml == null) {
-            this.listener = null;
-            this.blockingMessageListener = false;
-            return tmp;
-        }
-        
-        if (blocking) {
-            this.listener = new ThreadedMessageListener(this, ml);
-        } else {
-            this.listener = ml;
-        }
+        this.handler = new MessageListenerAdapter(ml);
 
-        this.blockingMessageListener = blocking;
         return tmp;
     }
 
@@ -329,12 +298,50 @@ class ChannelImpl implements Channel {
      */
     public MessageListener getMessageListener()
     {
-        if (this.blockingMessageListener) {
-            return
-                ((ThreadedMessageListener)this.listener).getMessageListener();
-        } else {
-            return this.listener;
+        if (!(this.handler instanceof MessageListenerAdapter)) {
+            return null;
         }
+        
+        return ((MessageListenerAdapter)this.handler).getMessageListener();
+    }
+
+    /**
+     * Returns the <code>RequestHandler</code> registered with this channel.
+     */
+    public RequestHandler getRequestHandler()
+    {
+        return this.handler;
+    }
+    
+    /**
+     * Sets the MSG handler for this <code>Channel</code>.
+     * 
+     * @param handler <code>RequestHandler</code> to handle received MSG messages.
+     * @return The previous <code>RequestHandler</code> or <code>null</code> if
+     *         one wasn't set.
+     */
+    public RequestHandler setRequestHandler(RequestHandler handler)
+    {
+        return this.setRequestHandler(handler, false);
+    }
+
+    /**
+     * Sets the MSG handler for this <code>Channel</code>.
+     * 
+     * @param handler <code>RequestHandler</code> to handle received MSG messages.
+     * @param tuningReset flag indicating that the profile will request a
+     *                    tuning reset.
+     * @return The previous <code>RequestHandler</code> or <code>null</code> if
+     *         one wasn't set.
+     */
+    public RequestHandler setRequestHandler(RequestHandler handler, boolean tuningReset)
+    {
+        RequestHandler tmp = this.handler;
+        
+        this.handler = handler;
+        this.tuningProfile = tuningReset;
+        
+        return tmp;
     }
 
     /**
@@ -344,6 +351,18 @@ class ChannelImpl implements Channel {
     public Session getSession()
     {
         return this.session;
+    }
+
+    public void run() {
+        MessageMSGImpl m;
+        synchronized (recvMSGQueue) {
+                m = (MessageMSGImpl) recvMSGQueue.getFirst();
+                synchronized (m) {
+                    m.setNotified();
+                }
+        }
+
+        handler.receiveMSG(m);
     }
 
     /**
@@ -469,20 +488,10 @@ class ChannelImpl implements Channel {
                 
                 if (recvMSGQueue.size() == 1) {
                     try {
-                        listener.receiveMSG(m);
-                    } catch (BEEPError e) {
-                        try {
-                            m.sendERR(e);
-                        } catch (BEEPException e2) {
-                            log.error("Error sending ERR", e2);
-                        }
-                    } catch (AbortChannelException e) {
-                        try {
-                            /* @todo change this to abort or something else */
-                            ChannelImpl.this.close();
-                        } catch (BEEPException e2) {
-                            log.error("Error closing channel", e2);
-                        }
+                        callbackQueue.execute(this);
+                    } catch (InterruptedException e) {
+                        /** @TODO handle this better */
+                        throw new BEEPException(e);
                     }
                 }
             }
@@ -627,9 +636,7 @@ class ChannelImpl implements Channel {
             m.getDataStream().setComplete();
         }
 
-        // notify message listener if this message has not been
-        // notified before and notifyOnFirstFrame is set, the
-        // window is full, this is the last frame.
+        // notify message listener if this message has not been notified before
         synchronized (m) {
             if (m.isNotified()) {
                 return;
@@ -681,8 +688,11 @@ class ChannelImpl implements Channel {
 
         receiveFrame(frame);
 
-        return !(frame.isLast() == true &&
-                 getState() == STATE_TUNING || tuningProfile == true);
+        if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
+            return !(frame.isLast() == true && tuningProfile == true);
+        } else {
+            return !(frame.isLast() == true && getState() == STATE_TUNING);
+        }
     }
 
     void sendMessage(MessageStatus m) throws BEEPException
@@ -829,20 +839,10 @@ class ChannelImpl implements Channel {
 
             if (m != null) {
                 try {
-                    listener.receiveMSG(m);
-                } catch (BEEPError e) {
-                    try {
-                        m.sendERR(e);
-                    } catch (BEEPException e2) {
-                        log.error("Error sending ERR", e2);
-                    }
-                } catch (AbortChannelException e) {
-                    try {
-                        /* @todo change this to abort or something else */
-                        ChannelImpl.this.close();
-                    } catch (BEEPException e2) {
-                        log.error("Error closing channel", e2);
-                    }
+                    callbackQueue.execute(this);
+                } catch (InterruptedException e) {
+                    /** @TODO handle this better */
+                    throw new BEEPException(e);
                 }
             }
         }
@@ -1080,5 +1080,53 @@ class ChannelImpl implements Channel {
     public String getStartData()
     {
         return startData;
+    }
+    
+    static class MessageListenerAdapter implements RequestHandler {
+        MessageListenerAdapter(MessageListener listener) {
+            this.listener = listener;
+        }
+
+        public void receiveMSG(MessageMSG message) {
+            try {
+                listener.receiveMSG(message);
+            } catch (BEEPError e) {
+                try {
+                    message.sendERR(e);
+                } catch (BEEPException e2) {
+                    log.error("Error sending ERR", e2);
+                }
+            } catch (AbortChannelException e) {
+                try {
+                    message.getChannel().close();
+                } catch (BEEPException e2) {
+                    log.error("Error closing channel", e2);
+                }
+            }
+        }
+
+        public MessageListener getMessageListener() {
+            return this.listener;
+        }
+        
+        private Log log = LogFactory.getLog(this.getClass());
+        private MessageListener listener;
+    }
+
+    private static class DefaultMSGHandler implements RequestHandler {
+        public void receiveMSG(MessageMSG message) {
+            log.error("No handler registered to process MSG received on " +
+                      "channel " + message.getChannel().getNumber());
+            try {
+                message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                "No MSG handler registered");
+            } catch (BEEPException e) {
+                log.error("Error sending ERR", e);
+            }
+        }
+
+        
+        private Log log = LogFactory.getLog(this.getClass());
+        private MessageListener listener;
     }
 }
