@@ -1,5 +1,5 @@
 /*
- * Beepd.java  $Revision: 1.4 $ $Date: 2001/06/28 15:42:49 $
+ * Beepd.java  $Revision: 1.5 $ $Date: 2001/10/31 00:08:45 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/06/28 15:42:49 $
+ * @version $Revision: 1.5 $, $Date: 2001/10/31 00:08:45 $
  */
 public class Beepd extends Thread {
     private int port;
@@ -206,6 +206,8 @@ public class Beepd extends Thread {
         while (i.hasNext()) {
             ((Beepd) i.next()).start();
         }
+
+        System.out.println("Beepd: started");
     }
 
     public void run() {
