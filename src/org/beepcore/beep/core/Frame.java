@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.5 $ $Date: 2001/04/18 01:43:50 $
+ * Frame.java            $Revision: 1.6 $ $Date: 2001/05/16 19:44:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/18 01:43:50 $
+ * @version $Revision, $Date: 2001/05/16 19:44:30 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -248,7 +248,6 @@ public class Frame {
      */
     byte[] buildHeader()
     {
-        // @todo throw an exception if a malformed header results
         StringBuffer header = new StringBuffer(Frame.MAX_HEADER_SIZE);
 
         // Create header
@@ -271,6 +270,7 @@ public class Frame {
 
         header.append(this.CRLF);
 
+        Log.logEntry(Log.SEV_DEBUG, header.toString());
         try {
             return header.toString().getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -282,7 +282,7 @@ public class Frame {
     static Frame parseHeader(Session session, byte[] headerBuffer, int length)
         throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Processing normal BEEP frame");
+        Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Processing normal BEEP frame");
 
         int limit = length;
 
@@ -362,7 +362,7 @@ public class Frame {
      * @author Huston Franklin
      * @author Jay Kint
      * @author Scott Pead
-     * @version $Revision: 1.5 $, $Date: 2001/04/18 01:43:50 $
+     * @version $Revision: 1.6 $, $Date: 2001/05/16 19:44:30 $
      */
     public static class BufferSegment {
 
