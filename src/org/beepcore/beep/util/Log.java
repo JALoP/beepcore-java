@@ -1,6 +1,6 @@
 
 /*
- * Log.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * Log.java            $Revision: 1.2 $ $Date: 2001/04/02 22:33:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -30,30 +30,23 @@ import java.io.PrintWriter;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:45:53 $
+ * @version $Revision, $Date: 2001/04/02 22:33:27 $
  */
 public class Log {
 
-    private static String parse(String trace, int deep)
+    private static String parse(String trace)
     {
-        int pos = trace.indexOf("at");
+        int pos = trace.indexOf("logEntry");
 
         if (pos != -1) {
-            if (deep > 1) {
-
-                // move pos off the 'at'
-                String sub = trace.substring(pos + 3);
-
-                return parse(sub, --deep);
-            }
-
+            pos = trace.indexOf("at", pos);
             String sub = trace.substring(pos + 3,
                                          trace.indexOf("(", pos + 3));
 
             return sub;
         }
 
-        return null;
+        return "";
     }
 
     private static String getClassName()
@@ -64,7 +57,7 @@ public class Log {
 
         e.printStackTrace(pw);
 
-        return parse(os.toString(), 3);
+        return parse(os.toString());
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * SASLSessionTable.java            $Revision: 1.1 $ $Date: 2001/04/02 21:38:14 $
+ * SASLSessionTable.java  $Revision: 1.2 $ $Date: 2001/04/02 22:33:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 21:38:14 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/02 22:33:27 $
  *
  */
 public class SASLSessionTable implements SessionEventListener

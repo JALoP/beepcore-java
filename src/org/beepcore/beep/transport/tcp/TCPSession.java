@@ -1,6 +1,6 @@
 
 /*
- * TCPSession.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:53 $
+ * TCPSession.java            $Revision: 1.2 $ $Date: 2001/04/02 22:33:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:45:53 $
+ * @version $Revision, $Date: 2001/04/02 22:33:27 $
  */
 public class TCPSession extends Session {
 
@@ -654,7 +654,7 @@ public class TCPSession extends Session {
             } catch (IOException e) {
                 Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, e);
                 socket = null;
-                TCPSession.super.terminate(e.getMessage());
+                terminate(e.getMessage());
             } catch (Throwable e) {
                 Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, e);
                 terminate(e.getMessage());

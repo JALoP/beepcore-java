@@ -1,4 +1,4 @@
-beep-java 0.9 release
+beepcore-java 0.9 release
 ---------------------
 
 This release includes an implementation of beep core RFC 3080 and beep
@@ -7,7 +7,7 @@ mapping for TCP RFC 3081.
 JDK Version notes
 -----------------
 
-beep-java supports Java 2 Standard Edition (J2SE) v1.2.x or
+beepcore-java supports Java 2 Standard Edition (J2SE) v1.2.x or
 higher. The main reason for this is the use of the collections
 classes.
 

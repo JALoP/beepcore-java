@@ -4,3 +4,5 @@
 - Remove closeChannel from StartChannelListener
 - Map piggybacked request into regular message exchanges
 - Create a sample reliablity/checksum/signature module
+- Add threading for Listeners
+- Add method to ReplyListener to call with updates to MessageStatus
