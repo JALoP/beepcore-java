@@ -1,0 +1,124 @@
+Getting Started
+---------------
+
+Here is a quick overview of how to get started with the Java BEEP Core
+library.
+
+BEEP basics
+-----------
+
+In BEEP there are two roles for all interactions: initiator and
+listener. BEEP is peer-to-peer in the sense that either peer/endpoint
+may assume either role at any time. For example peer 'A' initiates a
+session with peer 'B' who was listening for a session. Then peer 'B'
+may initiate a start channel with peer 'B'. Once the channel is
+started, depending on the profile, peer 'A' could initiate a request
+to peer 'B' on the channel that 'B' initiated.
+
+BEEP uses a request-reply model for sending messages. Requests are
+messages of type MSG and replies are messages of type RPY, ERR, or
+ANS/NUL. For each request there must be a reply.
+
+A profile defines the valid set of request-reply interactions.
+
+Starting a Session
+------------------
+
+The starting point for working with BEEP is Session. Session is an
+abstract class so you have to get an instance of a transport specific
+session (e.g. TCPSession). From an initiator's role you can start a
+Session using:
+
+  Session session = AutomatedTCPSessionCreator.initiate(host, port,
+                                                        new ProfileRegistry());
+
+From a listener's role you can listen for new Sessions using:
+
+  while (true) {
+      AutomatedTCPSessionCreator.listen(port, profileReg);
+  }
+
+The ProfileRegistry specified in both of these examples contains the
+list of profiles advertised to the other peer when the Session is
+started. This is used by the peer to determine which profiles it may
+specify when starting a Channel.
+
+Starting a Channel
+------------------
+
+Channel is the object used to send and receive messages. Channels have
+an associated profile that is specified when the Channel is started. A
+Channel is started (initiated) using:
+
+  Channel channel = session.startChannel(profileURI);
+
+A class may act in the listener role for start channel requests by
+implementing the StartChannelListener interface and registering it
+with the ProfileRegistry for the Session. The class will get called
+when the Session receives a start channel request with the new Channel
+object. The class can then register a class to receive and service
+request messages.
+
+Creating a message
+------------------
+
+The abstraction for the data of a message is a DataStream. Before
+sending a message one of the DataStream types (StringDataStream,
+ByteDataStream, etc.) must be created.
+
+  DataStream dataStream =
+      new StringDataStream("<attach endpoint=\"fred@example.com\"/>");
+
+NOTE: BEEP has a flow control mechanism for Channels that makes it
+possible to have multiple channels on one connection. The flow control
+is tied into the DataStream so that as an application reads the data
+it notifies Channel that more data may be received. Because of this
+the application MUST either read all of the data in the received
+messages or call close on the DataStreams for the messages to allow
+more data to be sent on the Channel. If this is not done the Channel
+will stall once the window for the Channel is full and no more
+messages will be received on that Channel.
+
+Sending a Request
+-----------------
+
+A request is sent using the Channel:
+
+  channel.sendMSG(dataStream, reply);
+
+Since every BEEP request must have a reply the second parameter is a
+class, implementing the ReplyListener interface, that is called when
+the reply is received. The class Reply implements the ReplyListener
+interface and is provided as a generic implementation.
+NullReplyListener also implements the ReplyListener interface but it
+discards all replies for applications that don't care about them.
+
+Sending a Reply
+---------------
+
+A reply must be sent for each request. This may be a RPY, ERR, or an
+ANS/NUL set. They are sent using the coresponding methods on Channel
+(sendRPY, etc.).
+
+ANS messages are a mechanism for sending multiple messages as a reply
+to a request. A NUL message is used to mark the end of the set of ANS
+messages.
+
+Receiving a Request
+-------------------
+
+To receive requests an applications implements the MessageListener
+interface and registers the class with the Channel (usually in the
+startChannel callback in StartChannelListener).
+
+  channel.setDataListener(this);
+
+Registering a Profile
+---------------------
+
+To act in the listener role for a profile the application must
+implement the StartChannelListener interface and register it with the
+Session. This is done by adding it to the ProfileRegister used in
+creating the Session:
+
+  profileReg.addStartChannelListener(ExampleProfile.URI, example);
