@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.22 $ $Date: 2002/04/30 17:09:35 $
+ * TCPSession.java  $Revision: 1.23 $ $Date: 2002/05/02 02:07:58 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -50,7 +50,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.22 $, $Date: 2002/04/30 17:09:35 $
+ * @version $Revision: 1.23 $, $Date: 2002/05/02 02:07:58 $
  */
 public class TCPSession extends Session {
 
@@ -557,31 +557,56 @@ public class TCPSession extends Session {
         byte[] payload = new byte[f.getSize()];
 
         int count = amountRead - headerLength;
-        System.arraycopy(headerBuffer, headerLength, payload, 0, count);
+        if (count > payload.length) {
+            System.arraycopy(headerBuffer, headerLength, payload, 0,
+                             payload.length);
+            count -= payload.length;
+            
+            for (int i = 0; i < Frame.TRAILER.length(); ++i) {
+                int b;
+                if (count > 0) {
+                    b = headerBuffer[headerLength + payload.length + i];
+                    --count;
+                } else {
+                    b = is.read();
 
-        while (count < payload.length) {
-            int n = is.read(payload, count, payload.length - count);
-            if (n == -1) {
-                throw new SessionAbortedException();
+                    if (b == -1) {
+                        throw new SessionAbortedException();
+                    }
+                }
+
+                if (((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
+                    throw new BEEPException("Malformed BEEP frame, "
+                                            + "invalid trailer");
+                }
             }
-            count += n;
-        }
+        } else {
+            System.arraycopy(headerBuffer, headerLength, payload, 0, count);
 
-        if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                         new String(payload));
-        }
-
-        for (int i = 0; i < Frame.TRAILER.length(); ++i) {
-            int b = is.read();
-
-            if (b == -1) {
-                throw new SessionAbortedException();
+            while (count < payload.length) {
+                int n = is.read(payload, count, payload.length - count);
+                if (n == -1) {
+                    throw new SessionAbortedException();
+                }
+                count += n;
             }
 
-            if (((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
-                throw new BEEPException("Malformed BEEP frame, "
-                                        + "invalid trailer");
+            if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
+                Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
+                             new String(payload));
+            }
+
+            for (int i = 0; i < Frame.TRAILER.length(); ++i) {
+                int b = is.read();
+
+                if (b == -1) {
+                    throw new SessionAbortedException();
+                }
+
+                if (((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
+                    throw new BEEPException("Malformed BEEP frame, "
+                                            + "invalid trailer");
+                }
             }
         }
 
