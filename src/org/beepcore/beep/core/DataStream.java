@@ -1,6 +1,6 @@
 
 /*
- * DataStream.java            $Revision: 1.3 $ $Date: 2001/04/24 22:52:02 $
+ * DataStream.java            $Revision: 1.4 $ $Date: 2001/05/16 05:05:32 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import java.util.Enumeration;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/24 22:52:02 $
+ * @version $Revision: 1.4 $, $Date: 2001/05/16 05:05:32 $
  */
 public abstract class DataStream {
 
@@ -436,23 +436,14 @@ public abstract class DataStream {
             this.headersCached = true;
         }
 
-        if (len >= this.headersBytes.length) {
-            System.arraycopy(this.headersBytes, 0, buf, off,
-                             this.headersBytes.length);
+        len = Math.min(len, this.headersBytes.length - this.headersBytesRead);
+        System.arraycopy(this.headersBytes, this.headersBytesRead, buf,
+                         off, len);
 
-            this.headersBytesRead += this.headersBytes.length;
-            this.bytesRead += this.headersBytesRead;
+        this.headersBytesRead += len;
+        this.bytesRead += len;
 
-            return this.headersBytes.length;
-        } else {
-            System.arraycopy(this.headersBytes, this.headersBytesRead, buf,
-                             off, len);
-
-            this.headersBytesRead += len;
-            this.bytesRead += len;
-
-            return len;
-        }
+        return len;
     }
 
     /**
