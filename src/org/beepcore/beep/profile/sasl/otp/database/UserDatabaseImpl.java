@@ -1,5 +1,5 @@
 /*
- * UserDatabaseImpl.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:35 $
+ * UserDatabaseImpl.java            $Revision: 1.3 $ $Date: 2002/09/07 15:09:39 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.profile.sasl.otp.algorithm.sha1.SHA1;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:35 $
+ * @version $Revision: 1.3 $, $Date: 2002/09/07 15:09:39 $
  *
  */
 public class UserDatabaseImpl 
@@ -76,7 +76,7 @@ public class UserDatabaseImpl
     /**
      * Method getAlgorithmName
      *
-     * @returns String the algorithm employed by the user of this database
+     * @return String the algorithm employed by the user of this database
      * for SASL OTP authentication.
      *
      */
@@ -88,7 +88,7 @@ public class UserDatabaseImpl
     /**
      * Method getLastHash
      *
-     * @returns byte[] the lastHash value generated the last time the
+     * @return byte[] the lastHash value generated the last time the
      * user of this database performed SASL OTP authentication.  The
      * hash value is represented in binary form.
      *
@@ -101,7 +101,7 @@ public class UserDatabaseImpl
     /**
      * Method getLastHash
      *
-     * @returns String the lastHash value generated the last time the
+     * @return String the lastHash value generated the last time the
      * user of this database performed SASL OTP authentication.  The
      * hash is represented in hexadecimal form.
      *
@@ -114,7 +114,7 @@ public class UserDatabaseImpl
     /**
      * Method getLastHash
      *
-     * @returns String the seed used by the 
+     * @return String the seed used by the 
      * user of this database for SASL OTP authentication.
      *
      */
@@ -126,7 +126,7 @@ public class UserDatabaseImpl
     /**
      * Method getLastHash
      *
-     * @returns int the sequence that shoudl be used by the 
+     * @return int the sequence that should be used by the 
      * user of this database for their next SASL OTP authentication.
      *
      */
@@ -138,7 +138,7 @@ public class UserDatabaseImpl
     /**
      * Method getLastHash
      *
-     * @returns String the last hash value used by the 
+     * @return String the last hash value used by the 
      * user of this database for SASL OTP authentication.
      *
      */

@@ -1,8 +1,8 @@
-
 /*
- * Profile.java            $Revision: 1.3 $ $Date: 2001/11/08 05:51:34 $
+ * Profile.java  $Revision: 1.4 $ $Date: 2002/09/07 15:09:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.beepcore.beep.core.Channel;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.4 $, $Date: 2002/09/07 15:09:38 $
  */
 public interface Profile {
 
@@ -43,8 +43,8 @@ public interface Profile {
      * @param uri
      * @param config
      *
-     * @returns The corresponding <code>StartChannelListener</code> for
-     *          the specified uri.
+     * @return The corresponding <code>StartChannelListener</code> for
+     *         the specified uri.
      * @throws BEEPException
      */
     public StartChannelListener init(String uri, ProfileConfiguration config)

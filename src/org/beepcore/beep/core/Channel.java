@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.28 $ $Date: 2002/09/06 02:34:28 $
+ * Channel.java  $Revision: 1.29 $ $Date: 2002/09/07 15:00:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.28 $, $Date: 2002/09/06 02:34:28 $
+ * @version $Revision: 1.29 $, $Date: 2002/09/07 15:00:12 $
  *
  */
 public class Channel {
@@ -136,7 +136,7 @@ public class Channel {
      *                sends/receives messages
      *
      * @see org.beepcore.beep.core.Session
-     * @see org.beepcore.beep.core.DataListener
+     * @see org.beepcore.beep.core.MessageListener
      */
     protected Channel(String profile, String number, MessageListener listener,
                       boolean blocking, Session session)
@@ -310,7 +310,7 @@ public class Channel {
      * Sets the <code>MessageListener</code> for this channel.
      *
      * @param ml
-     * @returns The previous MessageListener or null if none was set.
+     * @return The previous MessageListener or null if none was set.
      */
     public MessageListener setMessageListener(MessageListener ml)
     {
@@ -367,7 +367,7 @@ public class Channel {
      * @param replyListener A "one-shot" listener that will handle replies
      * to this sendMSG listener.
      *
-     * @see DataStream
+     * @see OutputDataStream
      * @see MessageStatus
      *
      * @return MessageStatus

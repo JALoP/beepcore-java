@@ -1,7 +1,8 @@
 /*
- * SharedChannel.java            $Revision: 1.7 $ $Date: 2002/08/29 01:50:42 $
+ * SharedChannel.java            $Revision: 1.8 $ $Date: 2002/09/07 15:06:45 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -43,7 +44,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2002/08/29 01:50:42 $
+ * @version $Revision: 1.8 $, $Date: 2002/09/07 15:06:45 $
  */
 public class SharedChannel extends Channel {
 
@@ -95,7 +96,7 @@ public class SharedChannel extends Channel {
      * @return MessageStatus Can be queried to get status information about the
      * message.
      *
-     * @see DataStream
+     * @see OutputDataStream
      * @see MessageStatus
      *
      * @throws BEEPException
