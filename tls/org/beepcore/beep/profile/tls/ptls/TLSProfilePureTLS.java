@@ -1,5 +1,5 @@
 /*
- * TLSProfilePureTLS.java  $Revision: 1.8 $ $Date: 2003/09/15 15:23:32 $
+ * TLSProfilePureTLS.java  $Revision: 1.9 $ $Date: 2003/11/07 23:01:35 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -281,7 +281,7 @@ public class TLSProfilePureTLS extends TuningProfile
 
                 policy.setCipherSuites(ciphers);
             } catch (Exception e) {
-                throw new BEEPException(e.getMessage());
+                throw new BEEPException(e);
             }
         }
 
@@ -666,9 +666,7 @@ public class TLSProfilePureTLS extends TuningProfile
 
             peerCred = new SessionCredential(ht);
         } catch (Exception e) {
-            e.printStackTrace();
-
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         } finally {}
 
         // swap it out for the new one with TLS enabled.
@@ -737,7 +735,7 @@ public class TLSProfilePureTLS extends TuningProfile
         try {
             PureTLSPackageBridge.setPrivateKey(context, key);
         } catch (Exception e) {
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         }
     }
 
@@ -768,7 +766,7 @@ public class TLSProfilePureTLS extends TuningProfile
             } catch (Exception e) {
                 e.printStackTrace();
 
-                throw new BEEPException(e.getMessage());
+                throw new BEEPException(e);
             }
         }
     }
@@ -801,7 +799,7 @@ public class TLSProfilePureTLS extends TuningProfile
             } catch (Exception e) {
                 e.printStackTrace();
 
-                throw new BEEPException(e.getMessage());
+                throw new BEEPException(e);
             }
         }
     }
@@ -830,7 +828,7 @@ public class TLSProfilePureTLS extends TuningProfile
 
             policy.setCipherSuites(ciphers);
         } catch (Exception e) {
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         }
     }
 

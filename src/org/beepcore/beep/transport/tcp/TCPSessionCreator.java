@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java  $Revision: 1.7 $ $Date: 2003/04/23 15:23:04 $
+ * TCPSessionCreator.java  $Revision: 1.8 $ $Date: 2003/11/07 23:01:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -39,7 +39,7 @@ import org.beepcore.beep.core.ProfileRegistry;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2003/04/23 15:23:04 $
+ * @version $Revision: 1.8 $, $Date: 2003/11/07 23:01:12 $
  */
 public class TCPSessionCreator {
 
@@ -73,7 +73,7 @@ public class TCPSessionCreator {
             return TCPSession.createInitiator(new Socket(host, port),
                                               new ProfileRegistry());
         } catch (IOException x) {
-            throw new BEEPException(x.getMessage());
+            throw new BEEPException(x);
         }
     }
 
@@ -98,7 +98,7 @@ public class TCPSessionCreator {
             return TCPSession.createInitiator(new Socket(host, port),
                                               registry, servername);
         } catch (IOException x) {
-            throw new BEEPException(x.getMessage());
+            throw new BEEPException(x);
         }
     }
 
@@ -234,7 +234,7 @@ public class TCPSessionCreator {
 
                 listenerSockets.put(Integer.toString(port), socket);
             } catch (Exception x) {
-                throw new BEEPException(x.getMessage());
+                throw new BEEPException(x);
             }
         }
 
@@ -244,7 +244,7 @@ public class TCPSessionCreator {
 
             return TCPSession.createListener(peer, registry);
         } catch (Exception e) {
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         }
     }
 
@@ -272,7 +272,7 @@ public class TCPSessionCreator {
 
             return listen(addr, port, registry);
         } catch (UnknownHostException x) {
-            throw new BEEPException(x.getMessage());
+            throw new BEEPException(x);
         }
     }
 }

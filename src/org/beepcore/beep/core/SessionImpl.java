@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.10 $ $Date: 2003/11/07 17:39:21 $
+ * SessionImpl.java  $Revision: 1.11 $ $Date: 2003/11/07 23:01:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -65,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2003/11/07 17:39:21 $
+ * @version $Revision: 1.11 $, $Date: 2003/11/07 23:01:12 $
  *
  * @see Channel
  */
@@ -1698,7 +1698,7 @@ public abstract class SessionImpl implements Session {
                             this.notify();
                         }
                     } catch (Exception x) {
-                        throw new BEEPException(x.getMessage());
+                        throw new BEEPException(x);
                     }
                 } else {
                     throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);

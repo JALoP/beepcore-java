@@ -1,7 +1,7 @@
 /*
- * BEEPException.java  $Revision: 1.5 $ $Date: 2002/09/07 15:15:49 $
+ * BEEPException.java  $Revision: 1.6 $ $Date: 2003/11/07 23:01:12 $
  *
- * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package org.beepcore.beep.core;
  * similar to what is available in JDK 1.4.
  *
  * @author Huston Franklin
- * @version $Revision: 1.5 $, $Date: 2002/09/07 15:15:49 $
+ * @version $Revision: 1.6 $, $Date: 2003/11/07 23:01:12 $
  */
 public class BEEPException extends Exception {
     private final Throwable cause;
@@ -51,6 +51,21 @@ public class BEEPException extends Exception {
      */
     public BEEPException(Throwable cause) {
         super(cause == null ? null : cause.toString());
+        this.cause = cause;
+    }
+
+    /**
+     * Constructs a new <code>BEEPException</code> with the specified
+     * cause and detailed message.
+     *
+     * @param message the detailed message which is saved for later
+     * retrieval by the <code>getMessage()</code> method.
+     * 
+     * @param cause the cause which is saved for later retrieval by
+     * the <code>getCause()</code> method.
+     */
+    public BEEPException(String message, Throwable cause) {
+        super(message);
         this.cause = cause;
     }
 
