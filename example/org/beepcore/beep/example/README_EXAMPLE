@@ -1,0 +1,15 @@
+beepcore-java 0.9 examples
+--------------------------
+
+This package includes sample beep applications which use the
+beepcore-java library. Beepd is a generic listener which can load any
+profile that supports the Profile interface. beepd-config.xml is a
+sample configuration file for Beepd. Bing is an initiator which pings
+a beep listener using the EchoProfile.
+
+Requirements
+------------
+
+Beepd requires a XML parser that implements the hasAttribute method for
+the org.w3c.dom.Element class. Xerces is the library we use for our
+development and testing.
