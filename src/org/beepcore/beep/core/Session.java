@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.22 $ $Date: 2001/11/29 04:00:00 $
+ * Session.java  $Revision: 1.23 $ $Date: 2002/05/07 05:00:33 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,22 +59,33 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.22 $, $Date: 2001/11/29 04:00:00 $
+ * @version $Revision: 1.23 $, $Date: 2002/05/07 05:00:33 $
  *
  * @see Channel
  */
 public abstract class Session {
 
     // Constants
-    public static final int SESSION_STATE_UNINITIALIZED = 0;
-    public static final int SESSION_STATE_INITIALIZED = 1;
-    public static final int SESSION_STATE_GREETING_SENT = 2;
-    public static final int SESSION_STATE_GREETING_RECEIVED = 4;
-    public static final int SESSION_STATE_ACTIVE = 7;
-    public static final int SESSION_STATE_TUNING = 7;
-    public static final int SESSION_STATE_CLOSING = 15;
-    public static final int SESSION_STATE_TERMINATING = 16;
-    public static final int SESSION_STATE_CLOSED = 8;
+    public static final int SESSION_STATE_INITIALIZED = 0;
+    public static final int SESSION_STATE_GREETING_SENT = 1;
+    public static final int SESSION_STATE_ACTIVE = 2;
+    public static final int SESSION_STATE_TUNING_PENDING = 3;
+    public static final int SESSION_STATE_TUNING = 4;
+    public static final int SESSION_STATE_CLOSE_PENDING = 5;
+    public static final int SESSION_STATE_CLOSING = 6;
+    public static final int SESSION_STATE_CLOSED = 7;
+    public static final int SESSION_STATE_ABORTED = 8;
+
+    private static final SessionOperations[] ops =
+    {new INITIALIZED_SessionOperations(),
+     new GREETING_SENT_SessionOperations(),
+     new ACTIVE_SessionOperations(),
+     new TUNING_PENDING_SessionOperations(),
+     new TUNING_SessionOperations(),
+     new CLOSE_PENDING_SessionOperations(),
+     new CLOSING_SessionOperations(),
+     new CLOSED_SessionOperations(),
+     new ABORTED_SessionOperations()};
 
     private static final String CORE = "core";
     private static final int DEFAULT_CHANNELS_SIZE = 4;
@@ -133,7 +144,7 @@ public abstract class Session {
                       SessionTuningProperties tuning)
         throws BEEPException
     {
-        state = SESSION_STATE_UNINITIALIZED;
+        state = SESSION_STATE_INITIALIZED;
         allowChannelWindowUpdates = true;
         localCredential = localCred;
         peerCredential = peerCred;
@@ -150,10 +161,6 @@ public abstract class Session {
         } catch (ParserConfigurationException e) {
             throw new BEEPException("Invalid parser configuration");
         }
-
-        // set starting channel number according to
-        // listener or initiator (odd or even)
-        changeState(SESSION_STATE_INITIALIZED);
     }
 
     /**
@@ -258,11 +265,8 @@ public abstract class Session {
     }
 
     /**
-     * Peer-level call to simply close a session down, no questions
-     * asked.
-     * @todo we need to do a "niceShutdown" or something like that which
-     * will accomodate Darren's needs by considering the results (exceptions)
-     * from the CCL close channel callbacks instead of simply ignoring them.
+     * Closes the <code>Session</code> gracefully. The profiles for
+     * the open channels on the session may veto the close request.
      *
      * @throws BEEPException
      */
@@ -271,7 +275,8 @@ public abstract class Session {
         Log.logEntry(Log.SEV_DEBUG,
                      "Closing Session with " + channels.size() + " channels");
 
-        //        changeState(SESSION_STATE_CLOSING);
+        changeState(SESSION_STATE_CLOSE_PENDING);
+
         Iterator i = channels.values().iterator();
 
         while (i.hasNext()) {
@@ -294,14 +299,35 @@ public abstract class Session {
             try {
                 scl.closeChannel(ch);
             } catch (CloseChannelException cce) {
+                changeState(SESSION_STATE_ACTIVE);
+                // @todo rollback notification
                 throw new BEEPException("Close Session rejected by local "
                                         + "channel " + ch.getProfile());
             }
         }
 
-        // check with the peer to see if it is ok to close the channel
-        zero.close();
-        shutdown();
+        changeState(SESSION_STATE_CLOSING);
+
+        try {
+            // check with the peer to see if it is ok to close the channel
+            zero.close();
+        } catch (BEEPError e) {
+            changeState(SESSION_STATE_ACTIVE);
+            throw e;
+        } catch (BEEPException e) {
+            terminate(e.getMessage());
+            Log.logEntry(Log.SEV_ERROR, e);
+            throw e;
+        }
+
+        this.disableIO();
+        // @todo close the socket
+
+        channels.clear();
+        zero = null;
+
+        this.changeState(SESSION_STATE_CLOSED);
+        fireSessionTerminated();
     }
 
     /**
@@ -590,7 +616,7 @@ public abstract class Session {
         Log.logEntry(Log.SEV_ERROR, reason);
 
         try {
-            this.changeState(SESSION_STATE_TERMINATING);
+            this.changeState(SESSION_STATE_ABORTED);
             shutdown();
         } catch (BEEPException e) {
 
@@ -598,44 +624,15 @@ public abstract class Session {
         }
     }
 
-    /**
-     * Changes the state of the Session.
-     *
-     *
-     * @param newState
-     *
-     * @return Returns <code>true</code> if the state changed was successful.
-     * Otherwise, returns <code>false</code>.
-     *
-     */
-    protected synchronized boolean changeState(int newState)
-        throws BEEPException
-    {
-        if ((state == SESSION_STATE_UNINITIALIZED)
-                &&!((newState == SESSION_STATE_INITIALIZED)
-                    || (newState == SESSION_STATE_CLOSED))) {
-            throw new BEEPException("Illegal session state transition");
+    synchronized void changeState(int newState) throws BEEPException {
+        try {
+            ops[state].changeState(this, newState);
+        } catch (BEEPException e) {
+            e.printStackTrace();
+            throw e;
         }
 
-        if ((state == SESSION_STATE_INITIALIZED)
-                &&!((newState == SESSION_STATE_GREETING_SENT)
-                    || (newState == SESSION_STATE_GREETING_RECEIVED)
-                    || (newState == SESSION_STATE_CLOSED))) {
-            throw new BEEPException("Illegal session state transition");
-        }
-
-        if ((state == SESSION_STATE_ACTIVE)
-                && (newState != SESSION_STATE_CLOSED)
-                && (newState != SESSION_STATE_TERMINATING)
-                && (newState != SESSION_STATE_CLOSING)) {
-            throw new BEEPException("Illegal session state transition");
-        }
-
-        state |= newState;
-
-        Log.logEntry(Log.SEV_DEBUG, CORE, "State changed to " + state);
-
-        return true;
+        Log.logEntry(Log.SEV_DEBUG, CORE, "State changed to " + newState);
     }
 
     /**
@@ -731,38 +728,8 @@ public abstract class Session {
      * @throws BEEPException
      *
      */
-    protected void postFrame(Frame f) throws BEEPException
-    {
-        try {
-            if (state == SESSION_STATE_ACTIVE) {
-                f.getChannel().postFrame(f);
-
-                // If we're in a PRE-GREETING state
-                // only handle one frame at a time...
-                // to avoid processing post-greeting
-                // frames before the greeting has been
-                // fully handled.
-            } else if (state < SESSION_STATE_ACTIVE) {
-                synchronized (this) {
-                    f.getChannel().postFrame(f);
-                }
-            } else {
-
-                // If we're in an error state
-                Log.logEntry(Log.SEV_DEBUG,
-                             "Dropping a frame because the Session state is " +
-                             "no longer active.");
-            }
-        } catch (BEEPException e) {
-            this.terminate(e.getMessage());
-
-            return;
-        } catch (Throwable e) {
-            Log.logEntry(Log.SEV_ERROR, e);
-            this.terminate("Uncaught exception, terminating session");
-
-            return;
-        }
+    protected void postFrame(Frame f) throws BEEPException {
+        ops[state].postFrame(this, f);
     }
 
     /**
@@ -1559,7 +1526,7 @@ public abstract class Session {
                         Collections.unmodifiableCollection(profileList);
                 }
 
-                changeState(Session.SESSION_STATE_GREETING_RECEIVED);
+                changeState(Session.SESSION_STATE_ACTIVE);
 
                 synchronized (this) {
                     this.notifyAll();
@@ -1800,6 +1767,239 @@ public abstract class Session {
         public void receiveNUL(Message message)
         {
             terminate("Received an unexpected NUL");
+        }
+    }
+
+    interface SessionOperations {
+        void changeState(Session s, int newState) throws BEEPException;
+        void postFrame(Session s, Frame f) throws BEEPException;
+    }
+
+    static class INITIALIZED_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            if (!((newState == SESSION_STATE_GREETING_SENT) ||
+                  (newState == SESSION_STATE_ABORTED)))
+            {
+                throw new BEEPException("Illegal session state transition");
+            }
+
+            s.state = newState;
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            try {
+                // If we're in a PRE-GREETING state
+                // only handle one frame at a time...
+                // to avoid processing post-greeting
+                // frames before the greeting has been
+                // fully handled.
+                synchronized (s) {
+                    f.getChannel().postFrame(f);
+                }
+            } catch (BEEPException e) {
+                s.terminate(e.getMessage());
+
+                return;
+            } catch (Throwable e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                s.terminate("Uncaught exception, terminating session");
+
+                return;
+            }
+        }
+    }
+
+    static class GREETING_SENT_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            if (!((newState == SESSION_STATE_ACTIVE) ||
+                  (newState == SESSION_STATE_ABORTED)))
+            {
+                throw new BEEPException("Illegal session state transition");
+            }
+
+            s.state = newState;
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            try {
+                // If we're in a PRE-GREETING state
+                // only handle one frame at a time...
+                // to avoid processing post-greeting
+                // frames before the greeting has been
+                // fully handled.
+                synchronized (s) {
+                    f.getChannel().postFrame(f);
+                }
+            } catch (BEEPException e) {
+                s.terminate(e.getMessage());
+
+                return;
+            } catch (Throwable e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                s.terminate("Uncaught exception, terminating session");
+
+                return;
+            }
+        }
+    }
+
+    static class ACTIVE_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            if (!((newState == SESSION_STATE_TUNING_PENDING) ||
+                  (newState == SESSION_STATE_CLOSE_PENDING) ||
+                  (newState == SESSION_STATE_ABORTED)))
+            {
+                throw new BEEPException("Illegal session state transition");
+            }
+
+            s.state = newState;
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            try {
+                f.getChannel().postFrame(f);
+            } catch (BEEPException e) {
+                s.terminate(e.getMessage());
+
+                return;
+            } catch (Throwable e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                s.terminate("Uncaught exception, terminating session");
+
+                return;
+            }
+        }
+    }
+
+    static class TUNING_PENDING_SessionOperations
+        implements SessionOperations
+    {
+        public void changeState(Session s, int newState) throws BEEPException {
+            if (!((newState == SESSION_STATE_ACTIVE) ||
+                  (newState == SESSION_STATE_TUNING) ||
+                  (newState == SESSION_STATE_ABORTED)))
+            {
+                throw new BEEPException("Illegal session state transition");
+            }
+
+            s.state = newState;
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            try {
+                f.getChannel().postFrame(f);
+
+            } catch (BEEPException e) {
+                s.terminate(e.getMessage());
+
+                return;
+            } catch (Throwable e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                s.terminate("Uncaught exception, terminating session");
+
+                return;
+            }
+        }
+    }
+
+    static class TUNING_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            if (!((newState == SESSION_STATE_CLOSED) ||
+                  (newState == SESSION_STATE_ABORTED)))
+            {
+                throw new BEEPException("Illegal session state transition");
+            }
+
+            s.state = newState;
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            try {
+                f.getChannel().postFrame(f);
+
+            } catch (BEEPException e) {
+                s.terminate(e.getMessage());
+
+                return;
+            } catch (Throwable e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                s.terminate("Uncaught exception, terminating session");
+
+                return;
+            }
+        }
+    }
+
+    static class CLOSE_PENDING_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            if (!((newState == SESSION_STATE_ACTIVE) ||
+                  (newState == SESSION_STATE_CLOSING) ||
+                  (newState == SESSION_STATE_ABORTED)))
+            {
+                throw new BEEPException("Illegal session state transition");
+            }
+
+            s.state = newState;
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            // If we're in an error state
+            Log.logEntry(Log.SEV_DEBUG,
+                         "Dropping a frame because the Session state is " +
+                         "no longer active.");
+        }
+    }
+
+    static class CLOSING_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            if (!((newState == SESSION_STATE_CLOSED) ||
+                  (newState == SESSION_STATE_ABORTED)))
+            {
+                throw new BEEPException("Illegal session state transition");
+            }
+
+            s.state = newState;
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            try {
+                f.getChannel().postFrame(f);
+            } catch (BEEPException e) {
+                s.terminate(e.getMessage());
+
+                return;
+            } catch (Throwable e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                s.terminate("Uncaught exception, terminating session");
+
+                return;
+            }
+        }
+    }
+
+    static class CLOSED_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            throw new BEEPException("Illegal session state transition");
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            // If we're in an error state
+            Log.logEntry(Log.SEV_DEBUG,
+                         "Dropping a frame because the Session state is " +
+                         "no longer active.");
+        }
+    }
+
+    static class ABORTED_SessionOperations implements SessionOperations {
+        public void changeState(Session s, int newState) throws BEEPException {
+            throw new BEEPException("Illegal session state transition");
+        }
+
+        public void postFrame(Session s, Frame f) throws BEEPException {
+            // If we're in an error state
+            Log.logEntry(Log.SEV_DEBUG,
+                         "Dropping a frame because the Session state is " +
+                         "no longer active.");
         }
     }
 }
