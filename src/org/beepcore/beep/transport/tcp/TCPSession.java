@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.26 $ $Date: 2002/10/05 15:32:45 $
+ * TCPSession.java  $Revision: 1.27 $ $Date: 2003/03/08 16:39:18 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -52,7 +52,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.26 $, $Date: 2002/10/05 15:32:45 $
+ * @version $Revision: 1.27 $, $Date: 2003/03/08 16:39:18 $
  */
 public class TCPSession extends Session {
 
@@ -114,10 +114,10 @@ public class TCPSession extends Session {
      */
     private TCPSession(Socket sock, ProfileRegistry registry, int firstChannel,
                        SessionCredential localCred, SessionCredential peerCred,
-                       SessionTuningProperties tuning)
+                       SessionTuningProperties tuning, String servername)
             throws BEEPException
     {
-        super(registry, firstChannel, localCred, peerCred, tuning);
+	super(registry, firstChannel, localCred, peerCred, tuning, servername);
 
         socket = sock;
         writerLock = new Object();
@@ -142,16 +142,35 @@ public class TCPSession extends Session {
      *
      * @param sock
      * @param registry
+     * @param servername
+     *
+     * @throws BEEPException
+     *
+     */
+    public static TCPSession createInitiator(Socket sock,
+					     ProfileRegistry registry,
+					     String servername)
+            throws BEEPException
+    {
+        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
+			      CHANNEL_START_ODD, null, null, null, servername);
+    }
+    /**
+     * Creates a TCPSession for a Socket that was created by
+     * initiating a connection.
+     *
+     *
+     * @param sock
+     * @param registry
      *
      * @throws BEEPException
      *
      */
     public static TCPSession createInitiator(Socket sock,
                                              ProfileRegistry registry)
-            throws BEEPException
+	throws BEEPException
     {
-        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_ODD, null, null, null);
+        return createInitiator(sock, registry, null);
     }
 
     /**
@@ -170,7 +189,7 @@ public class TCPSession extends Session {
             throws BEEPException
     {
         return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_EVEN, null, null, null);
+                              CHANNEL_START_EVEN, null, null, null, null);
     }
 
     // Overrides method in Session
@@ -332,10 +351,10 @@ public class TCPSession extends Session {
 
         if (isInitiator()) {
             return new TCPSession(s, reg, CHANNEL_START_ODD,
-                                  localCred, peerCred, tuning);
+                                  localCred, peerCred, tuning, null);
         } else {
             return new TCPSession(s, reg, CHANNEL_START_EVEN,
-                                  localCred, peerCred, tuning);
+                                  localCred, peerCred, tuning, null);
         }
     }
 
