@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.11 $ $Date: 2001/11/08 05:51:34 $
+ * Frame.java            $Revision: 1.12 $ $Date: 2001/11/27 02:39:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -37,7 +37,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.12 $, $Date: 2001/11/27 02:39:03 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -66,6 +66,8 @@ public class Frame {
     public static final int MAX_SIZE = Integer.MAX_VALUE;
 
     private static final String CRLF = "\r\n";
+    private static final BufferSegment trailerBufferSegment =
+        new BufferSegment(TRAILER.getBytes());
 
     /** BEEP message type of  <code>Frame</code>. */
     private int messageType;
@@ -102,35 +104,6 @@ public class Frame {
      */
     private LinkedList payload = new LinkedList();
 
-    /**
-     * Initializes a new <code>Frame</code> representing a BEEP ANS frame.
-     *
-     * @param messageType indicates whether a <code>Frame</code> is a MSG,
-     *    RPY, ERR, ANS or NUL.
-     * @param channel <code>Channel</code> on which the <code>Frame</code> was
-     *    sent.
-     * @param msgno Message number of the <code>Frame</code>.
-     * @param seqno Sequence number of the <code>Frame</code>.
-     * @param ansno Answer number of the <code>Frame</code>.
-     * @param payload Payload of the <code>Frame</code>.
-     * @param last  Indicates if this is the last <code>Frame</code> sent in a
-     *    sequence of frames.
-     *
-     * @see BufferSegment
-     */
-//     Frame(int messageType, Channel channel, int msgno, boolean last,
-//           long seqno, int ansno, BufferSegment payload)
-//     {
-//         this.messageType = messageType;
-//         this.channel = channel;
-//         this.msgno = msgno;
-//         this.seqno = seqno;
-//         this.ansno = ansno;
-//         this.payload.add(payload);
-//         this.size = payload.getLength() - payload.getOffset();
-//         this.last = last;
-//     }
-
     Frame(int messageType, Channel channel, int msgno, boolean last,
           long seqno, int size, int ansno)
     {
@@ -141,7 +114,6 @@ public class Frame {
         this.seqno = seqno;
         this.size = size;
         this.ansno = ansno;
-        //        this.payload = null;
     }
 
     /**
@@ -158,18 +130,23 @@ public class Frame {
      * <code>BufferSegment</code> objects.
      *
      */
-    public Iterator getBytes()
+    public BufferSegment[] getBytes()
     {
+        BufferSegment[] b = new BufferSegment[this.payload.size() + 2];
         this.size = 0;
 
+        int j=1;
         Iterator i = this.payload.iterator();
         while (i.hasNext()) {
-            this.size += ((BufferSegment) i.next()).getLength();
+            b[j] = (BufferSegment) i.next();
+            this.size += b[j].getLength();
+            ++j;
         }
 
-        this.payload.addFirst(new BufferSegment(buildHeader()));
-        this.payload.addLast(new BufferSegment(TRAILER.getBytes()));
-        return this.payload.iterator();
+        b[0] = new BufferSegment(buildHeader());
+        b[b.length-1] = trailerBufferSegment;
+
+        return b;
     }
 
     /**

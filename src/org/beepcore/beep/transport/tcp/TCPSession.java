@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.17 $ $Date: 2001/11/23 04:24:04 $
+ * TCPSession.java  $Revision: 1.18 $ $Date: 2001/11/27 02:39:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -48,7 +48,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.17 $, $Date: 2001/11/23 04:24:04 $
+ * @version $Revision: 1.18 $, $Date: 2001/11/27 02:39:03 $
  */
 public class TCPSession extends Session {
 
@@ -76,6 +76,7 @@ public class TCPSession extends Session {
     // for probably a while yet...this'll help on performance.
     // reusing fixed size buffers.
     private byte headerBuffer[] = new byte[Frame.MAX_HEADER_SIZE];
+    private byte[] outputBuf = new byte[0];
     private Object writerLock;
     private Socket socket;
     private boolean running;
@@ -257,33 +258,41 @@ public class TCPSession extends Session {
     {
         try {
 
-            // @todo consider the costs of colliding these into one
-            // buffer and one write..test to see if it's faster
-            // this way or faster copying.
             OutputStream os = socket.getOutputStream();
-            byte[] header = null;
 
             synchronized (writerLock) {
+                /* Inspite of the extra data copy if is faster to have
+                 * a single call to write() (at least with the JVMs we
+                 * have tested with).
+                 */
+                BufferSegment[] bs = f.getBytes();
+
+                int n = 0;
+                for (int i=0; i<bs.length; ++i) {
+                    n += bs[i].getLength();
+                }
+
+                if (n > outputBuf.length) {
+                    outputBuf = new byte[n];
+                }
+
+                int off = 0;
+
+                for (int i=0; i<bs.length; ++i) {
+                    System.arraycopy(bs[i].getData(), bs[i].getOffset(),
+                                     outputBuf, off, bs[i].getLength());
+
+                    off += bs[i].getLength();
+                }
+
+                os.write(outputBuf, 0, n);
+                os.flush();
+
                 if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
                     Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                 "Wrote the following\n");
+                                 "Wrote the following\n" +
+                                 new String(outputBuf));
                 }
-
-                Iterator i = f.getBytes();
-
-                while (i.hasNext()) {
-                    BufferSegment b = (BufferSegment) i.next();
-
-                    os.write(b.getData(), b.getOffset(), b.getLength());
-
-                    if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
-                        Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                     new String(b.getData(), b.getOffset(),
-                                                b.getLength()));
-                    }
-                }
-
-                os.flush();
             }
         } catch (IOException e) {
             throw new BEEPException(e.toString());
