@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.13 $ $Date: 2001/11/27 02:41:25 $
+ * Frame.java            $Revision: 1.14 $ $Date: 2001/11/27 07:31:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -37,12 +37,14 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2001/11/27 02:41:25 $
+ * @version $Revision: 1.14 $, $Date: 2001/11/27 07:31:21 $
  *
  * @see FrameDataStream
  * @see BufferSegment
  */
 public class Frame {
+
+    private static final String CRLF = "\r\n";
 
     public static final String TRAILER = "END\r\n";
     public static final int MAX_HEADER_SIZE = (3        // msg type
@@ -58,14 +60,27 @@ public class Frame {
                                                + 10     // size
                                                + 1      // space
                                                + 10     // ansno
-                                               + 2);    // CRLF
+                                               + CRLF.length());
+    public static final int MIN_HEADER_SIZE = (3        // msg type
+                                               + 1      // space
+                                               + 1      // channel number
+                                               + 1      // space
+                                               + 1      // msgno
+                                               + 1      // space
+                                               + 1      // more
+                                               + 1      // space
+                                               + 1      // seqno
+                                               + 1      // space
+                                               + 1      // size
+                                               + CRLF.length());
+    public static final int MIN_FRAME_SIZE = MIN_HEADER_SIZE +
+        Frame.TRAILER.length();
     public static final int MAX_ANS_NUMBER = Integer.MAX_VALUE; // 2147483647;
     public static final int MAX_CHANNEL_NUMBER = Integer.MAX_VALUE;
     public static final int MAX_MESSAGE_NUMBER = Integer.MAX_VALUE;
     public static final long MAX_SEQUENCE_NUMBER = 4294967295L;
     public static final int MAX_SIZE = Integer.MAX_VALUE;
 
-    private static final String CRLF = "\r\n";
     private static final BufferSegment trailerBufferSegment =
         new BufferSegment(TRAILER.getBytes());
 
