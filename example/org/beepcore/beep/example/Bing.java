@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.10 $ $Date: 2001/11/25 08:00:28 $
+ * Bing.java  $Revision: 1.11 $ $Date: 2002/10/05 15:33:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -32,8 +32,6 @@ import org.beepcore.beep.profile.echo.EchoProfile;
 import org.beepcore.beep.profile.tls.TLSProfile;
 import org.beepcore.beep.transport.tcp.TCPSessionCreator;
 import org.beepcore.beep.transport.tcp.TCPSession;
-import org.beepcore.beep.util.ConsoleLog;
-import org.beepcore.beep.util.Log;
 
 /**
  * Sample client application analogous to ping. The application uses the
@@ -45,7 +43,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2001/11/25 08:00:28 $
+ * @version $Revision: 1.11 $, $Date: 2002/10/05 15:33:22 $
  */
 public class Bing {
 
