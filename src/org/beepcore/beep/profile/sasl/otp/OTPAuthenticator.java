@@ -1,7 +1,8 @@
 /*
- * OTPAuthenticator.java  $Revision: 1.14 $ $Date: 2003/06/10 18:59:22 $
+ * OTPAuthenticator.java  $Revision: 1.15 $ $Date: 2003/09/13 21:17:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -40,7 +41,7 @@ import org.beepcore.beep.profile.sasl.otp.database.UserDatabase;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2003/06/10 18:59:22 $
+ * @version $Revision: 1.15 $, $Date: 2003/09/13 21:17:30 $
  *
  */
 class OTPAuthenticator implements RequestHandler, ReplyListener {
@@ -226,7 +227,9 @@ class OTPAuthenticator implements RequestHandler, ReplyListener {
 
         credential.put(SessionCredential.AUTHENTICATOR, authenticated);
 
-        if (authorized != null) {
+        if (authorized == null || authorized.equals("")) {
+            credential.put(SessionCredential.AUTHORIZED, authenticated);
+        } else {
             credential.put(SessionCredential.AUTHORIZED, authorized);
         }
 
@@ -336,10 +339,10 @@ class OTPAuthenticator implements RequestHandler, ReplyListener {
             log.trace("Control=>"+SASLOTPProfile.convertBytesToHex(nextHash));
         }
         boolean match = true;
-        for(int i = 0; i < 8; i++)
+        for(int i = 0; i < 8; i++) ///@TODO change to use array compare
         {
             if(nextHash[i] != responseHash[i])
-                match = false;
+                match = false; ///@TODO break;
         }
         if(!match)
             throw new SASLException(ERR_OTP_AUTH_FAILURE);
@@ -464,7 +467,9 @@ class OTPAuthenticator implements RequestHandler, ReplyListener {
         credential.put(SessionCredential.ALGORITHM, algorithm.getName());
         credential.put(SessionCredential.AUTHENTICATOR, authenticateId);
 
-        if (authorizedId != null) {
+        if (authorizedId == null || authorizedId.equals("")) {
+            credential.put(SessionCredential.AUTHORIZED, authenticateId);
+        } else {
             credential.put(SessionCredential.AUTHORIZED, authorizedId);
         }
     }
@@ -512,9 +517,9 @@ class OTPAuthenticator implements RequestHandler, ReplyListener {
 
         if (authorizeId != null) {
             temp.append(authorizeId);
-        } else {
-            temp.append((char) 0);
         }
+
+        temp.append((char) 0);
 
         temp.append(authenticateId);
         if (log.isDebugEnabled()) {
