@@ -1,6 +1,6 @@
 
 /*
- * InputStreamDataStream.java            $Revision: 1.3 $ $Date: 2001/04/24 22:52:02 $
+ * InputStreamDataStream.java            $Revision: 1.4 $ $Date: 2001/04/26 18:33:14 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -37,7 +37,7 @@ import java.io.FileNotFoundException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/24 22:52:02 $
+ * @version $Revision, $Date: 2001/04/26 18:33:14 $
  */
 public class InputStreamDataStream extends DataStream {
 
@@ -57,8 +57,6 @@ public class InputStreamDataStream extends DataStream {
      *
      * @param data  the stream to be opened for reading.
      * @param length the length of the stream.
-     *
-     * @see isComplete
      */
     public InputStreamDataStream(InputStream data, long length)
     {
@@ -82,8 +80,6 @@ public class InputStreamDataStream extends DataStream {
      * @param contentType Content type of <code>stream</code>.
      * @param data  the stream to be opened for reading.
      * @param length the length of the stream.
-     *
-     * @see isComplete
      */
     public InputStreamDataStream(String contentType, InputStream data,
                                  long length)
@@ -110,8 +106,6 @@ public class InputStreamDataStream extends DataStream {
      * <code>stream</code>.
      * @param data  the stream to be opened for reading.
      * @param length the length of the stream.
-     *
-     * @see isComplete
      */
     public InputStreamDataStream(String contentType, String transferEncoding,
                                  InputStream data, long length)

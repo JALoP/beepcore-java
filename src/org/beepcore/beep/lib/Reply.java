@@ -1,6 +1,6 @@
 
 /*
- * Reply.java            $Revision: 1.3 $ $Date: 2001/04/16 20:04:34 $
+ * Reply.java            $Revision: 1.4 $ $Date: 2001/04/26 18:33:14 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -40,13 +40,13 @@ import org.beepcore.beep.core.ReplyListener;
  * Please note that the other Channel send operations do NOT
  * return this class as a result.
  *
- * @see Channel#sendMSG
+ * @see org.beepcore.beep.core.Channel#sendMSG
  *
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/16 20:04:34 $
+ * @version $Revision, $Date: 2001/04/26 18:33:14 $
  */
 public class Reply implements ReplyListener {
 
