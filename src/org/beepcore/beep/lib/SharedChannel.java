@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.6 $ $Date: 2002/08/22 05:28:41 $
+ * SharedChannel.java            $Revision: 1.7 $ $Date: 2002/08/29 01:50:42 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2002/08/22 05:28:41 $
+ * @version $Revision: 1.7 $, $Date: 2002/08/29 01:50:42 $
  */
 public class SharedChannel extends Channel {
 
@@ -89,19 +89,16 @@ public class SharedChannel extends Channel {
     /**
      * Send a message of type MSG. Sends <code>stream</code> as message's
      * payload.
-     * Note: If the stream is not complete, then the send will block
-     * until it is finished (a <code>read</code> returns a -1).
      *
      * @param stream <code>DataStream</code> that is read to send data.
      * @param replyListener
-     * @return MessageStutas Can be queried to get status information about the
+     * @return MessageStatus Can be queried to get status information about the
      * message.
      *
      * @see DataStream
      * @see MessageStatus
      *
      * @throws BEEPException
-     * @deprecated
      */
     public MessageStatus sendMSG(OutputDataStream stream,
                                  ReplyListener replyListener)
