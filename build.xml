@@ -52,6 +52,13 @@
 
     <target name="init">
         <mkdir dir="${core.build.dir}" />
+        <condition property="javadoc.param" value="-breakiterator">
+            <or>
+	        <equals arg1="${ant.java.version}" arg2="1.4"/>
+	        <equals arg1="${ant.java.version}" arg2="1.5"/>
+            </or>
+        </condition>
+        <property name="javadoc.param" value="" />
     </target>
 
     <target name="core" depends="init">
@@ -92,6 +99,7 @@
 		 overview="${core.src.dir}/overview.html"
 		 windowtitle="${Name} API"
 		 doctitle="${Name}"
+		 additionalparam="${javadoc.param}"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -212,6 +220,7 @@
 		 version="false"
 		 windowtitle="SASL Profile API"
 		 doctitle="SASL Profile"
+		 additionalparam="${javadoc.param}"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -227,7 +236,7 @@
 	       destdir="${tls-jsse.build.dir}"
                debug="${debug}"
                optimize="${optimize}"
-               deprecation="${deprecation}">
+               deprecation="off">
             <include name="**/jsse/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -253,6 +262,7 @@
 		 version="false"
 		 windowtitle="JSSE TLS Profile API"
 		 doctitle="JSSE TLS Profile"
+		 additionalparam="${javadoc.param}"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
 	    <link offline="${doc-ref-offline}"
 	          href="http://java.sun.com/products/jdk/1.3/docs/api"
@@ -301,6 +311,7 @@
 		 version="false"
 		 windowtitle="PureTLS TLS Profile API"
 		 doctitle="PureTLS TLS Profile"
+		 additionalparam="${javadoc.param}"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
 	    <link offline="${doc-ref-offline}"
 	          href="http://java.sun.com/products/jdk/1.3/docs/api"
