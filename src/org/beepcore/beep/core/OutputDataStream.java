@@ -1,5 +1,5 @@
 /*
- * OutputDataStream.java  $Revision: 1.3 $ $Date: 2002/05/28 02:23:37 $
+ * OutputDataStream.java  $Revision: 1.4 $ $Date: 2002/09/02 13:44:42 $
  *
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
@@ -26,7 +26,7 @@ import org.beepcore.beep.util.BufferSegment;
  * stream.
  *
  * @author Huston Franklin
- * @version $Revision: 1.3 $, $Date: 2002/05/28 02:23:37 $
+ * @version $Revision: 1.4 $, $Date: 2002/09/02 13:44:42 $
  */
 public class OutputDataStream {
 
@@ -68,6 +68,12 @@ public class OutputDataStream {
 
     public void add(BufferSegment segment) {
         this.buffers.addLast(segment);
+        if (channel != null) {
+            try {
+                channel.sendQueuedMessages();
+            } catch (BEEPException e) {
+            }
+        }
     }
 
     /**
@@ -88,6 +94,12 @@ public class OutputDataStream {
 
     public void setComplete() {
         this.complete = true;
+        if (channel != null) {
+            try {
+                channel.sendQueuedMessages();
+            } catch (BEEPException e) {
+            }
+        }
     }
 
     boolean availableSegment() {
@@ -122,6 +134,10 @@ public class OutputDataStream {
 
         return b;
     }
+    
+    void setChannel(Channel channel) {
+        this.channel = channel;
+    }
 
     protected final MimeHeaders mimeHeaders;
 
@@ -129,4 +145,5 @@ public class OutputDataStream {
     private boolean complete = false;
     private boolean headersSent = false;
     private int curOffset = 0;
+    private Channel channel = null;
 }
