@@ -46,13 +46,13 @@ abstract class so you have to get an instance of a transport specific
 session (e.g. TCPSession). From an initiator's role you can start a
 Session using:
 
-  Session session = AutomatedTCPSessionCreator.initiate(host, port,
-                                                        new ProfileRegistry());
+  Session session = TCPSessionCreator.initiate(host, port,
+                                               new ProfileRegistry());
 
 From a listener's role you can listen for new Sessions using:
 
   while (true) {
-      AutomatedTCPSessionCreator.listen(port, profileReg);
+      TCPSessionCreator.listen(port, profileReg);
   }
 
 The ProfileRegistry specified in both of these examples contains the
@@ -89,21 +89,21 @@ request messages.
 Creating a message
 ------------------
 
-The abstraction for the data of a message is a DataStream. Before
-sending a message one of the DataStream types (StringDataStream,
-ByteDataStream, etc.) must be created.
+The abstraction for the data of a message is an
+OutputDataStream. Before sending a message one of the OutputDataStream
+types (StringDataStream, ByteDataStream, etc.) must be created.
 
-  DataStream dataStream =
-      new StringDataStream("<attach endpoint=\"fred@example.com\"/>");
+  OutputDataStream dataStream =
+      new StringOutputDataStream("<attach endpoint=\"fred@example.com\"/>");
 
 NOTE: BEEP has a flow control mechanism for Channels that makes it
 possible to have multiple channels on one connection. The flow control
-is tied into the DataStream so that as an application reads the data
-it notifies Channel that more data may be received. Because of this
-the application MUST either read all of the data in the received
-messages or call close on the DataStreams for the messages to allow
-more data to be sent on the Channel. If this is not done the Channel
-will stall once the window for the Channel is full and no more
+is tied into the InputDataStream so that as an application reads the
+data it notifies Channel that more data may be received. Because of
+this the application MUST either read all of the data in the received
+messages or call close on the InputDataStreams for the messages to
+allow more data to be sent on the Channel. If this is not done the
+Channel will stall once the window for the Channel is full and no more
 messages will be received on that Channel.
 
 Sending a Request
@@ -124,8 +124,8 @@ Sending a Reply
 ---------------
 
 A reply must be sent for each request. This may be a RPY, ERR, or an
-ANS/NUL set. They are sent using the coresponding methods on Channel
-(sendRPY, etc.).
+ANS/NUL set. They are sent using the coresponding methods on
+MessageMSG (sendRPY, etc.).
 
 ANS messages are a mechanism for sending multiple messages as a reply
 to a request. A NUL message is used to mark the end of the set of ANS
@@ -138,7 +138,7 @@ To receive requests an applications implements the MessageListener
 interface and registers the class with the Channel (usually in the
 startChannel callback in StartChannelListener).
 
-  channel.setDataListener(this);
+  channel.setMessageListener(this);
 
 Basic Server
 ------------
@@ -152,7 +152,7 @@ Basic Server
   reg.addStartChannelListener(echo.getURI(),
                               echo.getStartChannelListener());
   while (true) {
-      AutomatedTCPSessionCreator.listen(port, reg);
+      TCPSessionCreator.listen(port, reg);
   }
 
 Basic Profile
@@ -165,7 +165,7 @@ Basic Profile
       Log.logEntry(Log.SEV_DEBUG, "Received MSG Callback [ECHO]");
 
       try {
-          message.getChannel().sendRPY(message.getDataStream());
+          message.sendRPY(message.getDataStream());
       } catch (BEEPException e) {
           throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
                               "Error sending RPY");
@@ -177,18 +177,17 @@ Basic Client
 
 (see example Bing)
 
-  Session session = AutomatedTCPSessionCreator.initiate(host, port,
-                                                        new ProfileRegistry());
+  Session session = TCPSessionCreator.initiate(host, port,
+                                               new ProfileRegistry());
   Channel channel = session.startChannel(EchoProfile.ECHO_URI);
 
   Reply reply = new Reply();
-  channel.sendMSG(new StringDataStream("Hello"), reply);
+  channel.sendMSG(new StringOutputDataStream("Hello"), reply);
 
-  DataStream ds = reply.getNextReply().getDataStream();
-  InputStream is = ds.getInputStream();
+  InputStream is =
+      reply.getNextReply().getDataStream().getInputStream();
 
-  int replyLength = 0;
-  while (ds.isComplete() == false || is.available() > 0) {
-      is.read();
+  // Read the data in the reply
+  while (is.read() != -1) {
       ++replyLength;
   }
