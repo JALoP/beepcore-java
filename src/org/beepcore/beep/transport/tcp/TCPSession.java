@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.15 $ $Date: 2001/11/08 05:26:29 $
+ * TCPSession.java  $Revision: 1.16 $ $Date: 2001/11/09 15:49:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -48,7 +48,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.15 $, $Date: 2001/11/08 05:26:29 $
+ * @version $Revision: 1.16 $, $Date: 2001/11/09 15:49:28 $
  */
 public class TCPSession extends Session {
 
@@ -359,6 +359,9 @@ public class TCPSession extends Session {
                          + bufferSize);
         }
 
+        // If IO is disabled don't send SEQ
+        if (running == false)
+            return false;
         // @todo update the java-doc to correctly identify the params
         /*
         if (currentSeq > 0) {    // don't send it the first time
