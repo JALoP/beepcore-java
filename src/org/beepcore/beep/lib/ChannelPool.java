@@ -1,6 +1,6 @@
 
 /*
- * ChannelPool.java            $Revision: 1.2 $ $Date: 2001/04/19 16:16:31 $
+ * ChannelPool.java            $Revision: 1.3 $ $Date: 2001/07/18 21:03:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -41,7 +41,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/19 16:16:31 $
+ * @version $Revision: 1.3 $, $Date: 2001/07/18 21:03:41 $
  */
 public class ChannelPool {
 
@@ -219,6 +219,22 @@ public class ChannelPool {
     public void setSharedChannelTTL(long ttl)
     {
         this.timeToLive = ttl;
+    }
+
+    /**
+     * Closes down the channel pool, its session and all associated channels.
+     */
+    public void close()
+    {
+      // close all available channels and the session
+      try
+      {
+        this.session.close();
+      }
+      catch( BEEPException e )
+      {
+        e.printStackTrace();
+      }
     }
 
     /**
