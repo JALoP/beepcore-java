@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.11 $ $Date: 2003/11/07 23:01:12 $
+ * SessionImpl.java  $Revision: 1.12 $ $Date: 2003/11/08 20:58:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -65,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2003/11/07 23:01:12 $
+ * @version $Revision: 1.12 $, $Date: 2003/11/08 20:58:02 $
  *
  * @see Channel
  */
@@ -1107,6 +1107,7 @@ public abstract class SessionImpl implements Session {
         // We're past the CCL approval
         channel.setState(ChannelImpl.STATE_CLOSED);
         channels.remove(channel.getNumberAsString());
+        fireChannelClosed(channel);
     }
 
     private void receiveCloseChannelZero() throws BEEPError
@@ -1158,6 +1159,7 @@ public abstract class SessionImpl implements Session {
                     return;
                 }
             }
+            fireChannelClosed(ch);
         }
 
         OutputDataStream sds =
