@@ -1,5 +1,5 @@
 /*
- * TLSProfile.java  $Revision: 1.16 $ $Date: 2003/11/07 23:01:11 $
+ * TLSProfile.java  $Revision: 1.17 $ $Date: 2003/11/17 15:17:01 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -112,7 +112,7 @@ public abstract class TLSProfile extends TuningProfile implements Profile {
     public static TLSProfile getInstance(String provider) throws BEEPException
     {
         try {
-            ClassLoader cl = ClassLoader.getSystemClassLoader();
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
             Class whatever = cl.loadClass(provider);
 
             return (TLSProfile) whatever.newInstance();
