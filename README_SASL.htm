@@ -1,0 +1,300 @@
+<html>
+<head>
+<title>Untitled Document</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#ffffff" text="#000000">
+<p align="center"><b><font face="Georgia, Times New Roman, Times, serif" size="5">README 
+  for the BEEPLib SASL Profiles</font></b></p>
+<p><i>WARNING: The JVM we're currently testing with (JDK1.2.2) has an issue in 
+  its implementation of the MessageDigest classes, that can result in the generation 
+  of incorrect hashes from strings. This may be related to the platform (win32) 
+  rather than the VM design itself - we'll have to check it out. The fact is that 
+  while the initial hash of the SEED+PASSPHRASE information can fail, subsequent 
+  hashes of other hashes all work just fine. Again, it's just the initial hash 
+  that can be incorrect, I suspect the issue, just given what I've observed (that 
+  the failure is limited for hashes which, if turned to hex and then represented 
+  mathematically, exceed the Long.MAX_VALUE), is related to the signed limits 
+  of the 64-bit Long in the JVM. Once this is investigated further, we will update 
+  the library appropriately. It will still work in the majority of cases, but 
+  this is a limitation at present. We may provide non-JVM code as a workaround, 
+  but would prefer to avoid that if newer versions of the JVM fix this. This is 
+  a top issue right now, but it didn't get fully investigated prior to the first 
+  beta release.</i></p>
+<p><font face="Georgia, Times New Roman, Times, serif">This BEEP library comes 
+  equipped with two SASL profiles, corresponding to the Anonymous and OTP SASL 
+  mechanisms. Example code for the use of both mechanisms has been included in 
+  the distribution in org.beepcore.beep.example.SASLExample. This document will 
+  describe this example and extrapolate from it to assist in the development and 
+  deployment of other BEEP-based applications that wish to take advanatage of 
+  the SASL mechanisms provided.</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif"><b><i>An explicit explanation 
+  of the SASLExample:</i></b></font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">The code that follows has 
+  been edited slightly to focus on the important points. Commentary can be found 
+  in <b>bold</b> and preceeds the logic it's describing.</font></p>
+<p><font face="Courier New, Courier, mono">public class SASLExample</font></p>
+<p><font face="Courier New, Courier, mono">{<br>
+  </font></p>
+<p><font face="Courier New, Courier, mono"><b>/* Package and import directives 
+  omitted for brevity</b></font><b><font face="Courier New, Courier, mono">. Local 
+  constants denoted in UPPER_CASE</font></b><b><font face="Courier New, Courier, mono">*/</font></b></p>
+<blockquote> 
+  <p><font face="Courier New, Courier, mono">public static void main(String argv[])<br>
+    {</font></p>
+  <blockquote> 
+    <p><b><font face="Courier New, Courier, mono">/* BEEPLib's Logging facility 
+      is initialized here, </font></b><b><font face="Courier New, Courier, mono">we 
+      use the default console log (maps to System.out)</font></b><b><font face="Courier New, Courier, mono">. 
+      */</font></b> <font face="Courier New, Courier, mono"><br>
+      ConsoleLog log = new ConsoleLog();<br>
+      log.setSeverity(Log.SEV_DEBUG_VERBOSE);<br>
+      Log.setLogService(log);</font></p>
+    <p><font face="Courier New, Courier, mono">try <br>
+      {</font></p>
+    <p><font face="Courier New, Courier, mono"><b>/* ProfileRegistry is a helpful 
+      class. It allows a BEEP Peer </b></font><b><font face="Courier New, Courier, mono">to 
+      register various classes (implementations of the class <i>ChannelControlListener</i>) 
+      to process StartChannel requests for a given profile. In this case, we're 
+      creating and initializing instances of our two SASL profiles, Anonymous 
+      and OTP. We then register these profiles (which are their own <i>Channel 
+      Control Listeners</i>) as the class to be called if a start channel request is 
+    received. We also register the EchoProfile (for reasons we'll show later). 
+    We register CCLs for each profile with the 
+    <EM>addChannelControlListener</EM>            
+                 call 
+      </font></b><font face="Courier New, Courier, mono"><b>*/</b><br>
+      // Set up our profile registry<br>
+      ProfileRegistry reg = new ProfileRegistry();<br>
+      SASLAnonymousProfile anon = new SASLAnonymousProfile();<br>
+      SASLOTPProfile otp = new SASLOTPProfile();<br>
+      anon.init(new ProfileConfiguration());<br>
+      otp.init(new ProfileConfiguration());<br>
+      <br>
+      reg.addChannelControlListener(SASLOTPProfile.uri, otp);<br>
+      reg.addChannelControlListener(SASLAnonymousProfile.uri, anon);<br>
+      reg.addChannelControlListener(EchoProfile.uri,<br>
+      new SASLExample().getCCL());</font></p>
+    <p><b><font face="Courier New, Courier, mono">/* If the command line arguments 
+      specify to make this a 'listener' then we proceed to set ourselves up appropriately. 
+      We have provided a simple stub routine to generate OTP databases for some 
+      sample users (which are IW_User and IW_User2) to allow the example to function 
+      correctly.*/</font></b></p>
+    <P><font face="Courier New, Courier, mono">// If we're a listener, then create 
+      sessions by 'listening' on the<br>
+      // static AutomatedTCPSessionCreator methods<br>
+      if (argv[2].charAt(0) == 'l') {<br>
+      InetAddress addr = null;</font></P>
+    <P><FONT face="Courier New"><STRONG>/* This bit is a little inane, it simple 
+    creates a couple of OTP database files for IW_User and IW_User2.&nbsp; After 
+    running this in listening mode, you can see this files locally.&nbsp; I 
+    suggest you take a look at them.&nbsp; It is our intention to write an 
+    interface through which other storage mechanisms can hook in to store these 
+    things - so that the profile can be used without being extended.&nbsp; 
+    That's rife with security issues however, so this is what is available for 
+    now.*/</STRONG></FONT></P>
+    <P><font face="Courier New, Courier, mono"> // Creates stub accts for the 
+      users in this example<br>
+      try<br>
+      {<br>
+      UserDatabasePool.populateUserDatabases();<br>
+      }<br>
+      catch(BEEPException ex)<br>
+      {<br>
+      ex.printStackTrace();<br>
+      }</font></P>
+    <P><FONT face="Courier New"></FONT>&nbsp;</P>
+    <P><FONT face="Courier New"><STRONG>/* This is where we bind to an 
+    address/port combination and begin to listen for connections.&nbsp; If 
+    another peer connects to our port and sends us a greeting, a new session is 
+    created.*/</STRONG></FONT></P>
+    <p><font face="Courier New, Courier, mono"> try {<br>
+      addr =
+        InetAddress.getByName(argv[1]);<br>
+      } catch (Exception x) {<br>
+      addr = InetAddress.getLocalHost();<br>
+      }</font></p>
+    <p><font face="Courier New, Courier, mono"> System.out.println("Listening 
+      on " + addr.toString() + ":"<br>
+      + argv[1]);</font></p>
+    <P><font face="Courier New, Courier, mono"> while (true) 
+      {</font><FONT face="Courier New, Courier, mono">   <br>
+      Session newSession = 
+      AutomatedTCPSessionCreator.listen(addr, <br>
+      Integer.parseInt(argv[1]), <br>
+      reg);</FONT></P>
+    <P><FONT face="Courier New, Courier, mono">}</FONT><FONT 
+    face="Courier New, Courier, mono">
+      <br>
+      }</FONT></P>
+    <P><FONT face="Courier New"><STRONG>/* This is the initiator path 
+    */</STRONG></FONT></P>
+    <P><font face="Courier New, Courier, mono"> // Otherwise we're initiating.<br>
+      else if (argv[2].charAt(0) == 'i') <br>
+      {<br>
+      Channel echoChannel = null; <br>
+      Log.logEntry(Log.SEV_DEBUG,"Initiating..."<br>
+      + InetAddress.getByName(argv[0]).toString()<br>
+      + ":" + argv[1]);<br>
+      </font></P>
+    <P><FONT face="Courier New, Courier, mono"><STRONG>/* We create a Session by 
+    connecting to the host/port where we know another BEEP peer is 
+    listening.&nbsp; The peers exchange greetings, and a reference to the 
+    Session is returned to us */</STRONG></FONT></P>
+    <P><FONT face="Courier New, Courier, mono">Session session =
+         AutomatedTCPSessionCreator.initiate(InetAddress.getByName(argv[0]), 
+      <br>
+      Integer.parseInt(argv[1]), <br>
+      reg);</FONT></P><FONT 
+    face="Courier New, Courier, mono"></FONT>
+  </blockquote>
+  <BLOCKQUOTE><FONT face="Courier New, Courier, mono">
+    <P><STRONG>/* The routine used below, <EM>AuthenticateSASLAnonymous </EM>is 
+    provided as a convenience routine.&nbsp; All you have to do is provide it 
+    with your session (the first argument) and some sort of identifier for 
+    yourself (the second argument, in this case, the 'anonymous' string 
+    constant) and go.&nbsp; The return value is another Session reference.&nbsp; 
+    In this case, this will be the same session - although this isn't always the 
+    case.*/</STRONG>
+      <br>
+      if(argv[3].charAt(0) == 'a')<br>
+      {<br>
+      session =
+        SASLAnonymousProfile.AuthenticateSASLAnonymous(session,<br>
+      SASLAnonymousProfile.ANONYMOUS);<br>
+      }</P>
+    <P><STRONG>/* This is the OTP convenience routine.&nbsp; The arguments are, 
+      first, the session you wish to Authenticate on, second the Authorization 
+      ID you wish to use (this is who you are authorized to act as, which is different 
+      than who you authenticate as - see the OTP spec for a more extensive explanation), 
+      third, the identity you're authenticating as, fourth, the passphrase you 
+      use to secure yourself.*/</STRONG> <br>
+      else if(argv[3].charAt(0) == 'o')<br>
+      {<br>
+      session =
+        (TCPSession)SASLOTPProfile.AuthenticateSASLOTP(session,<br>
+      null, // No Authorization ID<br>
+      SAMPLE_OTP_USER,<br>
+      SAMPLE_OTP_PASSPHRASE );<br>
+      }</P>
+    <P><STRONG>/* When either SASL authentication routine succeeds without throwing 
+      a SASLException, you're homefree!&nbsp; We can examine the new credentials 
+      we have by calling <EM>session</EM>-&gt;<EM>getMyCredentials</EM>() which 
+      returns a <EM>SessionCredential</EM> object, whose <EM>toString</EM>() method 
+      prettyily prints all its attributes.*/</STRONG></P>
+    <P><STRONG>/* What we're going to do now shows us who we are as far as our 
+    peer is concerned.&nbsp; We're going to start up an ECHO profile on BEEP (a 
+    profile that simply echos back what we type) only it has a twist.&nbsp; The 
+    ECHO profile this time (since we're running our example) echoes back what we 
+    sent them AND includes credential information indicating who we have 
+    authenticated as - from their point of view.&nbsp; This shows how the 
+    credential exists on both sides.*/</STRONG>
+      <br>
+      echoChannel = session.startChannel(EchoProfile.uri);<br>
+      String temp = "Hi There!";<br>
+      ReplyListener idiot = null;<br>
+      echoChannel.sendMSG(new StringDataStream(temp),idiot);<br>
+      Utility.delay(500); <br>
+      }<br>
+      else <br>
+      {<br>
+      System.out.println(USAGE);<br>
+      return;<br>
+      }<br>
+      } catch (Exception x) {<br>
+      x.printStackTrace();<br>
+      Log.logEntry(Log.SEV_ERROR,"SASL Example Failed. Exiting.");<br>
+      return;<br>
+      }<br>
+      Log.logEntry(Log.SEV_DEBUG,"SASL Example Succeeded. Exiting");</P>
+    </FONT></BLOCKQUOTE>
+  <p><font face="Courier New, Courier, mono">}<br>
+    <b> /* The funky echo described above is implemented in the SASLExample source 
+    code. You can examine it there if you like, but it is merely a distraction 
+    here. */</b></font><font face="Courier New, Courier, mono"><br>
+    </font> </p>
+  </blockquote>
+<p><font face="Georgia, Times New Roman, Times, serif"><b><i>To use the existing 
+  SASLAnonymous and SASLOTP Profiles:</i></b></font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">Simply <i>initiate</i> 
+  using the various <i>Authenticate </i>routines in the profiles, or <i> listen 
+  </i>using an <i>org.beepcore.beep.core.ProfileRegistry</i> which registers the 
+  included implmentations of SASLOTP and SASLAnonymous as the CCLs (<i>ChannelControlListener</i>s) 
+  for the uri's corresponding to the two SASL Profiles. The specific classes are 
+  o<i>rg.beepcore.profile.sasl.anonymous.SASLAnonymousProfile </i>and <i>org.beepcore.profile.sasl.otp.SASLOTPProfile 
+  </i>of course.</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">Example:</font></p>
+<p></p>
+<p><font face="Georgia, Times New Roman, Times, serif"><i><b>To Authenticate to 
+  another BEEP peer using Anonymous SASL:</b></i></font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">simply call <i>AuthenticateSASLAnonymous 
+  </i>in<i> or</i></font><i><font face="Georgia, Times New Roman, Times, serif">g.beepcore.profile.sasl.anonymous.SASLAnonymousProfile 
+  </font></i><font face="Georgia, Times New Roman, Times, serif">with an existing 
+  session, such as is done below.</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">// We have a valid Session 
+  'mySession'</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">mySession = SASLAnonymousProfile.AuthenticateSASLAnonymous( 
+  mySession, null, &quot;Bob&quot;, &quot;Bob's_password&quot;);</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif"><b><i>To Authenticate to 
+  another BEEP peer using OTP SASL:</i></b></font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">The OTP case is very similar 
+  to the Anonymous one</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">// We have a valid Session 
+  'mySession'</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">mySession = SASLAnonymousProfile.AuthenticateSASLOTP( 
+  mySession, null, &quot;Bob&quot;, &quot;Bob's_password&quot;);</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif"><b><i>To access the Credentials 
+  associated ith a given Session:</i></b></font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">SessionCredential myCredentials 
+  = mySession.getLocalCredential();</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">SessionCredential myPeersCredentials 
+  = mySession.getPeerCredential();</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">System.out.println(&quot;My 
+  credentials are &quot;+myCredentials.toString());</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">System.out.println(&quot;My 
+  peer's credentials are &quot;+myPeersCredentials.toString());</font></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+<p>Note: The <i>SessionCredential</i> class has several data members, each of 
+  which can be accessed as outlined in the documentation for <i>org.beepcore.beep.core.SessionCredential.</i></p>
+<p><font face="Georgia, Times New Roman, Times, serif"><i><b>To generate a sequence 
+  of One-Time Passwords</b></i></font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">A utility class <i>org.beepcore.beep.profile.sasl.otp.Generator 
+  </i>has been provided for the</font><font face="Georgia, Times New Roman, Times, serif">purpose 
+  of generating OTP databases for individual users. These databases take the form 
+  of flat files that are the serialized output of the java.util.Properties class. 
+  The library does not make an effort to modify or maintain any sort of access 
+  control for the generated files. It is up to the application or the individual 
+  user to protect access to the generated file. It will disallow the generation 
+  of a user otp database file on top of a previously generated one.</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">To use: simply run java 
+  org.beepcore.beep.profile.sasl.otp.Generator. This will bring up a series of 
+  questions and prompts that will allow the user to enter enough information to 
+  create an OTP database. The generated file will then be produced in the local 
+  directory. It is the responsiblity of the user to ensure that the generated 
+  file is accessible by listening BEEP peers in order to facilitate OTP authentication.</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">The 'clean' way to renew 
+  or alter them is to use the <i>AuthenticateSASLOTPWithInit </i>call in <i>org.beepcore.beep.profile.sasl.otp.SASLOTPProfile 
+  </i>which is identical to the other OTP authentication calls, except that it 
+  tells the server to create a record for this user. If you have access to the 
+  test directory, OTPTest shows how to do this too.</font></p>
+<p><font face="Georgia, Times New Roman, Times, serif">Note however that the whole 
+  issue of how the user information for OTP is stored and propagated is all very 
+  murky. The <i>org.beepcore.beep.profile.sasl.otp.UserDatabase </i>interface 
+  is designed to kind of provide room for expansion in this area, considering 
+  the ability to create or delete user OTP databases, and the like. We will eventually 
+  have to provide some sort of facility for this in the BEEP libraries, not in 
+  core, but in lib perhaps. Until then, look to <i>UserDatabaseManager</i> and 
+  its implementation in <i>UserDatabasePool </i>as the prototype. </font></p>
+</body>
+</html>
