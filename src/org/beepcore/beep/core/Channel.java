@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.20 $ $Date: 2001/12/15 00:07:19 $
+ * Channel.java  $Revision: 1.21 $ $Date: 2002/03/30 16:19:42 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) Huston Franklin.  All rights reserved.
@@ -22,6 +22,8 @@ import java.io.*;
 
 import java.util.*;
 
+import edu.oswego.cs.dl.util.concurrent.PooledExecutor;
+
 import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.Log;
 
@@ -34,7 +36,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.20 $, $Date: 2001/12/15 00:07:19 $
+ * @version $Revision: 1.21 $, $Date: 2002/03/30 16:19:42 $
  *
  */
 public class Channel {
@@ -116,6 +118,8 @@ public class Channel {
     private boolean notifyOnFirstFrame = true;
 
     private Object applicationData = null;
+
+    private static final PooledExecutor callbackQueue = new PooledExecutor();
 
     // in shutting down the session
     // something for waiting synchronous messages (semaphores or something)
@@ -411,6 +415,7 @@ public class Channel {
         // previously sent message
         if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
             MessageMSG m = null;
+            boolean notify = false;
 
             synchronized (recvMSGQueue) {
                 if (recvMSGQueue.size() != 0) {
@@ -426,49 +431,72 @@ public class Channel {
                                        new InputDataStream(this));
 
                     recvMSGQueue.addLast(m);
+                    notify = true;
                 }
-            }
 
-            Iterator i = frame.getPayload();
-            while (i.hasNext()) {
-                m.getDataStream().add((BufferSegment)i.next());
-            }
+                Iterator i = frame.getPayload();
+                synchronized (m) {
+                    while (i.hasNext()) {
+                        m.getDataStream().add((BufferSegment)i.next());
+                    }
 
-            if (frame.isLast()) {
-                m.getDataStream().setComplete();
-            }
+                    if (frame.isLast()) {
+                        m.getDataStream().setComplete();
+                    }
+                }
 
-            // The MessageListener interface only allows one message
-            // up to be processed at a time so if this is not the
-            // first message on the queue just return.
-            // Question, so how do we EVER catch up?  If something
-            // gets stuck here.  I suspect it isn't getting taken off.
-            synchronized (recvMSGQueue) {
+                // The MessageListener interface only allows one message
+                // up to be processed at a time so if this is not the
+                // first message on the queue just return.
                 if (m != recvMSGQueue.getFirst()) {
                     return;
                 }
 
                 if (frame.isLast()) {
-                    recvMSGQueue.remove(m);
+                    synchronized (m) {
+                        if (m.isNotified()) {
+                            recvMSGQueue.remove(m);
+                        }
+                    }
                 }
             }
 
-            // notify message listener if this message has not been
-            // notified before and notifyOnFirstFrame is set, the
-            // window is full, this is the last frame.
-            synchronized (m) {
-                if (m.isNotified()
-                        || ((this.notifyOnFirstFrame == false)
-                            && (recvSequence - prevAckno) !=
-                            (recvWindowSize - prevWindowUsed)
-                            && (frame.isLast() == false))) {
-                    return;
+            if (notify) {
+                try {
+                    callbackQueue.execute(new Runnable() {
+                            public void run() {
+                                MessageMSG m;
+                                synchronized (recvMSGQueue) {
+                                    m = (MessageMSG)recvMSGQueue.getFirst();
+                                    synchronized (m) {
+                                        if (m.getDataStream().isComplete()) {
+                                            recvMSGQueue.remove(m);
+                                        }
+                                        m.setNotified();
+                                    }
+                                }
+
+                                try {
+                                    listener.receiveMSG(m);
+                                } catch (BEEPError e) {
+                                    try {
+                                        m.sendERR(e);
+                                    } catch (BEEPException e2) {
+                                        Log.logEntry(Log.SEV_ERROR, e2);
+                                    }
+                                } catch (AbortChannelException e) {
+                                    try {
+                                        Channel.this.close();
+                                    } catch (BEEPException e2) {
+                                        Log.logEntry(Log.SEV_ERROR, e2);
+                                    }
+                                }
+                            }
+                        });
+                } catch (InterruptedException e) {
+                    throw new BEEPException(e);
                 }
-
-                m.setNotified();
             }
-
-            ((MessageListener) this.listener).receiveMSG(m);
 
             return;
         }
