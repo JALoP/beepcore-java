@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.33 $ $Date: 2003/09/15 15:23:31 $
+ * TCPSession.java  $Revision: 1.34 $ $Date: 2003/11/07 17:39:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -47,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.33 $, $Date: 2003/09/15 15:23:31 $
+ * @version $Revision: 1.34 $, $Date: 2003/11/07 17:39:21 $
  */
 public class TCPSession extends SessionImpl {
 
@@ -221,6 +221,15 @@ public class TCPSession extends SessionImpl {
             socket = null;
             running = false;
         }
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return super.toString() + " (" +
+            socket.getLocalAddress() + ":" + socket.getLocalPort() + "-" +
+            socket.getInetAddress() + ":" + socket.getPort() + ")";
     }
 
     // Implementation of method declared in Session

@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.9 $ $Date: 2003/09/15 15:23:30 $
+ * ChannelImpl.java  $Revision: 1.10 $ $Date: 2003/11/07 17:39:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -36,22 +36,12 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/09/15 15:23:30 $
+ * @version $Revision: 1.10 $, $Date: 2003/11/07 17:39:21 $
  *
  */
 class ChannelImpl implements Channel, Runnable {
 
     // class variables
-    public static final int STATE_INITIALIZED = 0;
-    public static final int STATE_STARTING = 1;
-    public static final int STATE_ACTIVE = 2;
-    public static final int STATE_TUNING_PENDING = 3;
-    public static final int STATE_TUNING = 4;
-    public static final int STATE_CLOSE_PENDING = 5;
-    public static final int STATE_CLOSING = 6;
-    public static final int STATE_CLOSED = 7;
-    public static final int STATE_ABORTED = 8;
-
     private static final BufferSegment zeroLengthSegment =
         new BufferSegment(new byte[0]);
 
@@ -129,6 +119,14 @@ class ChannelImpl implements Channel, Runnable {
     // request a tuning reset
     private boolean tuningProfile = false;
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return super.toString() + " (#" + getNumberAsString() + " "
+            + getStateString() + " on " + session.toString() + ")";
+    }
+    
     ChannelImpl(String profile, String number,
                 RequestHandler handler, boolean tuningReset, SessionImpl session)
     {
@@ -443,13 +441,34 @@ class ChannelImpl implements Channel, Runnable {
         return number;
     }
 
-    /**
-     * returns the state of the <code>Channel</code>
-     * The possible states are (all defined as Channel.STATE_*):
-     */
-    int getState()
+    public int getState()
     {
         return state;
+    }
+
+    private String getStateString() {
+        switch (state) {
+            case STATE_INITIALIZED:
+                return "initialized";
+            case STATE_STARTING:
+                return "starting";
+            case STATE_ACTIVE:
+                return "active";
+            case STATE_TUNING_PENDING:
+                return "tuning pending";
+            case STATE_TUNING:
+                return "tuning";
+            case STATE_CLOSE_PENDING:
+                return "close pending";
+            case STATE_CLOSING:
+                return "closing";
+            case STATE_CLOSED:
+                return "closed";
+            case STATE_ABORTED:
+                return "aborted";
+            default:
+                return "unknown";
+        }
     }
 
     private void receiveFrame(Frame frame) throws BEEPException
