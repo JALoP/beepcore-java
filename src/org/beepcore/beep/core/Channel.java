@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.13 $ $Date: 2001/07/09 17:17:27 $
+ * Channel.java            $Revision: 1.14 $ $Date: 2001/07/10 01:17:52 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2001/07/09 17:17:27 $
+ * @version $Revision: 1.14 $, $Date: 2001/07/10 01:17:52 $
  *
  */
 public class Channel {
@@ -84,12 +84,6 @@ public class Channel {
 
     /** number of last message sent */
     private int lastMessageSent;
-
-    /** number of last reply received */
-    private int lastReplyRecv;
-
-    /** number of last message received */
-    private int lastMessageRecv;
 
     /** sequence number for messages sent */
     private long sentSequence;
@@ -168,13 +162,6 @@ public class Channel {
         sentSequence = 0;
         recvSequence = 0;
         lastMessageSent = 1;
-        lastMessageRecv = 1;
-
-        if (Integer.parseInt(number) == 0) {
-            lastReplyRecv = 0;
-        } else {
-            lastReplyRecv = 1;
-        }
 
         sentMSGQueue = Collections.synchronizedList(new LinkedList());
         recvMSGQueue = new LinkedList();
@@ -882,7 +869,6 @@ public class Channel {
         boolean createAndPostMessage = false;
         Message currentMessage = null;
         int msgno = frame.getMsgno();
-        int lastnumber;
         ReplyListener replyListener = null;
         FrameListener frameListener = null;
 
@@ -892,29 +878,55 @@ public class Channel {
 
         // Validate Frame
         synchronized (this) {
-            lastnumber = lastReplyRecv;
 
             // assume the frame has already been parsed by the session and
             // that the flags indicated are part of the frame object
-            if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
-                lastnumber = lastMessageRecv;
-            } else {
-                lastnumber = lastReplyRecv;
-            }
 
             // is the message number correct?
-            if (frame.getMsgno() != lastnumber) {
-                if ((frame.getMessageType() != Message.MESSAGE_TYPE_ANS)
-                        && (frame.getMessageType()
-                            != Message.MESSAGE_TYPE_NUL)) {
-                    throw new BEEPException(ERR_CHANNEL_MESSAGE_NUMBER_PREFIX
-                                                 + frame.getMsgno()
-                                                 + ERR_CHANNEL_MIDDLE
-                                                 + lastnumber);
+            if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
+                if (previousFrame != null) {
+                    if (frame.getMsgno() != previousFrame.getMsgno()) {
+                        throw new BEEPException(ERR_CHANNEL_MESSAGE_NUMBER_PREFIX
+                                                + frame.getMsgno()
+                                                + ERR_CHANNEL_MIDDLE
+                                                + previousFrame.getMsgno());
+                    }
+                } else {
+                    synchronized (recvMSGQueue) {
+                        ListIterator i =
+                            recvMSGQueue.listIterator(recvMSGQueue.size());
+                        while (i.hasPrevious()) {
+                            if (((Message) i.previous()).getMsgno()
+                                == frame.getMsgno())
+                            {
+                                throw new BEEPException("Received a frame " +
+                                                        "with a duplicate " +
+                                                        "msgno (" +
+                                                        frame.getMsgno() +
+                                                        ")");
+                            }
+                        }
+                    }
+                }
+            } else {
+                int expectedMsgno;
+
+                synchronized (sentMSGQueue) {
+                    if (sentMSGQueue.size() == 0) {
+                        throw new BEEPException("Received unsolicited reply");
+                    }
+
+                    MessageStatus mstatus =
+                        (MessageStatus) sentMSGQueue.get(0);
+                    expectedMsgno = mstatus.getMessage().getMsgno();
                 }
 
-                Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                             "Accepting an ANS or NUL for a previous request");
+                if (frame.getMsgno() != expectedMsgno) {
+                    throw new BEEPException(ERR_CHANNEL_MESSAGE_NUMBER_PREFIX
+                                            + frame.getMsgno()
+                                            + ERR_CHANNEL_MIDDLE
+                                            + expectedMsgno);
+                }
             }
 
             // is the sequence number correct?
@@ -1012,13 +1024,6 @@ public class Channel {
         // is this the last frame in the message?
         if (frame.isLast() == true) {
             Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Got the last frame");
-
-            // increment the appropriate message number
-            if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
-                lastMessageRecv++;
-            } else if (frame.getMessageType() != Message.MESSAGE_TYPE_ANS) {
-                lastReplyRecv++;
-            }
         }
 
         // save the previous frame to compare message types
