@@ -12,19 +12,28 @@
     <property name="core.doc.dir" value="${release.dir}/doc/core" />
     <property name="core.jar.name" value="beepcore.jar" />
     <property name="core.src.dir" value="src" />
-    <property name="core.packages" value="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile,org.beepcore.beep.profile.echo"/>
+    <property name="core.packages" value="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile,org.beepcore.beep.profile.echo,org.beepcore.beep.profile.tls"/>
 
     <property name="example.build.dir" value="${build.dir}/example" />
+    <property name="example.jar.name" value="example.jar" />
     <property name="example.src.dir" value="example" />
 
-    <property name="test.build.dir"  value="${build.dir}/test" />
-    <property name="test.src.dir"  value="test" />
+    <property name="jdk.doc.dir" value="doc/jdk" />
+
+    <property name="jsse.doc.dir" value="doc/jsse" />
+
+    <property name="puretls.doc.dir" value="doc/puretls" />
 
     <property name="sasl.build.dir" value="${build.dir}/sasl"/>
     <property name="sasl.doc.dir" value="${release.dir}/doc/sasl"/>
     <property name="sasl.jar.name" value="beepsasl.jar"/>
     <property name="sasl.packages" value="org.beepcore.beep.profile.sasl.*"/>
     <property name="sasl.src.dir" value="src"/>
+
+    <property name="source.jar.name" value="beepsource.jar"/>
+
+    <property name="test.build.dir"  value="${build.dir}/test" />
+    <property name="test.src.dir"  value="test" />
 
     <property name="tls-jsse.build.dir" value="${build.dir}/tls-jsse" />
     <property name="tls-jsse.doc.dir" value="${release.dir}/doc/tls-jsse" />
@@ -35,6 +44,8 @@
     <property name="tls-ptls.jar.name" value="beeptls-ptls.jar" />
 
     <property name="tls.src.dir" value="tls" />
+
+    <property name="doc-ref-offline" value="false" />
 
     <target name="init">
         <mkdir dir="${core.build.dir}" />
@@ -80,19 +91,36 @@
     </target>
 
     <target name="core-dist" depends="core-doc">
-        <mkdir dir="${release.dir}/src"/>
+        <mkdir dir="${build.dir}/src/${release.name}/src"/>
 
-        <copy todir="${release.dir}/src">
+        <copy todir="${build.dir}/src/${release.name}/src">
             <fileset dir="${core.src.dir}"/>
         </copy>
+        <copy todir="${build.dir}/src/${release.name}/tls">
+            <fileset dir="${tls.src.dir}"/>
+        </copy>
+	<copy file="build.xml"
+              tofile="${build.dir}/src/${release.name}/build.xml"/>
+
+	<fixcrlf srcdir="${build.dir}/src/${release.name}"
+                 cr="remove" eof="remove"/>
+
+        <jar jarfile="${release.dir}/${source.jar.name}"
+	     basedir="${build.dir}/src"/>
+
 	<copy file="LICENSE.txt" tofile="${release.dir}/LICENSE.txt"/>
 	<copy file="README.txt" tofile="${release.dir}/README.txt"/>
 	<copy file="README_SASL.htm" tofile="${release.dir}/README_SASL.htm"/>
 	<copy file="GettingStarted.txt"
 	      tofile="${release.dir}/GettingStarted.txt"/>
+
+	<fixcrlf srcdir="${release.dir}"
+                 cr="remove" eof="remove" includes="*.txt"/>
+	<fixcrlf srcdir="${release.dir}"
+                 cr="remove" eof="remove" includes="*.htm"/>
     </target>
 
-    <target name="example" depends="core-jar,sasl-jar">
+    <target name="example-compile" depends="core-jar,sasl-jar">
         <mkdir dir="${example.build.dir}"/>
         <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
             <include name="**/*.java"/>
@@ -104,12 +132,22 @@
         </javac>
     </target>
 
-    <target name="example-dist" depends="core-dist">
+    <target name="example" depends="example-compile">
+        <mkdir dir="${release.dir}/lib"/>
+        <jar jarfile="${release.dir}/lib/${example.jar.name}"
+	     basedir="${example.build.dir}">
+	    <include name="**/*.class"/>
+	</jar>
+    </target>
+
+    <target name="example-dist" depends="example">
         <mkdir dir="${release.dir}/example"/>
 
         <copy todir="${release.dir}/example">
             <fileset dir="${example.src.dir}"/>
         </copy>
+
+	<fixcrlf srcdir="${release.dir}/example" cr="remove" eof="remove"/>
     </target>
 
     <target name="test" depends="example">
@@ -181,18 +219,25 @@
 	</jar>
     </target>
 
-    <target name="tls-jsse-doc" depends="tls-jsse">
+    <target name="tls-jsse-doc" depends="tls-jsse,core-doc">
         <mkdir dir="${tls-jsse.doc.dir}"/>
-	<javadoc packagenames="org.beepcore.beep.profile.tls"
+	<javadoc packagenames="org.beepcore.beep.profile.tls.jsse"
                  sourcepath="${tls.src.dir}/"
 	         destdir="${tls-jsse.doc.dir}"
 		 author="false"
 		 version="false"
-		 windowtitle="TLS Profile API"
-		 doctitle="TLS Profile"
+		 windowtitle="JSSE TLS Profile API"
+		 doctitle="JSSE TLS Profile"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
-	    <link offline="true" href="http://java.sun.com/products/jdk/1.3/docs/api" packagelistLoc="doc/jdk" />
-	    <link offline="true" href="http://java.sun.com/products/jsse/doc/apidoc" packagelistLoc="doc/jsse" />
+	    <link offline="${doc-ref-offline}"
+	          href="http://java.sun.com/products/jdk/1.3/docs/api"
+		  packagelistLoc="${jdk.doc.dir}" />
+	    <link offline="${doc-ref-offline}"
+	          href="http://java.sun.com/products/jsse/doc/apidoc"
+		  packagelistLoc="${jsse.doc.dir}" />
+	    <link offline="true"
+	          href="file://../core"
+		  packagelistLoc="${core.doc.dir}" />
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
@@ -220,18 +265,22 @@
 	</jar>
     </target>
 
-    <target name="tls-ptls-doc" depends="tls-ptls">
+    <target name="tls-ptls-doc" depends="tls-ptls,core-doc">
         <mkdir dir="${tls-ptls.doc.dir}"/>
-	<javadoc packagenames="org.beepcore.beep.profile.tls"
+	<javadoc packagenames="org.beepcore.beep.profile.tls.ptls"
                  sourcepath="${tls.src.dir}/"
 	         destdir="${tls-ptls.doc.dir}"
 		 author="false"
 		 version="false"
-		 windowtitle="TLS Profile API"
-		 doctitle="TLS Profile"
+		 windowtitle="PureTLS TLS Profile API"
+		 doctitle="PureTLS TLS Profile"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
-	    <link offline="true" href="http://java.sun.com/products/jdk/1.3/docs/api" packagelistLoc="doc/jdk" />
-	    <link offline="true" href="http://java.sun.com/products/jsse/doc/apidoc" packagelistLoc="doc/jsse" />
+	    <link offline="${doc-ref-offline}"
+	          href="http://java.sun.com/products/jdk/1.3/docs/api"
+		  packagelistLoc="${jdk.doc.dir}" />
+	    <link offline="true"
+	          href="file://../core"
+		  packagelistLoc="${core.doc.dir}" />
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
