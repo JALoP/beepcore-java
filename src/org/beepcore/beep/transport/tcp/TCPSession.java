@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.35 $ $Date: 2003/11/07 23:01:11 $
+ * TCPSession.java  $Revision: 1.36 $ $Date: 2003/11/18 14:03:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -47,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.35 $, $Date: 2003/11/07 23:01:11 $
+ * @version $Revision: 1.36 $, $Date: 2003/11/18 14:03:10 $
  */
 public class TCPSession extends SessionImpl {
 
@@ -368,13 +368,6 @@ public class TCPSession extends SessionImpl {
      * Update the channel window size with the remote peer by sending
      * SEQ frames as per RFC 3081.
      *
-     *
-     * @param channel
-     * @param previouslySeq
-     * @param currentSeq
-     * @param previouslyUsed
-     * @param currentlyUsed
-     * @param bufferSize
      *
      * @return true if the Receive Buffer Size was updated
      *

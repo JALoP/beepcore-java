@@ -1,5 +1,5 @@
 /*
- * StartChannelListener.java  $Revision: 1.3 $ $Date: 2001/11/08 05:51:34 $
+ * StartChannelListener.java  $Revision: 1.4 $ $Date: 2003/11/18 14:03:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -25,7 +25,7 @@ package org.beepcore.beep.core;
  * close events on a channel, as well as any other events that may eventually
  * be associated with profiles.
  *
- * @version $Revision: 1.3 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.4 $, $Date: 2003/11/18 14:03:08 $
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
@@ -40,7 +40,6 @@ public interface StartChannelListener {
      * such as encryption or authentication.
      * @param session to check other properties such as the credentials of
      * of the session
-     * @param tuning properties in effect on the session
      * @see SessionTuningProperties for standard properties and their values
      */
     public boolean advertiseProfile(Session session) throws BEEPException;

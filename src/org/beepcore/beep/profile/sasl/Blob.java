@@ -1,5 +1,5 @@
 /*
- * Blob.java            $Revision: 1.9 $ $Date: 2003/10/30 14:29:55 $
+ * Blob.java            $Revision: 1.10 $ $Date: 2003/11/18 14:03:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/10/30 14:29:55 $
+ * @version $Revision: 1.10 $, $Date: 2003/11/18 14:03:08 $
  *
  */
 public class Blob
@@ -90,7 +90,6 @@ public class Blob
      * 
      * @param status the status to construct the blob with (see the constants
      * in this class).
-     * @param data the data to be embedded in the blob element
      *
      * @throws SASLException
      */
@@ -267,7 +266,7 @@ public class Blob
     /**
      * Constructor for those that want to 'receive' or 'digest' a blob.
      * 
-     * @param Blob blob is the data to digest.
+     * @param blob The data to digest.
      * 
      * @throws SASLException in the event that errors occur during the
      * parsing of the blob passed in.

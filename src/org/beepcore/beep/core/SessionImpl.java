@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.12 $ $Date: 2003/11/08 20:58:02 $
+ * SessionImpl.java  $Revision: 1.13 $ $Date: 2003/11/18 14:03:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -65,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2003/11/08 20:58:02 $
+ * @version $Revision: 1.13 $, $Date: 2003/11/18 14:03:08 $
  *
  * @see Channel
  */
@@ -130,13 +130,14 @@ public abstract class SessionImpl implements Session {
      * consists of a set of profiles they share in common, and an ordinality
      * (to prevent new channel collision) so that the initiator starts odd
      * channels and the listener starts channels with even numbers.
-     * @param The Profile Registry summarizing the profiles this Session will
-     *        support
-     * @param cred
-     *
-     * @param registry
+     * @param registry The Profile Registry summarizing the profiles this
+     *                 Session will support
      * @param firstChannel used internally in the API, an indication of the
      *        ordinality of the channels this peer can start, odd, or even.
+     * @param localCred
+     * @param peerCred
+     * @param tuning
+     * @param serverName
      */
     protected SessionImpl(ProfileRegistry registry, int firstChannel,
                       SessionCredential localCred, SessionCredential peerCred,
@@ -650,17 +651,7 @@ public abstract class SessionImpl implements Session {
      * a new <code>Frame</code> object representing a BEEP MSG, RPY, ERR,
      * or NUL frames.
      *
-     * @param messageType indicates whether a <code>Frame</code> is a MSG,
-     *    RPY, ERR, ANS or NUL.
-     * @param channelNum Channel on which the <code>Frame</code> was sent.
-     * @param msgno Message number of the <code>Frame</code>.
-     * @param seqno Sequence number of the <code>Frame</code>.
-     * @param payload Payload of the <code>Frame</code>.
-     * @param last  Indicates if this is the last <code>Frame</code> sent in a
-     *    sequence of frames.
-     *
      * @return a <code>Frame</code> for the specified values
-     *
      *
      * @throws BEEPException
      */
@@ -731,9 +722,7 @@ public abstract class SessionImpl implements Session {
     /**
      * Method postFrame
      *
-     *
      * @param f
-     * @param number
      *
      * @throws BEEPException
      *
@@ -771,7 +760,7 @@ public abstract class SessionImpl implements Session {
      * Implement this method to send frames and on the sub-classed transport.
      *
      *
-     * @param BEEP frame to send.
+     * @param f BEEP frame to send.
      *
      *
      * @throws BEEPException
@@ -833,11 +822,8 @@ public abstract class SessionImpl implements Session {
      *
      *
      * @param channel
-     * @param previouslySeq
      * @param currentSeq
-     * @param previouslyUsed
-     * @param currentlyUsed
-     * @param bufferSize
+     * @param currentAvail
      *
      * @return true if the Receive Buffer Size was updated
      *

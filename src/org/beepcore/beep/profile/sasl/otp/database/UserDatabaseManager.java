@@ -1,5 +1,5 @@
 /*
- * UserDatabasePool.java            $Revision: 1.4 $ $Date: 2003/04/23 15:23:05 $
+ * UserDatabasePool.java            $Revision: 1.5 $ $Date: 2003/11/18 14:03:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -54,7 +54,7 @@ public interface UserDatabaseManager
      * evolving the way init-hex/word are processed, as well...which
      * is slightly trickier than doing a dual parameter lookup.
      * 
-     * @param String username indicates which OTP database should 
+     * @param username Indicates which OTP database should 
      * be retrieved, based on who wishes to authenticate using it.
      *
      * @return UserDatabase the OTP database for the user specified.
@@ -70,8 +70,8 @@ public interface UserDatabaseManager
     /**
      * Method addUser
      *
-     * @param String username is the identity of the user for
-     * whom this OTP database is used.
+     * @param username The identity of the user for whom this OTP
+     *                 database is used.
      *
      */
     public void addUser(String username, String algorithm,
@@ -86,7 +86,7 @@ public interface UserDatabaseManager
      * 'last hash' value.
      *
      *
-     * @param UserDatabase ud is the updated form of the OTP database.
+     * @param ud The updated form of the OTP database.
      *
      * @throws SASLException if any issues are encountered during the
      * storage of the user's OTP DB.
@@ -99,7 +99,7 @@ public interface UserDatabaseManager
      * Method purgeUserDatabase is a routine designed to allow
      * for the removal of a user db.
      * 
-     * @param String username the username associated with a given db.
+     * @param username The username associated with a given db.
      * 
      * @throws SASLException if any errors are encountered in the
      * removal of the data (such as it not being there in the first place

@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java  $Revision: 1.8 $ $Date: 2003/11/07 23:01:12 $
+ * TCPSessionCreator.java  $Revision: 1.9 $ $Date: 2003/11/18 14:03:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -39,7 +39,7 @@ import org.beepcore.beep.core.ProfileRegistry;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2003/11/07 23:01:12 $
+ * @version $Revision: 1.9 $, $Date: 2003/11/18 14:03:10 $
  */
 public class TCPSessionCreator {
 
@@ -61,7 +61,6 @@ public class TCPSessionCreator {
      *
      * @param host
      * @param port
-     * @param registry
      *
      * @throws BEEPException
      *
@@ -126,8 +125,6 @@ public class TCPSessionCreator {
      *
      * @param host
      * @param port
-     * @param profiles
-     * @param ccls
      *
      * @throws BEEPException
      *
@@ -148,8 +145,7 @@ public class TCPSessionCreator {
      *
      * @param host
      * @param port
-     * @param profiles
-     * @param ccls
+     * @param registry
      *
      * @throws BEEPException
      *

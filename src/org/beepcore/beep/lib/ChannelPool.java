@@ -1,5 +1,5 @@
 /*
- * ChannelPool.java  $Revision: 1.9 $ $Date: 2003/06/10 18:59:22 $
+ * ChannelPool.java  $Revision: 1.10 $ $Date: 2003/11/18 14:03:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002,2003 Huston Franklin.  All rights reserved.
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/06/10 18:59:22 $
+ * @version $Revision: 1.10 $, $Date: 2003/11/18 14:03:08 $
  */
 public class ChannelPool {
 
@@ -207,7 +207,7 @@ public class ChannelPool {
      *
      * @param profile Name of profile for the requested
      * <code>SharedChannel</code>.
-     * @param listener <code>DataListener</code> for the requested
+     * @param handler <code>RequestHandler</code> for the requested
      * <code>SharedChannel</code>.
      *
      * @return A <code>SharedChannel</code>.

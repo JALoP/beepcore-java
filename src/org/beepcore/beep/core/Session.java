@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.36 $ $Date: 2003/06/10 18:59:18 $
+ * Session.java  $Revision: 1.37 $ $Date: 2003/11/18 14:03:07 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -29,7 +29,7 @@ import org.beepcore.beep.core.event.SessionListener;
  * A BEEP Session encapsulates a connection for a given transport.
  *
  * @author Huston Franklin
- * @version $Revision: 1.36 $, $Date: 2003/06/10 18:59:18 $
+ * @version $Revision: 1.37 $, $Date: 2003/11/18 14:03:07 $
  *
  * @see Channel
  */
@@ -201,8 +201,6 @@ public interface Session {
      * @param data An initial request to be sent piggyback'd along with the
      *              request to start the Channel. This request can be at most
      *              4K in size.
-     * @param listener A <code>MessageListener</code> to receive MSG messages
-     *                  sent by the remote peer of this Session.
      *
      * @throws BEEPError Thrown if the remote peer is unable or refuses to
      *                    start a new Channel for the requested profile.
