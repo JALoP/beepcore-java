@@ -1,6 +1,5 @@
-
 /*
- * SASLAnonymousProfile.java            $Revision: 1.1 $ $Date: 2001/04/02 21:38:14 $
+ * SASLAnonymousProfile.java  $Revision: 1.2 $ $Date: 2001/04/30 14:08:20 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -45,7 +44,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 21:38:14 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/30 14:08:20 $
  *
  */
 public class SASLAnonymousProfile extends SASLProfile {
@@ -74,7 +73,7 @@ public class SASLAnonymousProfile extends SASLProfile {
      */
     static synchronized SASLAnonymousProfile getInstance()
     {
-        if(instance != null)  
+        if(instance == null)  
         {
             instance = new SASLAnonymousProfile();
         }
@@ -170,7 +169,6 @@ public class SASLAnonymousProfile extends SASLProfile {
             try
             {
                 auth.wait();
-                System.out.println("Back from long wait=>"+ch.getSession().getLocalCredential());
                 return ch.getSession();
             }
             catch(InterruptedException x)
@@ -180,10 +178,10 @@ public class SASLAnonymousProfile extends SASLProfile {
     }
 
     /**
-     * Method authencitateSASLAnonymousPiggyback is an Initiator routine designed
-     * to allow a peer to authenticate to another one.  It is distinct in that
-     * it piggybacks the data for the authentication request on the startChannel
-     * request.
+     * Method authencitateSASLAnonymousPiggyback is an Initiator
+     * routine designed to allow a peer to authenticate to another
+     * one.  It is distinct in that it piggybacks the data for the
+     * authentication request on the startChannel request.
      *
      * @param Session session the current session
      * @param String id the identity of the peer withing to authenticate
