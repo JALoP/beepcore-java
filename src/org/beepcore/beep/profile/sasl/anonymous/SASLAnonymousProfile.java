@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.6 $ $Date: 2001/11/29 04:00:00 $
+ * SASLAnonymousProfile.java  $Revision: 1.7 $ $Date: 2002/08/22 18:11:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +44,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/11/29 04:00:00 $
+ * @version $Revision: 1.7 $, $Date: 2002/08/22 18:11:22 $
  *
  */
 public class SASLAnonymousProfile
@@ -160,7 +160,7 @@ public class SASLAnonymousProfile
      * @throws SASLException if any failure occurs.
      */
     public static Session AuthenticateSASLAnonymous(Session session, String id)
-            throws BEEPException
+            throws BEEPException, AuthenticationFailureException
     {
         if (id == null) {
             id = ANONYMOUS;
@@ -177,6 +177,15 @@ public class SASLAnonymousProfile
             try
             {
                 auth.wait();
+
+                //FIX for bug 469725, if authentication fails no local Cred is
+                //set and a AuthenticationFailureException is thrown
+                if (ch.getSession().getLocalCredential() == null)
+                {
+                    throw new AuthenticationFailureException( 
+                        "Could not authenticate with SASL/ANON");
+                }
+
                 return ch.getSession();
             }
             catch(InterruptedException x)
