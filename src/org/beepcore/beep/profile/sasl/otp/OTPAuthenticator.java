@@ -1,5 +1,5 @@
 /*
- * OTPAuthenticator.java  $Revision: 1.11 $ $Date: 2001/11/10 21:33:29 $
+ * OTPAuthenticator.java  $Revision: 1.12 $ $Date: 2002/10/05 15:32:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,8 +24,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.*;
-import org.beepcore.beep.util.*;
 import org.beepcore.beep.profile.sasl.*;
 import org.beepcore.beep.profile.sasl.otp.algorithm.*;
 import org.beepcore.beep.profile.sasl.otp.algorithm.md5.*;
@@ -42,7 +44,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2001/11/10 21:33:29 $
+ * @version $Revision: 1.12 $, $Date: 2002/10/05 15:32:06 $
  *
  */
 class OTPAuthenticator implements MessageListener, ReplyListener {
@@ -96,6 +98,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     static final char SPACE_CHAR = ' ';
 
     // Data
+    private Log log = LogFactory.getLog(this.getClass());
+
     private int state;
     private Algorithm algorithm;
     private Channel channel;
@@ -112,8 +116,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
      */
     OTPAuthenticator(SASLOTPProfile otpProfile)
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "Creating Listener OTP Authenticator");
+        log.debug("Creating Listener OTP Authenticator");
 
         authenticated = null;
         authorized = null;
@@ -133,8 +136,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     void started(Channel ch) 
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                     "Starting OTP Authenticator");
+        log.debug("Starting OTP Authenticator");
 
         if (state != STATE_UNKNOWN) {
             throw new SASLException(ERR_OTP_STATE);
@@ -152,8 +154,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     synchronized Blob receiveIDs(String data)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "OTP Authenticator Receiving IDs");
+        log.debug("OTP Authenticator Receiving IDs");
 
         // If we're listening, the last state we should
         // have gotten to was STATE_STARTED (after the channel start)
@@ -161,7 +162,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             abort(ERR_OTP_STATE);
         }
 
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, "Data is" + data);
+        if (log.isDebugEnabled()) {
+            log.debug("Data is" + data);
+        }
 
         int i = data.charAt(0);    // data.indexOf(SPACE_CHAR);
 
@@ -193,8 +196,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             abort(ERR_NULL_ID);
         }
 
-        Log.logEntry(Log.SEV_DEBUG, 
-                     "Fetching DB for " + authenticated);
+        if (log.isDebugEnabled()) {
+            log.debug("Fetching DB for " + authenticated);
+        }
 
         try
         {
@@ -242,8 +246,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         challenge.append(database.getSeed().toLowerCase());
         challenge.append(SPACE);
         challenge.append(EXT);
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "Generated Challenge=>" + challenge.toString());
+        if (log.isDebugEnabled()) {
+            log.debug("Generated Challenge=>" + challenge.toString());
+        }
 
         try
         {
@@ -270,9 +275,8 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     {
         boolean doInit = false;
         byte responseHash[] = null;
-        
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "OTP Authenticator validating response");
+
+        log.debug("OTP Authenticator validating response");
 
         // If we're listening, the last state we should
         // have gotten to was STATE_ID (receiving the IDs)
@@ -297,14 +301,16 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         if (response.indexOf(WORD) != -1) {
             response = response.substring(WORD.length());
             long l = OTPDictionary.convertWordsToHash(response);
-            responseHash = profile.convertLongToBytes(l);            
-            Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                         "Hacked response=>" + response);
+            responseHash = profile.convertLongToBytes(l);
+            if (log.isDebugEnabled()) {
+                log.debug("Hacked response=>" + response);
+            }
         } else if (response.indexOf(HEX) != -1) {
             response = response.substring(HEX.length());
             responseHash = profile.convertHexToBytes(response);
-            Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                         "Hacked response=>" + response);
+            if (log.isDebugEnabled()) {
+                log.debug("Hacked response=>" + response);
+            }
         } else {
             abort(ERR_UNEXPECTED_MESSAGE);
         }
@@ -329,8 +335,10 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         // Get the two hashes
         byte nextHash[] = database.getLastHash();
         byte responseHash[] = algorithm.generateHash(hash);
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,"Test====>"+profile.convertBytesToHex(responseHash));
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE,"Control=>"+profile.convertBytesToHex(nextHash));
+        if (log.isTraceEnabled()) {
+            log.trace("Test====>"+profile.convertBytesToHex(responseHash));
+            log.trace("Control=>"+profile.convertBytesToHex(nextHash));
+        }
         boolean match = true;
         for(int i = 0; i < 8; i++)
         {
@@ -350,7 +358,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     synchronized SessionCredential validateInitResponse(String response) 
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Validating init-* response");
+        log.debug("Validating init-* response");
         // Extract the various elements of the request
         String oldHashData;
         byte oldHash[]=null;
@@ -367,30 +375,31 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             oldHashData = st.nextToken();
             newParms = st.nextToken();
             newHashData = st.nextToken();
-            Log.logEntry(Log.SEV_DEBUG,"Command=>"+command);
-            Log.logEntry(Log.SEV_DEBUG,"OldHashData=>"+oldHashData);
-            Log.logEntry(Log.SEV_DEBUG,"newParms=>"+newParms);
-            Log.logEntry(Log.SEV_DEBUG,"newHashData=>"+newHashData);
+            if (log.isDebugEnabled()) {
+                log.debug("Command=>"+command);
+                log.debug("OldHashData=>"+oldHashData);
+                log.debug("newParms=>"+newParms);
+                log.debug("newHashData=>"+newHashData);
+            }
                         
             // Validate login
             Algorithm a = profile.getAlgorithm(database.getAlgorithmName());
-            if(profile.HEX_INIT.startsWith(command))//command.indexOf(profile.HEX_INIT) != -1)
-            {
-                Log.logEntry(Log.SEV_DEBUG,"CMD is "+profile.HEX_INIT);
+            if(profile.HEX_INIT.startsWith(command)) {
+                log.debug("CMD is "+profile.HEX_INIT);
                 oldHash = profile.convertHexToBytes(oldHashData);
-            }
-            else if(profile.WORD_INIT.startsWith(command))//command.indexOf(profile.WORD_INIT) != -1)
-            {
-                Log.logEntry(Log.SEV_DEBUG,"CMD is "+profile.WORD_INIT);
+            } else if(profile.WORD_INIT.startsWith(command)) {
+                log.debug("CMD is "+profile.WORD_INIT);
                 // @todo obviate the 2nd step when you get a chance
                 long l = OTPDictionary.convertWordsToHash(oldHashData);
                 oldHash = profile.convertLongToBytes(l);
-            }
-            else
-            {
+            } else {
                 abort(ERR_UNKNOWN_COMMAND+command);
             }
-            Log.logEntry(Log.SEV_DEBUG,"Retrieved from init-* oldHash=>"+profile.convertBytesToHex(oldHash));
+
+            if (log.isDebugEnabled()) {
+                log.debug("Retrieved from init-* oldHash=>" +
+                          profile.convertBytesToHex(oldHash));
+            }
             
             // Compare the hash and fail if it doesn't match
             SessionCredential cred = validateHash(oldHash);
@@ -404,11 +413,13 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                 abort("Invalid Seed");
             st = new StringTokenizer(newParms);
             // Now do even weirder update of the db.
-            Log.logEntry(Log.SEV_DEBUG,"Auth=>"+authenticated);
-            Log.logEntry(Log.SEV_DEBUG,"Hash=>"+newHashData);
+            if (log.isDebugEnabled()) {
+                log.debug("Auth=>"+authenticated);
+                log.debug("Hash=>"+newHashData);
+            }
             profile.getUserDatabase().addUser(authenticated, algorithm,
                                               newHashData, seed, sequence);
-            Log.logEntry(Log.SEV_DEBUG, "Successful Authentication!");
+            log.debug("Successful Authentication!");
             return cred;            
         }
         catch(Throwable t)
@@ -433,19 +444,18 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                       UserDatabase db, String pwd,
                       String authorizedId, String authenticateId)
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "OTP Authenticator Initiator Construtor");
+        log.debug("OTP Authenticator Initiator Construtor");
 
         authenticated = authenticateId;
         authorized = authorizedId;
         credential = new Hashtable();
         database = db;
 
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "Dict.getA()" + database.getAlgorithmName());
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "Dict.getA()"
-                     + profile.getAlgorithm(database.getAlgorithmName()));
+        if (log.isDebugEnabled()) {
+            log.debug("Dict.getA()" + database.getAlgorithmName());
+            log.debug("Dict.getA()"
+                      + profile.getAlgorithm(database.getAlgorithmName()));
+        }
 
         algorithm = profile.getAlgorithm(database.getAlgorithmName());
         profile = otpProfile;
@@ -492,8 +502,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     void sendIdentity(String authorizeId, String authenticateId)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "OTP Authenticator sending Identities");
+        log.debug("OTP Authenticator sending Identities");
 
         // Grok and validate the parameters
         int limit = authenticateId.length();
@@ -511,11 +520,13 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         }
 
         temp.append(authenticateId);
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                     "AuthOTP Using=>" + temp.toString() + "<=");
+        if (log.isDebugEnabled()) {
+            log.debug("AuthOTP Using=>" + temp.toString() + "<=");
+        }
         Blob blob = new Blob(Blob.STATUS_NONE, temp.toString());
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                     "AuthOTP Using=>" + blob.toString() + "<=");
+        if (log.isDebugEnabled()) {
+            log.debug("AuthOTP Using=>" + blob.toString() + "<=");
+        }
         try {
             channel.sendMSG(new StringOutputDataStream(blob.toString()),
                             (ReplyListener) this);
@@ -531,8 +542,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     synchronized void receiveChallenge(Blob blob)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "OTP Authenticator received Challenge");
+        log.debug("OTP Authenticator received Challenge");
 
         // If we're initiating, the last state we should
         // have gotten to was STATE_STARTED
@@ -552,8 +562,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         int sequence = 0;
         String seed = null, algo = null;
 
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                     "Tokenizing=>" + challenge);
+        if (log.isDebugEnabled()) {
+            log.debug("Tokenizing=>" + challenge);
+        }
 
         StringTokenizer st = new StringTokenizer(challenge);
 
@@ -574,9 +585,10 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         if(!OTPGenerator.validateSeed(seed))
             abort("Invalid Seed");
 
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "Algo is=>" + algo + " seed is=>" + seed + " seq=>"
-                     + sequence);
+        if (log.isDebugEnabled()) {
+            log.debug("Algo is=>" + algo + " seed is=>" + seed + " seq=>"
+                      + sequence);
+        }
 
         String phrase = new String(seed + password);
         password = null;
@@ -589,12 +601,15 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             temp = response;
         }
 
-        profile.printHex(temp);
+        if (log.isDebugEnabled()) {
+            log.debug(SASLOTPProfile.convertBytesToHex(temp));
+        }
         long l = profile.convertBytesToLong(temp);
         phrase = new String(WORD + OTPDictionary.convertHashToWords(l));
-        
-        Log.logEntry(Log.SEV_DEBUG, 
-                     "Prelim response is =>" + phrase + "<=");
+
+        if (log.isDebugEnabled()) {
+            log.debug("Prelim response is =>" + phrase + "<=");
+        }
 
         // IF this is an init request   
         if(initData != null)
@@ -604,7 +619,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             sb.append(profile.convertBytesToHex(temp));
             sb.append(initData);
             phrase = sb.toString();
-            Log.logEntry(Log.SEV_DEBUG,"Produced INIT response of "+phrase);
+            if (log.isDebugEnabled()) {
+                log.debug("Produced INIT response of "+phrase);
+            }
         }
         try
         {
@@ -625,8 +642,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     synchronized SessionCredential receiveCompletion(String response)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                     "OTP Authenticator Completing!");
+        log.debug("OTP Authenticator Completing!");
 
         // If we're initiating, the last state we should
         // have gotten to was STATE_CHALLENGE
@@ -642,8 +658,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     void abort(String message)
         throws SASLException
     {
-        Log.logEntry(Log.SEV_ERROR, OTP_AUTH, 
-                     "Aborting OTP Authenticator because " + message);
+        log.error("Aborting OTP Authenticator because " + message);
         state = STATE_ABORT;
         throw new SASLException(message);
     }
@@ -656,8 +671,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
      */
     void abortNoThrow(String message)
     {
-        Log.logEntry(Log.SEV_ERROR, OTP_AUTH, 
-                     "Aborting OTP Authenticator because " + message);
+        log.error("Aborting OTP Authenticator because " + message);
         state = STATE_ABORT;
     }
 
@@ -679,8 +693,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
     {
         try
         {
-            Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                         "OTP Authenticator.receiveMSG");
+            log.debug("OTP Authenticator.receiveMSG");
 
             String data = null;
             Blob blob = null;
@@ -704,8 +717,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                 abort(x.getMessage());
             }
 
-            Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                         "MSG DATA=>" + data);
+            if (log.isDebugEnabled()) {
+                log.debug("MSG DATA=>" + data);
+            }
             String status = blob.getStatus();
 
             if ((status != null)
@@ -732,9 +746,10 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
 
                 state = STATE_COMPLETE;
 
-                Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                             "Wow, cool!!! " + channel.getSession()
-                             + " is valid for\n" + cred.toString());
+                if (log.isDebugEnabled()) {
+                    log.debug("" + channel.getSession()
+                              + " is valid for\n" + cred.toString());
+                }
                 try
                 {
                     message.sendRPY(new StringOutputDataStream(new Blob(Blob.STATUS_COMPLETE).toString()));
@@ -783,8 +798,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
      */
     public void receiveRPY(Message message)
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                     "OTP Authenticator.receiveRPY");
+        log.debug("OTP Authenticator.receiveRPY");
 
         Blob blob = null;
         // Don't send an abort if we got one.
@@ -813,10 +827,10 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
             String status = blob.getStatus();
 
             if ((status != null)
-                && status.equals(SASLProfile.SASL_STATUS_ABORT)) {
-                Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                             "OTPAuthenticator receiveRPY got an RPY=>"
-                             + blob.getData());
+                && status.equals(SASLProfile.SASL_STATUS_ABORT))
+            {
+                log.debug("OTPAuthenticator receiveRPY got an RPY=>"
+                          + blob.getData());
                 sendAbort = false;
                 abort(ERR_PEER_ABORTED + blob.getData());
             }
@@ -849,7 +863,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         }
         catch(Exception x)
         {
-            Log.logEntry(Log.SEV_ERROR, x);
+            log.error(x);
             synchronized (this) {
                 this.notify();
             }
@@ -887,8 +901,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
      */
     public void receiveERR(Message message)
     {
-        Log.logEntry(Log.SEV_DEBUG, OTP_AUTH, 
-                     "OTP Authenticator.receiveERR");
+        log.debug("OTP Authenticator.receiveERR");
 
         try {
             InputStream is = message.getDataStream().getInputStream();
@@ -897,8 +910,9 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
 
             is.read(buff);
             Blob b = new Blob(new String(buff));
-            Log.logEntry(Log.SEV_DEBUG, OTP_AUTH,
-                         "ERR received=>\n" + b.getData());
+            if (log.isDebugEnabled()) {
+                log.debug("ERR received=>\n" + b.getData());
+            }
             abort(new String(buff));
             
             synchronized (this) {

@@ -1,5 +1,5 @@
 /*
- * ProfileRegistry.java  $Revision: 1.12 $ $Date: 2002/09/07 14:59:03 $
+ * ProfileRegistry.java  $Revision: 1.13 $ $Date: 2002/10/05 15:29:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -18,10 +18,12 @@
 package org.beepcore.beep.core;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.beepcore.beep.util.Log;
 import org.beepcore.beep.util.StringUtil;
 
 
@@ -34,11 +36,13 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2002/09/07 14:59:03 $
+ * @version $Revision: 1.13 $, $Date: 2002/10/05 15:29:10 $
  */
 public class ProfileRegistry implements Cloneable {
 
     // Instance Data
+    private Log log = LogFactory.getLog(this.getClass());
+
     private class InternalProfile {
         StartChannelListener listener;
         SessionTuningProperties tuning;
@@ -106,8 +110,7 @@ public class ProfileRegistry implements Cloneable {
         // so the profile requires something, but if the session doesn't
         // have anything, then return null
         if (tuning == null) {
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Session does not have any tuning properties");
+            log.debug("Session does not have any tuning properties");
             return null;
         }
 
@@ -122,9 +125,10 @@ public class ProfileRegistry implements Cloneable {
                     && (tuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i])
                         == null))
             {
-                Log.logEntry(Log.SEV_DEBUG,
-                             "Session does not have tuning property " +
-                             SessionTuningProperties.STANDARD_PROPERTIES[i]);
+                if (log.isDebugEnabled()) {
+                    log.debug("Session does not have tuning property " +
+                              SessionTuningProperties.STANDARD_PROPERTIES[i]);
+                }
                 return null;
             }
         }

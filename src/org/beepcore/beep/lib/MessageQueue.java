@@ -1,7 +1,8 @@
 /*
- * MessageQueue.java            $Revision: 1.4 $ $Date: 2001/11/08 05:51:34 $
+ * MessageQueue.java            $Revision: 1.5 $ $Date: 2002/10/05 15:31:19 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -19,9 +20,11 @@ package org.beepcore.beep.lib;
 
 import java.util.LinkedList;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.MessageListener;
-import org.beepcore.beep.util.Log;
 
 
 /**
@@ -36,9 +39,11 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.5 $, $Date: 2002/10/05 15:31:19 $
  */
 public class MessageQueue implements MessageListener {
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     private LinkedList queue = new LinkedList();
 
@@ -47,7 +52,7 @@ public class MessageQueue implements MessageListener {
      */
     public Message getNextMessage() throws InterruptedException
     {
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Entry");
+        log.trace("getNextMessage: entry");
         synchronized (this) {
             if (queue.size() == 0) {
                 this.wait();
@@ -58,7 +63,7 @@ public class MessageQueue implements MessageListener {
 
     public void receiveMSG(Message message)
     {
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Entry");
+        log.trace("receiveMSG: entry");
         synchronized (this) {
             queue.addLast(message);
             this.notify();

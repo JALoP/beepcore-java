@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.25 $ $Date: 2002/09/07 15:11:22 $
+ * TCPSession.java  $Revision: 1.26 $ $Date: 2002/10/05 15:32:45 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -29,6 +29,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
 import org.beepcore.beep.core.Frame;
@@ -39,7 +42,6 @@ import org.beepcore.beep.core.SessionCredential;
 import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.HeaderParser;
-import org.beepcore.beep.util.Log;
 import org.beepcore.beep.util.StringUtil;
 
 
@@ -50,7 +52,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.25 $, $Date: 2002/09/07 15:11:22 $
+ * @version $Revision: 1.26 $, $Date: 2002/10/05 15:32:45 $
  */
 public class TCPSession extends Session {
 
@@ -73,6 +75,8 @@ public class TCPSession extends Session {
 
 
     // Instance Data
+    private Log log = LogFactory.getLog(this.getClass());
+
     private byte headerBuffer[] = new byte[Frame.MAX_HEADER_SIZE];
     private byte[] outputBuf = new byte[0];
     private Object writerLock;
@@ -127,8 +131,7 @@ public class TCPSession extends Session {
         try {
             socket.setReceiveBufferSize(MAX_RECEIVE_BUFFER_SIZE);
         } catch (Exception x) {
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Socket doesn't support setting receive buffer size");
+            log.debug("Socket doesn't support setting receive buffer size");
         }
     }
 
@@ -291,10 +294,9 @@ public class TCPSession extends Session {
                 os.write(outputBuf, 0, n);
                 os.flush();
 
-                if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                 "Wrote the following\n" +
-                                 new String(outputBuf, 0, n));
+                if (log.isTraceEnabled()) {
+                    log.trace("Wrote the following\n" +
+                              new String(outputBuf, 0, n));
                 }
             }
         } catch (IOException e) {
@@ -311,9 +313,10 @@ public class TCPSession extends Session {
                             ProfileRegistry reg, Object argument)
             throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                     "Reset as "
-                     + (isInitiator() ? "INITIATOR" : "LISTENER"));
+        if (log.isTraceEnabled()) {
+            log.trace("Reset as "
+                      + (isInitiator() ? "INITIATOR" : "LISTENER"));
+        }
 
         Socket s = null;
 
@@ -362,13 +365,12 @@ public class TCPSession extends Session {
                                                 int bufferSize)
             throws BEEPException
     {
-        if (Log.isLogged(Log.SEV_DEBUG)) {
-            Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                         "update SEQ channel=" + channel.getNumber()
-                         + " prevSeq=" + previouslySeq + " curSeq="
-                         + currentSeq + " prevUsed=" + previouslyUsed
-                         + " curUsed=" + currentlyUsed + " bufSize="
-                         + bufferSize);
+        if (log.isDebugEnabled()) {
+            log.debug("update SEQ channel=" + channel.getNumber()
+                      + " prevSeq=" + previouslySeq + " curSeq="
+                      + currentSeq + " prevUsed=" + previouslyUsed
+                      + " curUsed=" + currentlyUsed + " bufSize="
+                      + bufferSize);
         }
 
         // If IO is disabled don't send SEQ
@@ -396,9 +398,8 @@ public class TCPSession extends Session {
         sb.append(CRLF);
 
         try {
-            if (Log.isLogged(Log.SEV_DEBUG)) {
-                Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                             "Wrote: " + sb.toString());
+            if (log.isDebugEnabled()) {
+                log.debug("Wrote: " + sb.toString());
             }
 
             OutputStream os = socket.getOutputStream();
@@ -422,9 +423,8 @@ public class TCPSession extends Session {
             InputStream is = socket.getInputStream();
 
             while (running) {
-                if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
-                    Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                 "Processing next frame");
+                if (log.isTraceEnabled()) {
+                    log.trace("Processing next frame");
                 }
 
                 int amountRead;
@@ -457,7 +457,7 @@ public class TCPSession extends Session {
                 }
             }
         } catch (IOException e) {
-            Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, e);
+            log.error(e);
 
             socket = null;
 
@@ -465,13 +465,14 @@ public class TCPSession extends Session {
         } catch (SessionAbortedException e) {
             terminate("Session aborted by remote peer.");
         } catch (Throwable e) {
-            Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, e);
+            log.error(e);
             terminate(e.getMessage());
         }
 
-        Log.logEntry(Log.SEV_DEBUG, TCP_MAPPING,
-                     "Session listener thread exiting.  State = "
-                     + TCPSession.this.getState());
+        if (log.isDebugEnabled()) {
+            log.debug("Session listener thread exiting.  State = "
+                      + TCPSession.this.getState());
+        }
     }
 
     private void processCoreFrame(byte[] headerBuffer, int amountRead,
@@ -539,9 +540,8 @@ public class TCPSession extends Session {
             amountToRead = (tokenCount * 2) + Frame.TRAILER.length();
         }
 
-        if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                         new String(headerBuffer, 0, headerLength));
+        if (log.isTraceEnabled()) {
+            log.trace(new String(headerBuffer, 0, headerLength));
         }
 
         Frame f = super.createFrame(headerBuffer,
@@ -583,9 +583,8 @@ public class TCPSession extends Session {
                 count += n;
             }
 
-            if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
-                Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                             new String(payload));
+            if (log.isTraceEnabled()) {
+                log.trace(new String(payload));
             }
 
             for (int i = 0; i < Frame.TRAILER.length(); ++i) {

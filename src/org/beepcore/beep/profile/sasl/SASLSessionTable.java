@@ -1,5 +1,5 @@
 /*
- * SASLSessionTable.java  $Revision: 1.5 $ $Date: 2001/11/22 15:25:29 $
+ * SASLSessionTable.java  $Revision: 1.6 $ $Date: 2002/10/05 15:32:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -19,12 +19,14 @@ package org.beepcore.beep.profile.sasl;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.SessionCredential;
 import org.beepcore.beep.core.event.SessionEvent;
 import org.beepcore.beep.core.event.SessionListener;
 import org.beepcore.beep.profile.sasl.anonymous.SASLAnonymousProfile;
-import org.beepcore.beep.util.Log;
 
 /**
  * This class is provided to give the SASL profiles a way
@@ -35,12 +37,11 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/11/22 15:25:29 $
+ * @version $Revision: 1.6 $, $Date: 2002/10/05 15:32:22 $
  *
  */
 public class SASLSessionTable implements SessionListener
 {
-    private Hashtable nameToSession, sessionToName;
     private final static int DEFAULT_SIZE = 4;
     
     private static final String ERR_INVALID_PARAMETERS = "Invalid parameters to Session Table call";
@@ -50,6 +51,9 @@ public class SASLSessionTable implements SessionListener
     private static final String MSG_USER_PREFIX = "===]  User=>";
     private static final String MSG_SESSIONS_TABLE_TRAILER="===] End of Table";
                      
+    private Log log = LogFactory.getLog(this.getClass());
+    private Hashtable nameToSession, sessionToName;
+
     SASLSessionTable()
     {
         sessionToName = new Hashtable(DEFAULT_SIZE);
@@ -174,7 +178,7 @@ public class SASLSessionTable implements SessionListener
         {}        
         catch(SASLException x)
         {
-            Log.logEntry(Log.SEV_ERROR, x);
+            log.error("Error removing entry", x);
         }
     }
 
@@ -184,10 +188,10 @@ public class SASLSessionTable implements SessionListener
      */
     void printContents()
     {
-        Log.logEntry(Log.SEV_DEBUG, MSG_SESSIONS_TABLE_HEADER);
+        log.debug(MSG_SESSIONS_TABLE_HEADER);
         if(sessionToName.size()==0)
         {
-            Log.logEntry(Log.SEV_DEBUG, MSG_EMPTY);
+            log.debug(MSG_EMPTY);
         }
         else
         {
@@ -201,10 +205,13 @@ public class SASLSessionTable implements SessionListener
                     mech = s.getPeerCredential().getAuthenticatorType();
                 else 
                     mech = "UNKNOWN";
-                Log.logEntry(Log.SEV_DEBUG, MSG_USER_PREFIX + user +
-                                   MSG_MECHANISM_PREFIX + mech );
+                    
+                if (log.isDebugEnabled()) {
+                    log.debug(MSG_USER_PREFIX + user +
+                              MSG_MECHANISM_PREFIX + mech );
+                }
             }        
         }
-        Log.logEntry(Log.SEV_DEBUG,MSG_SESSIONS_TABLE_TRAILER);
+        log.debug(MSG_SESSIONS_TABLE_TRAILER);
     }
 }

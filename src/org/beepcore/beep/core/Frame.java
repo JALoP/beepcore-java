@@ -1,5 +1,5 @@
 /*
- * Frame.java  $Revision: 1.18 $ $Date: 2002/09/07 15:15:49 $
+ * Frame.java  $Revision: 1.19 $ $Date: 2002/10/05 15:26:51 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -22,9 +22,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.HeaderParser;
-import org.beepcore.beep.util.Log;
 import org.beepcore.beep.util.StringUtil;
 
 /**
@@ -38,7 +40,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.18 $, $Date: 2002/09/07 15:15:49 $
+ * @version $Revision: 1.19 $, $Date: 2002/10/05 15:26:51 $
  *
  * @see BufferSegment
  */
@@ -83,6 +85,8 @@ public class Frame {
 
     private static final BufferSegment trailerBufferSegment =
         new BufferSegment(TRAILER.getBytes());
+
+    private Log log = LogFactory.getLog(this.getClass());
 
     /** BEEP message type of  <code>Frame</code>. */
     private int messageType;
@@ -278,8 +282,8 @@ public class Frame {
 
         header.append(this.CRLF);
 
-        if (Log.isLogged(Log.SEV_DEBUG)) {
-            Log.logEntry(Log.SEV_DEBUG, header.toString());
+        if (log.isTraceEnabled()) {
+            log.trace(header);
         }
         return StringUtil.stringBufferToAscii(header);
     }
@@ -287,8 +291,6 @@ public class Frame {
     static Frame parseHeader(Session session, byte[] headerBuffer, int length)
         throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG_VERBOSE, "Processing normal BEEP frame");
-
         HeaderParser header = new HeaderParser(headerBuffer, length);
 
         int msgType =
@@ -352,11 +354,6 @@ public class Frame {
 
                     break;
                 }
-            }
-
-            if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
-                Log.logEntry(Log.SEV_DEBUG_VERBOSE, "getMessageType=" +
-                             types[ret] + " (" + ret + ")");
             }
 
             return ret;

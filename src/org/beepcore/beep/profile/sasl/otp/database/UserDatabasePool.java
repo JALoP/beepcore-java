@@ -1,6 +1,6 @@
 
 /*
- * UserDatabasePool.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:35 $
+ * UserDatabasePool.java            $Revision: 1.3 $ $Date: 2002/10/05 15:32:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -23,9 +23,11 @@ import java.io.*;
 import java.util.Hashtable;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.TuningProfile;
 import org.beepcore.beep.profile.sasl.SASLException;
-import org.beepcore.beep.util.Log;
 
 
 /**
@@ -49,6 +51,8 @@ import org.beepcore.beep.util.Log;
 public class UserDatabasePool implements UserDatabaseManager
 {
     // Data 
+    private Log log = LogFactory.getLog(this.getClass());
+
     private Hashtable userpool = new Hashtable(4);
 
     /**
@@ -91,14 +95,13 @@ public class UserDatabasePool implements UserDatabaseManager
             Properties p = new Properties();
 
             try {
-                Log.logEntry(Log.SEV_DEBUG,
-                             ("Loading otp property file " + username
-                              + OTP_SUFFIX));
+                if (log.isDebugEnabled()) {
+                    log.debug("Loading otp property file " + username
+                              + OTP_SUFFIX);
+                }
                 p.load(new FileInputStream(username + OTP_SUFFIX));
             } catch (IOException x) {
-                Log.logEntry(Log.SEV_ERROR,
-                             new String(UserDBNotFoundException.MSG
-                                        + username));
+                log.error(UserDBNotFoundException.MSG + username);
 
                 throw new UserDBNotFoundException(username);
             }
@@ -116,11 +119,14 @@ public class UserDatabasePool implements UserDatabaseManager
                 throw new SASLException("OTP DB for "+username+"is corrupted");
             }
             userpool.put(username, ud);
-            Log.logEntry(Log.SEV_DEBUG, p.toString());
-            Log.logEntry(Log.SEV_DEBUG,
-                         ("Stored otp settings for " + username));
+            if (log.isDebugEnabled()) {
+                log.debug(p.toString());
+                log.debug("Stored otp settings for " + username);
+            }
         }
-        Log.logEntry(Log.SEV_DEBUG, "Fetching User Database for " + username);
+        if (log.isDebugEnabled()) {
+            log.debug("Fetching User Database for " + username);
+        }
         return ud;
     }
 
@@ -171,8 +177,9 @@ public class UserDatabasePool implements UserDatabaseManager
             Properties p = new Properties();
             String authenticator = ud.getAuthenticator();
 
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Updating User DB on for=>" + authenticator);
+            if (log.isDebugEnabled()) {
+                log.debug("Updating User DB on for=>" + authenticator);
+            }
             p.setProperty(OTP_AUTHENTICATOR, authenticator);
             p.setProperty(OTP_LAST_HASH, ud.getLastHashAsString());
             p.setProperty(OTP_SEED, ud.getSeed());
@@ -182,7 +189,7 @@ public class UserDatabasePool implements UserDatabaseManager
             p.store(new FileOutputStream(authenticator + OTP_SUFFIX), 
                     OTP_HEADER);
         } catch (IOException x) {
-            Log.logEntry(Log.SEV_ERROR, x);
+            log.error(x);
 
             throw new SASLException(x.getMessage());
         }
@@ -237,7 +244,7 @@ public class UserDatabasePool implements UserDatabaseManager
             p.setProperty(OTP_SEQUENCE, "1");
             p.store(new FileOutputStream("IW_User2.otp"), OTP_HEADER);
         } catch (IOException x) {
-            Log.logEntry(Log.SEV_ERROR, x);
+            log.error(x);
         }
     }
 }

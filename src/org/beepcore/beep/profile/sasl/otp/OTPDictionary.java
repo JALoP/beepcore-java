@@ -1,6 +1,6 @@
 
 /*
- * OTPDictionary.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:34 $
+ * OTPDictionary.java            $Revision: 1.3 $ $Date: 2002/10/05 15:32:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,10 +21,11 @@ package org.beepcore.beep.profile.sasl.otp;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.profile.sasl.SASLException;
 import org.beepcore.beep.profile.sasl.InvalidParameterException;
-import org.beepcore.beep.util.ConsoleLog;
-import org.beepcore.beep.util.Log;
 
 
 /**
@@ -33,7 +34,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.3 $, $Date: 2002/10/05 15:32:06 $
  *
  */
 public class OTPDictionary {
@@ -448,6 +449,8 @@ public class OTPDictionary {
                                       "YARN", "YAWL", "YAWN", "YEAH", "YEAR",
                                       "YELL", "YOGA", "YOKE" };
 
+    private static Log slog = LogFactory.getLog(OTPDictionary.class);
+
     static public String find(int index) throws InvalidParameterException
     {
         if (hashNumbersToWords == null) {
@@ -490,7 +493,7 @@ public class OTPDictionary {
         String i = (String) hashWordsToNumbers.get(s);
 
         if (i == null) {
-            Log.logEntry(Log.SEV_ERROR, "OTPDictionary", ERR_INVALID_HASH);
+            slog.error(ERR_INVALID_HASH);
 
             throw new InvalidParameterException("Invalid OTP word=>" + s);
         }
@@ -520,8 +523,7 @@ public class OTPDictionary {
         st = new StringTokenizer(words);
 
         if (st.countTokens() != 6) {
-            Log.logEntry(Log.SEV_ERROR, "OTPDictionary",
-                         "Failed to hash=>" + words);
+            slog.error("Failed to hash=>" + words);
 
             throw new InvalidParameterException(ERR_INVALID_HASH);
         } else {
@@ -586,7 +588,7 @@ public class OTPDictionary {
             return ((int) (((((l << 2) & 0x7fc) | (parity & 0x03))) & 0x7ff));
         }
 
-        Log.logEntry(Log.SEV_CRITICAL, "OTPDictionary", ERR_INVALID_HASH);
+        slog.error(ERR_INVALID_HASH);
 
         throw new RuntimeException(ERR_INVALID_HASH);
     }

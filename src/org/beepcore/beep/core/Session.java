@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.31 $ $Date: 2002/09/07 14:58:09 $
+ * Session.java  $Revision: 1.32 $ $Date: 2002/10/05 15:29:24 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -31,6 +31,9 @@ import java.util.List;
 
 import javax.xml.parsers.*;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.w3c.dom.*;
 
 import org.xml.sax.SAXException;
@@ -39,7 +42,6 @@ import org.beepcore.beep.core.event.ChannelEvent;
 import org.beepcore.beep.core.event.ChannelListener;
 import org.beepcore.beep.core.event.SessionEvent;
 import org.beepcore.beep.core.event.SessionListener;
-import org.beepcore.beep.util.Log;
 import org.beepcore.beep.util.StringUtil;
 
 
@@ -60,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.31 $, $Date: 2002/09/07 14:58:09 $
+ * @version $Revision: 1.32 $, $Date: 2002/10/05 15:29:24 $
  *
  * @see Channel
  */
@@ -88,7 +90,6 @@ public abstract class Session {
      new CLOSED_SessionOperations(),
      new ABORTED_SessionOperations()};
 
-    private static final String CORE = "core";
     private static final int DEFAULT_CHANNELS_SIZE = 4;
     private static final int DEFAULT_PROPERTIES_SIZE = 4;
     private static final int DEFAULT_POLL_INTERVAL = 500;
@@ -108,6 +109,8 @@ public abstract class Session {
         StringUtil.stringToAscii("<ok />");
 
     // Instance Data
+    private Log log = LogFactory.getLog(this.getClass());
+
     private int state;
     private long nextChannelNumber = 0;
     private Channel zero;
@@ -221,7 +224,7 @@ public abstract class Session {
      */
     protected void tuningInit() throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG, CORE, "Session.tuningInit");
+        log.debug("Session.tuningInit");
 
         this.peerSupportedProfiles = null;
 
@@ -273,8 +276,9 @@ public abstract class Session {
      */
     public void close() throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Closing Session with " + channels.size() + " channels");
+        if (log.isDebugEnabled()) {
+            log.debug("Closing Session with " + channels.size() + " channels");
+        }
 
         changeState(SESSION_STATE_CLOSE_PENDING);
 
@@ -317,7 +321,7 @@ public abstract class Session {
             throw e;
         } catch (BEEPException e) {
             terminate(e.getMessage());
-            Log.logEntry(Log.SEV_ERROR, e);
+            log.error("Error sending close", e);
             throw e;
         }
 
@@ -587,7 +591,7 @@ public abstract class Session {
             try {
                 reply.wait();
             } catch (InterruptedException e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Interrupted waiting for reply", e);
                 throw new BEEPException("Interrupted waiting for reply");
             }
         }
@@ -621,7 +625,7 @@ public abstract class Session {
      */
     public void terminate(String reason)
     {
-        Log.logEntry(Log.SEV_ERROR, reason);
+        log.error(reason);
 
         try {
             this.changeState(SESSION_STATE_ABORTED);
@@ -645,7 +649,9 @@ public abstract class Session {
             throw e;
         }
 
-        Log.logEntry(Log.SEV_DEBUG, CORE, "State changed to " + newState);
+        if (log.isDebugEnabled()) {
+            log.debug("State changed to " + newState);
+        }
     }
 
     /**
@@ -907,7 +913,7 @@ public abstract class Session {
             try {
                 reply.wait();
             } catch (InterruptedException e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Error waiting for reply", e);
                 throw new BEEPException("Interrupted waiting for reply");
             }
         }
@@ -1092,8 +1098,9 @@ public abstract class Session {
         // closing the session
         // @todo fireEvent(SESSION_STATE_CLOSING);
 
-        Log.logEntry(Log.SEV_DEBUG,
-                     "Closing Session with " + channels.size() + " channels");
+        if (log.isDebugEnabled()) {
+            log.debug("Closing Session with " + channels.size() + " channels");
+        }
 
         try {
             changeState(SESSION_STATE_CLOSE_PENDING);
@@ -1152,7 +1159,7 @@ public abstract class Session {
         try {
             this.changeState(SESSION_STATE_CLOSED);
         } catch (BEEPException e) {
-            Log.logEntry(Log.SEV_ERROR, e);
+            log.error("Error changing state", e);
         }
 
         fireSessionClosed();
@@ -1224,8 +1231,7 @@ public abstract class Session {
 
                 scl.startChannel(ch, encoding, p.data);
             } catch (TuningResetException e) {
-                Log.logEntry(Log.SEV_DEBUG, CORE,
-                             "Leaving profile response to Tuning Profile CCL");
+                log.debug("Leaving profile response to Tuning Profile CCL");
 
                 fireChannelStarted(ch);
 
@@ -1296,7 +1302,7 @@ public abstract class Session {
 
     private void sendGreeting() throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG, CORE, "sendGreeting");
+        log.debug("sendGreeting");
 
         // get the greeting from the session
         byte[] greeting = Session.this.getProfileRegistry().getGreeting(this);
@@ -1333,8 +1339,7 @@ public abstract class Session {
 
             // is this MSG a <start>
             if (elementName.equals("start")) {
-                Log.logEntry(Log.SEV_DEBUG, CORE,
-                             "Received a start channel request");
+                log.debug("Received a start channel request");
 
                 String channelNumber = topElement.getAttribute("number");
 
@@ -1400,8 +1405,7 @@ public abstract class Session {
 
             // is this MSG a <close>
             else if (elementName.equals("close")) {
-                Log.logEntry(Log.SEV_DEBUG, CORE,
-                             "Received a channel close request");
+                log.debug("Received a channel close request");
 
                 String channelNumber = topElement.getAttribute("number");
 
@@ -1458,7 +1462,7 @@ public abstract class Session {
                     throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
                 }
 
-                Log.logEntry(Log.SEV_DEBUG, CORE, "Received a greeting");
+                log.debug("Received a greeting");
 
                 // this attribute is implied
                 String features = topElement.getAttribute("features");
@@ -1629,10 +1633,8 @@ public abstract class Session {
                 return;
             }
 
-            Log.logEntry(Log.SEV_ERROR, CORE,
-                         "Received an error in response to a start. code="
-                         + err.getCode() + " diagnostic="
-                         + err.getDiagnostic());
+            log.error("Received an error in response to a start. code="
+                      + err.getCode() + " diagnostic=" + err.getDiagnostic());
 
             this.error = err;
 
@@ -1687,8 +1689,7 @@ public abstract class Session {
                     // is this RPY an <ok> (the positive response to a
                     // channel close)
                 } else if (elementName.equals("ok")) {
-                    Log.logEntry(Log.SEV_DEBUG, CORE,
-                                 "Received an OK for channel close");
+                    log.debug("Received an OK for channel close");
 
                     // @todo we should fire an event instead.
                     // set the state
@@ -1721,10 +1722,8 @@ public abstract class Session {
                 return;
             }
 
-            Log.logEntry(Log.SEV_DEBUG, CORE,
-                         "Received an error in response to a close. code="
-                         + err.getCode() + " diagnostic="
-                         + err.getDiagnostic());
+            log.debug("Received an error in response to a close. code="
+                      + err.getCode() + " diagnostic=" + err.getDiagnostic());
 
             this.error = err;
 
@@ -1780,12 +1779,14 @@ public abstract class Session {
 
                 return;
             } catch (Throwable e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Error posting frame", e);
                 s.terminate("Uncaught exception, terminating session");
 
                 return;
             }
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class GREETING_SENT_SessionOperations implements SessionOperations {
@@ -1814,12 +1815,14 @@ public abstract class Session {
 
                 return;
             } catch (Throwable e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Error posting frame", e);
                 s.terminate("Uncaught exception, terminating session");
 
                 return;
             }
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class ACTIVE_SessionOperations implements SessionOperations {
@@ -1842,12 +1845,14 @@ public abstract class Session {
 
                 return;
             } catch (Throwable e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Error posting frame", e);
                 s.terminate("Uncaught exception, terminating session");
 
                 return;
             }
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class TUNING_PENDING_SessionOperations
@@ -1873,12 +1878,14 @@ public abstract class Session {
 
                 return;
             } catch (Throwable e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Error posting frame", e);
                 s.terminate("Uncaught exception, terminating session");
 
                 return;
             }
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class TUNING_SessionOperations implements SessionOperations {
@@ -1901,12 +1908,14 @@ public abstract class Session {
 
                 return;
             } catch (Throwable e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Error posting frame", e);
                 s.terminate("Uncaught exception, terminating session");
 
                 return;
             }
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class CLOSE_PENDING_SessionOperations implements SessionOperations {
@@ -1923,10 +1932,11 @@ public abstract class Session {
 
         public void postFrame(Session s, Frame f) throws BEEPException {
             // If we're in an error state
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Dropping a frame because the Session state is " +
-                         "no longer active.");
+            log.debug("Dropping a frame because the Session state is " +
+                      "no longer active.");
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class CLOSING_SessionOperations implements SessionOperations {
@@ -1948,12 +1958,14 @@ public abstract class Session {
 
                 return;
             } catch (Throwable e) {
-                Log.logEntry(Log.SEV_ERROR, e);
+                log.error("Error posting frame", e);
                 s.terminate("Uncaught exception, terminating session");
 
                 return;
             }
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class CLOSED_SessionOperations implements SessionOperations {
@@ -1963,10 +1975,11 @@ public abstract class Session {
 
         public void postFrame(Session s, Frame f) throws BEEPException {
             // If we're in an error state
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Dropping a frame because the Session state is " +
-                         "no longer active.");
+            log.debug("Dropping a frame because the Session state is " +
+                      "no longer active.");
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 
     static class ABORTED_SessionOperations implements SessionOperations {
@@ -1976,9 +1989,10 @@ public abstract class Session {
 
         public void postFrame(Session s, Frame f) throws BEEPException {
             // If we're in an error state
-            Log.logEntry(Log.SEV_DEBUG,
-                         "Dropping a frame because the Session state is " +
-                         "no longer active.");
+            log.debug("Dropping a frame because the Session state is " +
+                      "no longer active.");
         }
+
+        private Log log = LogFactory.getLog(this.getClass());
     }
 }

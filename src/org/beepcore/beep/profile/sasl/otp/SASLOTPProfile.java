@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.8 $ $Date: 2002/08/22 17:51:31 $
+ * SASLOTPProfile.java  $Revision: 1.9 $ $Date: 2002/10/05 15:32:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,6 +24,9 @@ import java.util.StringTokenizer;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.sasl.*;
@@ -32,7 +35,6 @@ import org.beepcore.beep.profile.sasl.otp.algorithm.md5.MD5;
 import org.beepcore.beep.profile.sasl.otp.algorithm.sha1.SHA1;
 import org.beepcore.beep.profile.sasl.otp.database.*;
 import org.beepcore.beep.transport.tcp.*;
-import org.beepcore.beep.util.*;
 
 
 /**
@@ -43,7 +45,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2002/08/22 17:51:31 $
+ * @version $Revision: 1.9 $, $Date: 2002/10/05 15:32:06 $
  *
  */
 public class SASLOTPProfile
@@ -72,6 +74,8 @@ public class SASLOTPProfile
         "Invalid or improperly formatted Identity information";
 
     // Instance Data
+    private Log log = LogFactory.getLog(this.getClass());
+
     private Hashtable authenticators;
     private MD5 md5;
     private SHA1 sha1;
@@ -137,7 +141,7 @@ public class SASLOTPProfile
 
         String authorize, authenticate, challenge = null;
 
-        Log.logEntry(Log.SEV_DEBUG, SASL_OTP, "SASL-OTP Start Channel CCL");
+        log.debug("SASL-OTP Start Channel CCL");
 
         OTPAuthenticator temp = new OTPAuthenticator(this);
 
@@ -153,8 +157,9 @@ public class SASLOTPProfile
 
                 try {
                     blob = temp.receiveIDs(data);
-                    Log.logEntry(Log.SEV_DEBUG, SASL_OTP,
-                                 "Challenge is=>" + challenge);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Challenge is=>" + challenge);
+                    }
                 } catch (SASLException szf) {
                     temp.abortNoThrow(szf.getMessage());
                     // Write an error out in the profile
@@ -162,8 +167,9 @@ public class SASLOTPProfile
                                     szf.getMessage());
                     return;
                 }
-                Log.logEntry(Log.SEV_DEBUG, SASL_OTP,
-                             "Blobbed64 Challenge is=>" + data);
+                if (log.isDebugEnabled()) {
+                    log.debug("Blobbed64 Challenge is=>" + data);
+                }
             }
             channel.setMessageListener(temp);
             if(blob != null)
@@ -179,7 +185,7 @@ public class SASLOTPProfile
                 temp.started(channel);
             }
 
-            Log.logEntry(Log.SEV_DEBUG, "Started an SASL-OTP Channel");
+            log.debug("Started an SASL-OTP Channel");
         } catch (Exception x) {
             channel.getSession().terminate(x.getMessage());
             return;
@@ -305,11 +311,7 @@ public class SASLOTPProfile
     {
         boolean success = false;
         
-        if (authenticateId == null || 
-            session == null ||
-            pwd == null ) {
-            Log.logEntry(Log.SEV_ERROR, SASL_OTP,
-                         ERR_INVALID_ID + authenticateId);
+        if (authenticateId == null || session == null || pwd == null ) {
 
             throw new InvalidParameterException(ERR_INVALID_ID
                                                 + authenticateId);
@@ -369,9 +371,6 @@ public class SASLOTPProfile
                     auth.abort("Authentication Failed");
                 } else {
                     success = true;
-                    Log.logEntry(Log.SEV_DEBUG, SASL_OTP,
-                                 "Wow, cool!!! " + session
-                                 + " is valid for\n" + cred.toString());
                 }
             }
         } catch (Exception x) {
@@ -407,9 +406,6 @@ public class SASLOTPProfile
         boolean success = false;
         
         if (authenticateId == null) {
-            Log.logEntry(Log.SEV_ERROR, SASL_OTP,
-                         ERR_INVALID_ID + authenticateId);
-
             throw new InvalidParameterException(ERR_INVALID_ID
                                                 + authenticateId);
         }
@@ -468,9 +464,6 @@ public class SASLOTPProfile
                     auth.abort("Authentication Failed");
                 } else {
                     success = true;
-                    Log.logEntry(Log.SEV_DEBUG, SASL_OTP,
-                                 "Wow, cool!!! " + session
-                                 + " is valid for\n" + cred.toString());
                 }
             }
         } catch (Exception x) {
@@ -583,9 +576,6 @@ public class SASLOTPProfile
                     auth.abort("Authentication Failed");
                 } else {
                     success = true;
-                    Log.logEntry(Log.SEV_DEBUG, SASL_OTP,
-                                 "Wow, cool!!! " + session
-                                 + " is valid for\n" + cred.toString());
                 }
             }
         } catch (Exception x) {
@@ -593,11 +583,6 @@ public class SASLOTPProfile
         }
 
         return session;
-    }
-
-    static void printHex(byte buff[])
-    {
-        Log.logEntry(Log.SEV_DEBUG, SASL_OTP, convertBytesToHex(buff));
     }
 
     public static byte[] convertLongToBytes(long l)
