@@ -65,9 +65,9 @@
         <mkdir dir="${core.build.dir}"/>
 	<javac srcdir="${core.src.dir}/"
 	       destdir="${core.build.dir}"
-               debug="${debug}"
-               optimize="${optimize}"
-               deprecation="${deprecation}">
+           debug="${debug}"
+           optimize="${optimize}"
+           deprecation="${deprecation}">
             <include name="**/core/*.java"/>
             <include name="**/lib/*.java"/>
             <include name="**/profile/*.java"/>
@@ -372,4 +372,24 @@
         </javac>
     </target>
 
+	<target name="14LoggingCheck">
+		<available classname="java.util.loggin.Logger"
+			property="14logging-present"
+			classpath="${java.class.path}"/>
+	</target>
+
+    <target name="14log" depends="init,14LoggingCheck" if="14logging-present">
+        <mkdir dir="${example.build.dir}"/>
+        <javac srcdir="${example.src.dir}/"
+	       destdir="${example.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
+            <include name="**/util/BeepLogger.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+            </classpath>
+        </javac>
+    </target>
 </project>
