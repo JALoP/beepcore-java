@@ -1,7 +1,9 @@
 /*
- * TestStringDataStream.java  $Revision: 1.3 $ $Date: 2001/11/08 05:51:35 $
+ * TestStringOutputDataStream.java
+ *    $Revision: 1.1 $ $Date: 2001/11/10 21:33:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -26,20 +28,30 @@ import org.beepcore.beep.util.BufferSegment;
 
 import junit.framework.*;
 
-public class TestStringDataStream extends TestCase {
-    protected StringDataStream data;
+public class TestStringOutputDataStream extends TestCase {
+    protected StringOutputDataStream data;
     protected byte[] message;
     protected int dataOffset = 0;
     protected Hashtable headers = new Hashtable();
 
-    public TestStringDataStream(String name) {
+    public TestStringOutputDataStream(String name) {
         super(name);
     }
 
     public void testGetNextSegment() {
         int i=0;
         while (data.isComplete() == false || data.availableSegment()) {
-            BufferSegment b = data.getNextSegment();
+            BufferSegment b = data.getNextSegment(message.length);
+            for (int j=b.getOffset(); j < b.getOffset() + b.getLength(); ++j) {
+                assertEquals((char)message[i++], (char)(b.getData()[j]));
+            }
+        }
+    }
+
+    public void testGetNextSegmentFragments() {
+        int i=0;
+        while (data.isComplete() == false || data.availableSegment()) {
+            BufferSegment b = data.getNextSegment(10);
             for (int j=b.getOffset(); j < b.getOffset() + b.getLength(); ++j) {
                 assertEquals((char)message[i++], (char)(b.getData()[j]));
             }
@@ -55,10 +67,10 @@ public class TestStringDataStream extends TestCase {
         String h2 = "header2";
         String te = "TransferEncoding1";
 
-        data = new StringDataStream(s);
+        data = new StringOutputDataStream(s);
 
-        data.setHeader(EH1, h1);
-        data.setHeader(EH2, h2);
+        data.setHeaderValue(EH1, h1);
+        data.setHeaderValue(EH2, h2);
         data.setTransferEncoding(te);
         data.setContentType(MimeHeaders.BEEP_XML_CONTENT_TYPE);
 
@@ -112,7 +124,7 @@ public class TestStringDataStream extends TestCase {
     }
 
     public static Test suite() {
-        return new TestSuite(TestStringDataStream.class);
+        return new TestSuite(TestStringOutputDataStream.class);
     }
 
     public static void main (String[] args) {

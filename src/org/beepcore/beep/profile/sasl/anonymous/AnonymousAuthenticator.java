@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.11 $ $Date: 2001/11/08 05:51:34 $
+ * AnonymousAuthenticator.java  $Revision: 1.12 $ $Date: 2001/11/10 21:33:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.12 $, $Date: 2001/11/10 21:33:29 $
  *
  */
 class AnonymousAuthenticator
@@ -210,7 +210,7 @@ class AnonymousAuthenticator
         Log.logEntry(Log.SEV_DEBUG, "Using=>" + blob.toString() + "<=");
         try {
             credential.put(SessionCredential.AUTHENTICATOR, authenticateId);
-            channel.sendMSG(new StringDataStream(blob.toString()), this);
+            channel.sendMSG(new StringOutputDataStream(blob.toString()), this);
         } catch (Exception x) {
             abort(x.getMessage());
         }
@@ -314,7 +314,7 @@ class AnonymousAuthenticator
             if (state == STATE_STARTED) {
                 try {
                     Blob reply = receiveID(data);
-                    message.sendRPY(new StringDataStream(reply.toString()));
+                    message.sendRPY(new StringOutputDataStream(reply.toString()));
                 } catch (BEEPException x) {
                     abort(x.getMessage());
                     // @todo weird and iffy, cuz we may have sent...
@@ -330,7 +330,7 @@ class AnonymousAuthenticator
             try
             {
                 Blob reply = new Blob(Blob.STATUS_ABORT, s.getMessage());
-                message.sendRPY(new StringDataStream(reply.toString()));
+                message.sendRPY(new StringOutputDataStream(reply.toString()));
             }
             catch(BEEPException t)
             {
@@ -413,7 +413,7 @@ class AnonymousAuthenticator
             try {
                 if(sendAbort) {
                     Blob reply = new Blob(Blob.STATUS_ABORT, x.getMessage());
-                    channel.sendMSG(new StringDataStream(blob.toString()),
+                    channel.sendMSG(new StringOutputDataStream(blob.toString()),
                                     this);
                 }
             }

@@ -1,7 +1,8 @@
 /*
- * StringDataStream.java  $Revision: 1.6 $ $Date: 2001/11/08 05:51:34 $
+ * StringOutputDataStream.java  $Revision: 1.1 $ $Date: 2001/11/10 21:33:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -27,14 +28,13 @@ import org.beepcore.beep.util.BufferSegment;
 
 
 /**
- * <code>StringDataStream</code> represents a BEEP message's payload.
- * Allows implementors to treat a
- * <code>String</code> as a <code>DataSream</code>. The <code>String</code>
- * is stored as a <code>byte[]</code> using UTF-8 encoding.
- * <p>
- * <b>Note that this implementation
- * is not synchronized.</b> If multiple threads access a
- * <code>StringDataStream</code> concurrently, data may be inconsistent or lost.
+ * <code>StringOutputDataStream</code> represents a BEEP message's
+ * payload.  Allows implementors to treat a <code>String</code> as a
+ * <code>DataSream</code>. The <code>String</code> is stored as a
+ * <code>byte[]</code> using UTF-8 encoding.  <p> <b>Note that this
+ * implementation is not synchronized.</b> If multiple threads access
+ * a <code>StringOutputDataStream</code> concurrently, data may be
+ * inconsistent or lost.
  *
  * @see org.beepcore.beep.core.DataStream
  *
@@ -42,11 +42,11 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.1 $, $Date: 2001/11/10 21:33:29 $
  */
-public class StringDataStream extends OutputDataStream {
+public class StringOutputDataStream extends OutputDataStream {
     /**
-     * The default <code>StringDataStream</code> String encoding
+     * The default <code>StringOutputDataStream</code> String encoding
      * ("UTF-8").
      */
     private static final String DEFAULT_STRING_ENCODING = "UTF-8";
@@ -54,14 +54,14 @@ public class StringDataStream extends OutputDataStream {
     private String enc;
 
     /**
-     * Creates a <code>StringDataStream</code> with a
+     * Creates a <code>StringOutputDataStream</code> with a
      * <code>String</code> and a <code>BEEP_XML_CONTENT_TYPE</code>
      * content type and a transfer encoding of
      * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  A <code>String</code> representing a message's payload.
      */
-    public StringDataStream(String data)
+    public StringOutputDataStream(String data)
     {
         super(new MimeHeaders());
         try {
@@ -72,20 +72,20 @@ public class StringDataStream extends OutputDataStream {
             throw new MissingResourceException("Encoding " +
 					       DEFAULT_STRING_ENCODING +
 					       " not supported",
-                                               "StringDataStream", 
+                                               "StringOutputDataStream", 
 					       DEFAULT_STRING_ENCODING);
         }
     }
 
     /**
-     * Creates a <code>StringDataStream</code> with a <code>String</code> and
-     * a specified content type and a transfer encoding of
-     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Creates a <code>StringOutputDataStream</code> with a
+     * <code>String</code> and a specified content type and a transfer
+     * encoding of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param contentType Content type of <code>data</code>
      * @param data  A <code>String</code> representing a message's payload.
      */
-    public StringDataStream(String contentType, String data)
+    public StringOutputDataStream(String contentType, String data)
     {
         super(new MimeHeaders(contentType));
         try {
@@ -96,23 +96,23 @@ public class StringDataStream extends OutputDataStream {
             throw new MissingResourceException("Encoding " +
 					       DEFAULT_STRING_ENCODING +
 					       " not supported",
-                                               "StringDataStream", 
+                                               "StringOutputDataStream", 
 					       DEFAULT_STRING_ENCODING);
         }
     }
 
     /**
-     * Creates a <code>StringDataStream</code> with a <code>String</code> and
-     * a specified content type and a transfer encoding of
-     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Creates a <code>StringOutputDataStream</code> with a
+     * <code>String</code> and a specified content type and a transfer
+     * encoding of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param contentType Content type of <code>data</code>
      * @param transferEncoding Encoding Transfer encoding type of
      * <code>data</code>.
      * @param data  A <code>String</code> representing a message's payload.
      */
-    public StringDataStream(String contentType, String transferEncoding,
-                            String data)
+    public StringOutputDataStream(String contentType, String transferEncoding,
+                                  String data)
     {
         super(new MimeHeaders(contentType, transferEncoding));
         try {
@@ -123,14 +123,14 @@ public class StringDataStream extends OutputDataStream {
             throw new MissingResourceException("Encoding " +
 					       DEFAULT_STRING_ENCODING +
 					       " not supported",
-                                               "StringDataStream", 
+                                               "StringOutputDataStream", 
 					       DEFAULT_STRING_ENCODING);
         }
     }
 
     /**
-     * Creates a <code>StringDataStream</code> with a <code>String</code> and
-     * a specified content type and encoding.
+     * Creates a <code>StringOutputDataStream</code> with a
+     * <code>String</code> and a specified content type and encoding.
      *
      * @param contentType Content type of <code>data</code>
      * @param transferEncoding Encoding Transfer encoding type of
@@ -139,8 +139,8 @@ public class StringDataStream extends OutputDataStream {
      * @param enc The encoding used when converting <code>data</code> to a
      * <code>bytes[]</code>.
      */
-    public StringDataStream(String contentType, String transferEncoding,
-                            String data, String enc)
+    public StringOutputDataStream(String contentType, String transferEncoding,
+                                  String data, String enc)
         throws UnsupportedEncodingException
     {
         super(new MimeHeaders(contentType, transferEncoding));
@@ -168,15 +168,7 @@ public class StringDataStream extends OutputDataStream {
     }
 
     /**
-     * @deprecated
-     */
-    public void setContentType(String contentType)
-    {
-        this.mimeHeaders.setContentType(contentType);
-    }
-
-    /**
-     * @deprecated
+     * Returns the value of the MIME entity header <code>Content-Type</code>.
      */
     public String getContentType() throws BEEPException
     {
@@ -184,46 +176,13 @@ public class StringDataStream extends OutputDataStream {
     }
 
     /**
-     * @deprecated
-     */
-    public void setTransferEncoding(String transferEncoding)
-    {
-        this.mimeHeaders.setTransferEncoding(transferEncoding);
-    }
-
-    /**
-     * @deprecated
-     */
-    public String getTransferEncoding() throws BEEPException
-    {
-        return this.mimeHeaders.getTransferEncoding();
-    }
-
-    /**
-     * Adds a MIME entity header to this data stream.
+     * Sets the content type of a <code>DataStream</code>.
      *
-     * @param name  Name of the MIME enitity header.
-     * @param value Value of the MIME entity header.
-     * @deprecated
+     * @param contentType
      */
-    public void setHeader(String name, String value)
+    public void setContentType(String contentType)
     {
-        this.mimeHeaders.setHeader(name, value);
-    }
-
-    /**
-     * Retrieves the correspoding <code>value</code> to a given a MIME entity
-     * header <code>name</code>.
-     *
-     * @param name Name of the MIME entity header.
-     * @return The <code>value</code> of the MIME entity header.
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-    public String getHeaderValue(String name) throws BEEPException
-    {
-        return this.mimeHeaders.getHeaderValue(name);
+        this.mimeHeaders.setContentType(contentType);
     }
 
     /**
@@ -241,6 +200,50 @@ public class StringDataStream extends OutputDataStream {
     public Enumeration getHeaderNames() throws BEEPException
     {
         return this.mimeHeaders.getHeaderNames();
+    }
+
+    /**
+     * Retrieves the correspoding <code>value</code> to a given a MIME entity
+     * header <code>name</code>.
+     *
+     * @param name Name of the MIME entity header.
+     * @return The <code>value</code> of the MIME entity header.
+     *
+     * @throws BEEPException
+     */
+    public String getHeaderValue(String name) throws BEEPException
+    {
+        return this.mimeHeaders.getHeaderValue(name);
+    }
+
+    /**
+     * Adds a MIME entity header to this data stream.
+     *
+     * @param name  Name of the MIME enitity header.
+     * @param value Value of the MIME entity header.
+     */
+    public void setHeaderValue(String name, String value)
+    {
+        this.mimeHeaders.setHeader(name, value);
+    }
+
+    /**
+     * Returns the value of the MIME entity header
+     * <code>Content-Transfer-Encoding</code>.
+     */
+    public String getTransferEncoding() throws BEEPException
+    {
+        return this.mimeHeaders.getTransferEncoding();
+    }
+
+    /**
+     * Sets the content transfer encoding of a <code>DataStream</code>
+     *
+     * @param transferEncoding
+     */
+    public void setTransferEncoding(String transferEncoding)
+    {
+        this.mimeHeaders.setTransferEncoding(transferEncoding);
     }
 
     /**

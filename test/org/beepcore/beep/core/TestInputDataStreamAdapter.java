@@ -1,7 +1,8 @@
 /*
- * TestDataStream.java  $Revision: 1.1 $ $Date: 2001/10/31 00:32:38 $
+ * TestDataStream.java  $Revision: 1.2 $ $Date: 2001/11/10 21:33:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -36,11 +37,11 @@ public class TestInputDataStreamAdapter extends TestCase {
         super(name);
     }
 
-     public void testAvailable() throws IOException {
-         InputStream is = data.getInputStream();
-         assertEquals("is.available()",
-                      message.length - dataOffset, is.available());
-     }
+    public void testAvailable() throws IOException {
+        InputStream is = data.getInputStream();
+        assertEquals("is.available()",
+                     message.length - dataOffset, is.available());
+    }
 
     public void testRead() throws IOException {
         InputStream is = data.getInputStream();
@@ -48,7 +49,7 @@ public class TestInputDataStreamAdapter extends TestCase {
         for (int i=0; i < message.length - dataOffset; ++i) {
             assertEquals("is.available()",
                          is.available(), message.length - dataOffset - i);
-            assertEquals(//"Byte number: " + i + " did not match",
+            assertEquals(//"Byte number: " + i,
                          ((byte) is.read()), message[dataOffset + i]);
         }
 
@@ -74,7 +75,7 @@ public class TestInputDataStreamAdapter extends TestCase {
         assertEquals("count == message.length - dataOffset",
                      message.length - dataOffset, count);
         for (int i=0; i < message.length - dataOffset; ++i) {
-            assertEquals(//"Byte number: " + i + " did not match",
+            assertEquals(//"Byte number: " + i,
                          message[dataOffset + i], b[i+5]);
         }
         assertEquals("is.available() == 0", 0, is.available());
@@ -89,7 +90,7 @@ public class TestInputDataStreamAdapter extends TestCase {
                          message.length - dataOffset, count);
         }
         for (int i=0; i < count; ++i) {
-            assertEquals(//"Byte number: " + i + " did not match",
+            assertEquals(//"Byte number: " + i,
                          message[dataOffset + i], b[i]);
         }
         assertEquals("is.available() == message.length - dataOffset - count",
@@ -107,7 +108,7 @@ public class TestInputDataStreamAdapter extends TestCase {
                          message.length - dataOffset, count);
         }
         for (int i=0; i < b.length - dataOffset; ++i) {
-            assertEquals("Byte number: " + i + " did not match",
+            assertEquals("Byte number: " + i,
                          message[dataOffset + i], b[i]);
         }
         assertEquals("is.available() == message.length - dataOffset - count",
@@ -123,7 +124,7 @@ public class TestInputDataStreamAdapter extends TestCase {
                          message.length - dataOffset - 5, count);
         }
         for (int i=0; i < count - 5; ++i) {
-            assertEquals(//"Byte number: " + i + " did not match",
+            assertEquals(//"Byte number: " + i,
                          message[dataOffset + i], b[i+5]);
         }
         assertEquals("is.available() == message.length - dataOffset - count",
@@ -142,12 +143,12 @@ public class TestInputDataStreamAdapter extends TestCase {
           is.reset();
 
           for (int i=0; i<count; ++i) {
-              assertEquals("Byte number: " + i + " did not match",
+              assertEquals("Byte number: " + i,
                            (byte) is.read(), b[i]);
           }
 
           for (int i=0; is.available() != 0; ++i) {
-              assertEquals("Byte number: " + i + " did not match",
+              assertEquals("Byte number: " + i,
                            message[dataOffset + b.length + i],
                            (byte) is.read());
           }
@@ -161,7 +162,7 @@ public class TestInputDataStreamAdapter extends TestCase {
         byte[] b = new byte[20];
         int count = is.read(b);
         for (int i=0; i < count; ++i) {
-            assertEquals("Byte number: " + i + " did not match",
+            assertEquals("Byte number: " + i,
                          message[dataOffset + SKIP_AMOUNT + i], b[i]);
         }
     }
@@ -172,8 +173,7 @@ public class TestInputDataStreamAdapter extends TestCase {
             String name = (String)e.nextElement();
             String header = data.getInputStream().getHeaderValue(name);
             String origHeader = (String)headers.get(name);
-            assertEquals("Header: " + name + " values do not match (" +
-                         header + "!=" + origHeader + ")", origHeader, header);
+            assertEquals("Header: " + name, origHeader, header);
         }
 
         if (!headers.containsKey(MimeHeaders.CONTENT_TYPE)) {

@@ -1,5 +1,5 @@
 /*
- * MessageMSG.java  $Revision: 1.5 $ $Date: 2001/11/08 05:51:34 $
+ * MessageMSG.java  $Revision: 1.6 $ $Date: 2001/11/10 21:33:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,7 +24,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.6 $, $Date: 2001/11/10 21:33:29 $
  *
  */
 class MessageMSG extends Message
@@ -78,7 +78,7 @@ class MessageMSG extends Message
     public MessageStatus sendERR(BEEPError error) throws BEEPException
     {
         OutputDataStream stream =
-            new StringDataStream(error.createErrorMessage());
+            new StringOutputDataStream(error.createErrorMessage());
         MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
                                             this.msgno, stream);
         this.channel.sendMessage(m);
@@ -103,7 +103,7 @@ class MessageMSG extends Message
         String error = BEEPError.createErrorMessage(code, diagnostic);
         MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
                                             this.msgno,
-                                            new StringDataStream(error));
+                                            new StringOutputDataStream(error));
         this.channel.sendMessage(m);
         return m;
     }
@@ -128,7 +128,7 @@ class MessageMSG extends Message
         String error = BEEPError.createErrorMessage(code, diagnostic, xmlLang);
         MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
                                             this.msgno,
-                                            new StringDataStream(error));
+                                            new StringOutputDataStream(error));
         this.channel.sendMessage(m);
         return m;
     }

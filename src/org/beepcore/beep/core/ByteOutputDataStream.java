@@ -1,5 +1,5 @@
 /*
- * ByteDataStream.java            $Revision: 1.5 $ $Date: 2001/11/08 05:51:34 $
+ * ByteOutputDataStream.java  $Revision: 1.1 $ $Date: 2001/11/10 21:33:29 $
  *
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
@@ -23,49 +23,48 @@ import org.beepcore.beep.util.BufferSegment;
 
 
 /**
- * <code>ByteDataStream</code> represents a BEEP message's payload.
- * Allows the implementor to treat a
- * <code>byte[]</code> as a <code>DataStream</code>.
- * <p>
- * <b>Note that this implementation
- * is not synchronized.</b> If multiple threads access a
- * <code>ByteDataStream</code> concurrently, data may be inconsistent or lost.
+ * <code>ByteOutputDataStream</code> represents a BEEP message's
+ * payload.  Allows the implementor to treat a <code>byte[]</code> as
+ * a <code>DataStream</code>.  <p> <b>Note that this implementation is
+ * not synchronized.</b> If multiple threads access a
+ * <code>ByteOutputDataStream</code> concurrently, data may be
+ * inconsistent or lost.
  *
  * @see org.beepcore.beep.core.DataStream
  *
  * @author Huston Franklin
- * @version $Revision: 1.5 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.1 $, $Date: 2001/11/10 21:33:29 $
  */
-public class ByteDataStream extends OutputDataStream {
+public class ByteOutputDataStream extends OutputDataStream {
 
     /**
-     * Creates a <code>ByteDataStream</code> from a
+     * Creates a <code>ByteOutputDataStream</code> from a
      * <code>byte[]</code> with a content type of
      * <code>DEFAULT_CONTENT_TYPE</code> and a transfer encoding of
      * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  A <code>byte[]</code> representing a message's payload.
      */
-    public ByteDataStream(byte[] data)
+    public ByteOutputDataStream(byte[] data)
     {
         this(data, 0, data.length);
     }
 
     /**
-     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code>
+     * Creates a <code>ByteOutputDataStream</code> from a <code>byte[]</code>
      * with a specified content type and a transfer encoding
      * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param contentType Content type of <code>data</code>.
      * @param data  A <code>byte[]</code> representing a message's payload.
      */
-    public ByteDataStream(String contentType, byte[] data)
+    public ByteOutputDataStream(String contentType, byte[] data)
     {
         this(contentType, data, 0, data.length);
     }
 
     /**
-     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code>
+     * Creates a <code>ByteOutputDataStream</code> from a <code>byte[]</code>
      * with a specified content type and a specified transfer encoding.
      *
      * @param contentType Content type of <code>data</code>.
@@ -73,33 +72,35 @@ public class ByteDataStream extends OutputDataStream {
      * <code>data</code>.
      * @param data  A <code>byte[]</code> representing a message's payload.
      */
-    public ByteDataStream(String contentType, String transferEncoding,
-                          byte[] data)
+    public ByteOutputDataStream(String contentType, String transferEncoding,
+                                byte[] data)
     {
         this(contentType, transferEncoding, data, 0, data.length);
     }
 
     /**
-     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> using
-     * the specified length and offset
-     * with a content type of <code>DEFAULT_CONTENT_TYPE</code> and a transfer
-     * encoding of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Creates a <code>ByteOutputDataStream</code> from a
+     * <code>byte[]</code> using the specified length and offset with
+     * a content type of <code>DEFAULT_CONTENT_TYPE</code> and a
+     * transfer encoding of
+     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  A <code>byte[]</code> representing a message's payload.
      * @param offset  The start offset in array <code>data</code> at which the
      * data is written.
      * @param length The maximum number of bytes to read.
      */
-    public ByteDataStream(byte[] data, int offset, int length)
+    public ByteOutputDataStream(byte[] data, int offset, int length)
     {
         super(new MimeHeaders(),
               new BufferSegment(data, offset, length));
     }
 
     /**
-     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> using
-     * the specified length and offset and with a specified content type and a
-     * transfer encoding of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Creates a <code>ByteOutputDataStream</code> from a
+     * <code>byte[]</code> using the specified length and offset and
+     * with a specified content type and a transfer encoding of
+     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param contentType Content type of <code>byte[]</code>.
      * @param data  A <code>byte[]</code> representing a message's payload.
@@ -107,17 +108,18 @@ public class ByteDataStream extends OutputDataStream {
      * data is written.
      * @param length The maximum number of bytes to read.
      */
-    public ByteDataStream(String contentType, byte[] data, int offset,
-                          int length)
+    public ByteOutputDataStream(String contentType, byte[] data, int offset,
+                                int length)
     {
         super(new MimeHeaders(contentType),
               new BufferSegment(data, offset, length));
     }
 
     /**
-     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> using
-     * the specified length and offset and with a specified content type and a
-     * specified transfer encoding.
+     * Creates a <code>ByteOutputDataStream</code> from a
+     * <code>byte[]</code> using the specified length and offset and
+     * with a specified content type and a specified transfer
+     * encoding.
      *
      * @param contentType Content type of <code>byte[]</code>.
      * @param transferEncoding Encoding Transfer encoding type of
@@ -127,8 +129,8 @@ public class ByteDataStream extends OutputDataStream {
      * data is written.
      * @param length The maximum number of bytes to read.
      */
-    public ByteDataStream(String contentType, String transferEncoding,
-                          byte[] data, int offset, int length)
+    public ByteOutputDataStream(String contentType, String transferEncoding,
+                                byte[] data, int offset, int length)
     {
         super(new MimeHeaders(contentType, transferEncoding),
               new BufferSegment(data, offset, length));
@@ -145,15 +147,7 @@ public class ByteDataStream extends OutputDataStream {
     }
 
     /**
-     * @deprecated
-     */
-    public void setContentType(String contentType)
-    {
-        this.mimeHeaders.setContentType(contentType);
-    }
-
-    /**
-     * @deprecated
+     * Returns the value of the MIME entity header <code>Content-Type</code>.
      */
     public String getContentType() throws BEEPException
     {
@@ -161,15 +155,18 @@ public class ByteDataStream extends OutputDataStream {
     }
 
     /**
-     * @deprecated
+     * Sets the content type of a <code>DataStream</code>.
+     *
+     * @param contentType
      */
-    public void setTransferEncoding(String transferEncoding)
+    public void setContentType(String contentType)
     {
-        this.mimeHeaders.setTransferEncoding(transferEncoding);
+        this.mimeHeaders.setContentType(contentType);
     }
 
     /**
-     * @deprecated
+     * Returns the value of the MIME entity header
+     * <code>Content-Transfer-Encoding</code>.
      */
     public String getTransferEncoding() throws BEEPException
     {
@@ -177,30 +174,13 @@ public class ByteDataStream extends OutputDataStream {
     }
 
     /**
-     * Adds a MIME entity header to this data stream.
+     * Sets the content transfer encoding of a <code>DataStream</code>
      *
-     * @param name  Name of the MIME enitity header.
-     * @param value Value of the MIME entity header.
-     * @deprecated
+     * @param transferEncoding
      */
-    public void setHeader(String name, String value)
+    public void setTransferEncoding(String transferEncoding)
     {
-        this.mimeHeaders.setHeader(name, value);
-    }
-
-    /**
-     * Retrieves the correspoding <code>value</code> to a given a MIME entity
-     * header <code>name</code>.
-     *
-     * @param name Name of the MIME entity header.
-     * @return The <code>value</code> of the MIME entity header.
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-    public String getHeaderValue(String name) throws BEEPException
-    {
-        return this.mimeHeaders.getHeaderValue(name);
+        this.mimeHeaders.setTransferEncoding(transferEncoding);
     }
 
     /**
@@ -218,6 +198,31 @@ public class ByteDataStream extends OutputDataStream {
     public Enumeration getHeaderNames() throws BEEPException
     {
         return this.mimeHeaders.getHeaderNames();
+    }
+
+    /**
+     * Retrieves the correspoding <code>value</code> to a given a MIME entity
+     * header <code>name</code>.
+     *
+     * @param name Name of the MIME entity header.
+     * @return The <code>value</code> of the MIME entity header.
+     *
+     * @throws BEEPException
+     */
+    public String getHeaderValue(String name) throws BEEPException
+    {
+        return this.mimeHeaders.getHeaderValue(name);
+    }
+
+    /**
+     * Adds a MIME entity header to this data stream.
+     *
+     * @param name  Name of the MIME enitity header.
+     * @param value Value of the MIME entity header.
+     */
+    public void setHeaderValue(String name, String value)
+    {
+        this.mimeHeaders.setHeader(name, value);
     }
 
     /**

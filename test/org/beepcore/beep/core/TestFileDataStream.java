@@ -1,5 +1,5 @@
 /*
- * TestFileDataStream.java  $Revision: 1.2 $ $Date: 2001/11/08 05:51:35 $
+ * TestFileDataStream.java  $Revision: 1.3 $ $Date: 2001/11/10 21:33:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -25,8 +25,8 @@ import java.util.Enumeration;
 
 import junit.framework.*;
 
-public class TestFileDataStream extends TestDataStream {
-
+public class TestFileDataStream /*extends TestDataStream*/ {
+/*
     static public String filename;
 
     public TestFileDataStream(String name) {
@@ -86,5 +86,5 @@ public class TestFileDataStream extends TestDataStream {
     public static Test suite() {
         return new TestSuite(TestFileDataStream.class);
     }
-
+*/
 }

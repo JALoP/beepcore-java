@@ -1,7 +1,8 @@
 /*
- * Bing.java  $Revision: 1.8 $ $Date: 2001/11/08 05:51:33 $
+ * Bing.java  $Revision: 1.9 $ $Date: 2001/11/10 21:33:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -26,7 +27,7 @@ import org.beepcore.beep.core.Channel;
 import org.beepcore.beep.core.InputDataStream;
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
-import org.beepcore.beep.core.StringDataStream;
+import org.beepcore.beep.core.StringOutputDataStream;
 import org.beepcore.beep.lib.Reply;
 import org.beepcore.beep.profile.echo.EchoProfile;
 import org.beepcore.beep.profile.tls.TLSProfile;
@@ -45,7 +46,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2001/11/08 05:51:33 $
+ * @version $Revision: 1.9 $, $Date: 2001/11/10 21:33:28 $
  */
 public class Bing {
 
@@ -113,7 +114,8 @@ public class Bing {
 
                 try {
                     // Send the request
-                    channel.sendMSG(new StringDataStream(request), reply);
+                    channel.sendMSG(new StringOutputDataStream(request),
+                                    reply);
                 } catch (BEEPException e) {
                     System.err.println("bing: Error sending request (" +
                                        e.getMessage() + ")");
