@@ -1,8 +1,8 @@
-
 /*
- * ProfileConfiguration.java            $Revision: 1.3 $ $Date: 2001/11/09 18:41:23 $
+ * ProfileConfiguration.java            $Revision: 1.4 $ $Date: 2002/08/27 16:43:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ public class ProfileConfiguration {
      *         if it is not found.
      */
     public String getProperty(String key, String defaultValue) {
-        return props.getProperty(key);
+        return props.getProperty(key, String defaultValue);
     }
 
     /**
