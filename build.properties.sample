@@ -1,7 +1,7 @@
 
-debug="on"
-optimize="on"
-deprecation="off"
+debug=on
+optimize=on
+deprecation=off
 
 concurrent.jar=${basedir}/lib/concurrent.jar
 
