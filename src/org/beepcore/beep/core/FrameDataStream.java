@@ -1,5 +1,5 @@
 /*
- * FrameDataStream.java  $Revision: 1.5 $ $Date: 2001/04/26 16:29:42 $
+ * FrameDataStream.java  $Revision: 1.6 $ $Date: 2001/05/16 18:46:20 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import java.util.Iterator;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/04/26 16:29:42 $
+ * @version $Revision: 1.6 $, $Date: 2001/05/16 18:46:20 $
  */
 public class FrameDataStream extends DataStream {
 
@@ -281,9 +281,10 @@ public class FrameDataStream extends DataStream {
         }
 
         synchronized (this) {
-            this.frames.add(frame);
-
-            this.length += frame.getPayload().length;
+            if( frame.getPayload().length > 0 ) {
+                this.frames.add(frame);
+                this.length += frame.getPayload().length;
+            }
 
             if (frame.isLast()) {
                 haveLast = true;
@@ -332,22 +333,26 @@ public class FrameDataStream extends DataStream {
 
         Frame f;
         synchronized (this) {
-            if (available() == 0) {
+            do {
+                if (available() == 0) {
 
-                // caller wants to read bytes despite the fact there are no
-                // bytes currently available.
-                if ((this.haveLast == true) && (this.frames.size() == 0)) {
+                    // caller wants to read bytes despite the fact there are no
+                    // bytes currently available.
+                    if ((this.haveLast == true) && (this.frames.size() == 0)) {
 
-                    // no more bytes to read() and none are expected, return -1
-                    return -1;
+                        // no more bytes to read() and none are
+                        // expected, return -1
+                        return -1;
+                    }
+
+                    // no bytes available to read, but more are
+                    // expected... block
+                    waitForFrame(0);
                 }
 
-                // no bytes available to read, but more are expected... block
-                waitForFrame(0);
-            }
-
-            // for ease of reading
-            f = (Frame) this.frames.getFirst();
+                // for ease of reading
+                f = (Frame) this.frames.getFirst();
+            } while (f == null);
         }
 
         int pos = this.offset;    // index for reading the byte
@@ -431,6 +436,9 @@ public class FrameDataStream extends DataStream {
                 }
 
                 f = (Frame) this.frames.getFirst();
+                if (f == null) {
+                    continue;
+                }
             }
 
             // let exceptions handle arraycopy() error cases
