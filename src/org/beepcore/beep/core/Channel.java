@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.14 $ $Date: 2001/07/10 01:17:52 $
+ * Channel.java            $Revision: 1.15 $ $Date: 2001/07/30 12:59:03 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2001/07/10 01:17:52 $
+ * @version $Revision: 1.15 $, $Date: 2001/07/30 12:59:03 $
  *
  */
 public class Channel {
@@ -133,6 +133,9 @@ public class Channel {
     private boolean notifyOnFirstFrame;
 
     private Object applicationData = null;
+
+    /* this is to support deprecated sendXXX methods */
+    private MessageMSG currentMSG;
 
     // in shutting down the session
     // something for waiting synchronous messages (semaphores or something)
@@ -390,9 +393,7 @@ public class Channel {
      */
     public MessageStatus sendANS(DataStream stream) throws BEEPException
     {
-        Message m = (Message)this.recvMSGQueue.get(0);
-
-        return m.sendANS(stream);
+        return this.currentMSG.sendANS(stream);
     }
 
     /**
@@ -522,7 +523,8 @@ public class Channel {
      */
     public MessageStatus sendNUL() throws BEEPException
     {
-        Message m = (Message)this.recvMSGQueue.get(0);
+        Message m = this.currentMSG;
+        this.currentMSG = null;
 
         return m.sendNUL();
     }
@@ -542,7 +544,8 @@ public class Channel {
      */
     public MessageStatus sendRPY(DataStream stream) throws BEEPException
     {
-        Message m = (Message)this.recvMSGQueue.get(0);
+        Message m = this.currentMSG;
+        this.currentMSG = null;
 
         return m.sendRPY(stream);
     }
@@ -562,7 +565,8 @@ public class Channel {
      */
     public MessageStatus sendERR(BEEPError error) throws BEEPException
     {
-        Message m = (Message)this.recvMSGQueue.get(0);
+        Message m = this.currentMSG;
+        this.currentMSG = null;
 
         return m.sendERR(error);
     }
@@ -583,7 +587,8 @@ public class Channel {
     public MessageStatus sendERR(int code, String diagnostic)
         throws BEEPException
     {
-        Message m = (Message)this.recvMSGQueue.get(0);
+        Message m = this.currentMSG;
+        this.currentMSG = null;
 
         return m.sendERR(code, diagnostic);
     }
@@ -606,7 +611,8 @@ public class Channel {
     public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
         throws BEEPException
     {
-        Message m = (Message)this.recvMSGQueue.get(0);
+        Message m = this.currentMSG;
+        this.currentMSG = null;
 
         return m.sendERR(code, diagnostic, xmlLang);
     }
@@ -690,6 +696,7 @@ public class Channel {
                 m.setNotified();
             }
 
+            this.currentMSG = m;
             ((MessageListener) this.listener).receiveMSG(m);
 
             return;
@@ -749,6 +756,10 @@ public class Channel {
                             Message.MESSAGE_TYPE_NUL);
 
             mstatus.setMessageStatus(MessageStatus.MESSAGE_STATUS_RECEIVED_REPLY);
+            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+                         "Notifying reply listener =>" + replyListener +
+                         "for NUL message");
+
             replyListener.receiveNUL(m);
 
             return;
