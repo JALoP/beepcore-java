@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.16 $ $Date: 2001/11/09 15:49:28 $
+ * TCPSession.java  $Revision: 1.17 $ $Date: 2001/11/23 04:24:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -48,7 +48,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.16 $, $Date: 2001/11/09 15:49:28 $
+ * @version $Revision: 1.17 $, $Date: 2001/11/23 04:24:04 $
  */
 public class TCPSession extends Session {
 
@@ -430,8 +430,6 @@ public class TCPSession extends Session {
         int length = 0;
         InputStream is = socket.getInputStream();
 
-        headerBuffer[SEQ_LENGTH] = 0;
-
         while (true) {
             try {
                 int b = is.read();
@@ -455,6 +453,8 @@ public class TCPSession extends Session {
                 if ((length == 0) || (headerBuffer[length - 1] != '\r')) {
                     throw new BEEPException("Malformed BEEP header");
                 }
+
+                --length;
 
                 break;
             }
