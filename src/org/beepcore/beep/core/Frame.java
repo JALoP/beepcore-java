@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.3 $ $Date: 2001/04/13 21:42:32 $
+ * Frame.java            $Revision: 1.4 $ $Date: 2001/04/16 17:08:50 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/13 21:42:32 $
+ * @version $Revision, $Date: 2001/04/16 17:08:50 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -123,8 +123,8 @@ public class Frame {
         this.last = last;
     }
 
-    private Frame(int messageType, Channel channel, int msgno, boolean last,
-                  long seqno, int size, int ansno)
+    Frame(int messageType, Channel channel, int msgno, boolean last,
+          long seqno, int size, int ansno)
     {
         this.messageType = messageType;
         this.channel = channel;
@@ -133,6 +133,7 @@ public class Frame {
         this.seqno = seqno;
         this.size = size;
         this.ansno = ansno;
+        this.payload = null;
     }
 
     /**
@@ -156,7 +157,7 @@ public class Frame {
         StringBuffer header = new StringBuffer(Frame.MAX_HEADER_SIZE);
 
         // Create header
-        header.append(Message.MessageType.getMessageType(this.messageType));
+        header.append(MessageType.getMessageType(this.messageType));
         header.append(' ');
         header.append(this.channel.getNumberAsString());
         header.append(' ');
@@ -166,7 +167,7 @@ public class Frame {
         header.append(' ');
         header.append(this.seqno);
         header.append(' ');
-        header.append(this.payload.getLength());
+        header.append(this.size);
 
         if (this.messageType == Message.MESSAGE_TYPE_ANS) {
             header.append(' ');
@@ -192,7 +193,9 @@ public class Frame {
     {
         LinkedList l = new LinkedList();
         l.add(new BufferSegment(buildHeader()));
-        l.add(this.payload);
+        if (this.payload != null) {
+            l.add(this.payload);
+        }
         l.add(new BufferSegment(TRAILER.getBytes()));
         return l.iterator();
     }
@@ -359,7 +362,7 @@ public class Frame {
      * @author Huston Franklin
      * @author Jay Kint
      * @author Scott Pead
-     * @version $Revision: 1.3 $, $Date: 2001/04/13 21:42:32 $
+     * @version $Revision: 1.4 $, $Date: 2001/04/16 17:08:50 $
      */
     public static class BufferSegment {
 
