@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java  $Revision: 1.10 $ $Date: 2003/05/27 21:37:41 $
+ * TuningProfile.java  $Revision: 1.11 $ $Date: 2003/09/15 15:23:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -74,7 +74,7 @@ public abstract class TuningProfile {
      * @throws BEEPException
      *
      */
-    public void abort(BEEPError error, Channel channel) throws BEEPException
+    public void abort(BEEPError error, Channel channel)
     {
         tuningChannels.remove(channel);
         log.debug("TuningProfile.abort");
@@ -106,6 +106,7 @@ public abstract class TuningProfile {
             tuningChannels.add(channel);
             ((ChannelImpl)channel).setState(ChannelImpl.STATE_TUNING);
             session.sendProfile(profile, data, (ChannelImpl)channel);
+            ((ChannelImpl)channel).setState(ChannelImpl.STATE_ACTIVE);
             session.disableIO();
         } catch (Exception x) {
 
@@ -118,6 +119,15 @@ public abstract class TuningProfile {
                                 (ChannelImpl)channel);
             abort(error, channel);
         }
+    }
+    
+    protected void begin(Channel channel)
+    {
+        log.debug("TuningProfile.begin");
+
+        SessionImpl session = (SessionImpl)channel.getSession();
+
+        ((ChannelImpl)channel).setState(ChannelImpl.STATE_TUNING);
     }
 
     /**
@@ -133,11 +143,11 @@ public abstract class TuningProfile {
      *
      */
     public void complete(Channel channel,
-                          SessionCredential localCred,
-                          SessionCredential peerCred,
-                          SessionTuningProperties tuning,
-                          ProfileRegistry registry,
-                          Object argument)
+                         SessionCredential localCred,
+                         SessionCredential peerCred,
+                         SessionTuningProperties tuning,
+                         ProfileRegistry registry,
+                         Object argument)
         throws BEEPException
     {
         try {
@@ -247,6 +257,7 @@ public abstract class TuningProfile {
             throws BEEPException
     {
         ((SessionImpl)session).sendProfile(uri, data, (ChannelImpl)channel);
+        ((ChannelImpl)channel).setState(ChannelImpl.STATE_ACTIVE);
     }
 
     public Channel startChannel(Session session, String profile,

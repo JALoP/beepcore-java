@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+    <classpathentry kind="src" path="src"/>
+    <classpathentry kind="src" path="test"/>
+    <classpathentry kind="src" path="example"/>
+    <classpathentry kind="src" path="tls"/>
+    <classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
+    <classpathentry exported="true" kind="lib" path="lib/concurrent.jar"/>
+    <classpathentry kind="var" path="JAVA_HOME/jre/lib/jsse.jar"/>
+    <classpathentry exported="true" kind="lib" path="lib/commons-logging.jar"/>
+    <classpathentry kind="lib" path="lib/cryptix-asn1.jar"/>
+    <classpathentry kind="lib" path="lib/cryptix32.jar"/>
+    <classpathentry kind="lib" path="lib/puretls.jar"/>
+    <classpathentry kind="var" path="JUNIT_HOME/lib/junit.jar"/>
+    <classpathentry kind="lib" path="lib/log4j-1.2.6.jar"/>
+    <classpathentry kind="lib" path="lib/xerces.jar"/>
+    <classpathentry kind="output" path="build/classes"/>
+</classpath>

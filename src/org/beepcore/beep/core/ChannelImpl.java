@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.8 $ $Date: 2003/09/13 21:10:31 $
+ * ChannelImpl.java  $Revision: 1.9 $ $Date: 2003/09/15 15:23:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2003/09/13 21:10:31 $
+ * @version $Revision: 1.9 $, $Date: 2003/09/15 15:23:30 $
  *
  */
 class ChannelImpl implements Channel, Runnable {
@@ -416,6 +416,22 @@ class ChannelImpl implements Channel, Runnable {
         sendToPeer(status);
 
         return status;
+    }
+
+    void abort()
+    {
+        setState(ChannelImpl.STATE_ABORTED);
+    }
+
+    void addPiggybackedMSG(PiggybackedMSG msg) throws BEEPException
+    {
+        recvMSGQueue.add(msg);
+        try {
+            callbackQueue.execute(this);
+        } catch (InterruptedException e) {
+            /** @TODO handle this better */
+            throw new BEEPException(e);
+        }
     }
 
     /**
