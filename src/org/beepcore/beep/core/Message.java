@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.2 $ $Date: 2001/04/16 17:07:08 $
+ * Message.java            $Revision: 1.3 $ $Date: 2001/04/26 16:30:14 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import java.lang.IndexOutOfBoundsException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/16 17:07:08 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/26 16:30:14 $
  */
 public class Message {
 
@@ -104,8 +104,7 @@ public class Message {
      * @see DataStream
      * @see Channel
      */
-    protected Message(Channel channel, int msgno, DataStream data,
-                      int messageType)
+    Message(Channel channel, int msgno, DataStream data, int messageType)
     {
         this.channel = channel;
         this.msgno = msgno;
@@ -126,7 +125,7 @@ public class Message {
      * @see Channel
      * @see DataStream
      */
-    public Message(Channel channel, int msgno, int ansno, DataStream data)
+    Message(Channel channel, int msgno, int ansno, DataStream data)
     {
         this(channel, msgno, data, MESSAGE_TYPE_ANS);
 
