@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.17 $ $Date: 2003/06/10 18:59:21 $
+ * EchoProfile.java    $Revision: 1.18 $ $Date: 2003/09/14 04:17:39 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002,2003 Huston Franklin.  All rights reserved.
@@ -33,7 +33,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.17 $, $Date: 2003/06/10 18:59:21 $
+ * @version $Revision: 1.18 $, $Date: 2003/09/14 04:17:39 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, RequestHandler
@@ -70,46 +70,34 @@ public class EchoProfile
 
     public void receiveMSG(MessageMSG message)
     {
-        new ReplyThread(message).start();
-    }
+        OutputDataStream data = new OutputDataStream();
+        InputDataStream ds = message.getDataStream();
 
-    private class ReplyThread extends Thread {
-        private MessageMSG message;
-
-        ReplyThread(MessageMSG message) {
-            this.message = message;
-        }
-
-        public void run() {
-            OutputDataStream data = new OutputDataStream();
-            InputDataStream ds = message.getDataStream();
-
-            while (true) {
-                try {
-                    BufferSegment b = ds.waitForNextSegment();
-                    if (b == null) {
-                        break;
-                    }
-                    data.add(b);
-                } catch (InterruptedException e) {
-                    message.getChannel().getSession().terminate(e.getMessage());
-                    return;
-                }
-            }
-
-            data.setComplete();
-
+        while (true) {
             try {
-                message.sendRPY(data);
-            } catch (BEEPException e) {
-                try {
-                    message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                    "Error sending RPY");
-                } catch (BEEPException x) {
-                    message.getChannel().getSession().terminate(x.getMessage());
+                BufferSegment b = ds.waitForNextSegment();
+                if (b == null) {
+                    break;
                 }
+                data.add(b);
+            } catch (InterruptedException e) {
+                message.getChannel().getSession().terminate(e.getMessage());
                 return;
             }
+        }
+
+        data.setComplete();
+
+        try {
+            message.sendRPY(data);
+        } catch (BEEPException e) {
+            try {
+                message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                "Error sending RPY");
+            } catch (BEEPException x) {
+                message.getChannel().getSession().terminate(x.getMessage());
+            }
+            return;
         }
     }
 }
