@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.29 $ $Date: 2003/04/23 15:23:04 $
+ * TCPSession.java  $Revision: 1.30 $ $Date: 2003/05/20 16:06:16 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -47,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.29 $, $Date: 2003/04/23 15:23:04 $
+ * @version $Revision: 1.30 $, $Date: 2003/05/20 16:06:16 $
  */
 public class TCPSession extends SessionImpl {
 
@@ -344,13 +344,14 @@ public class TCPSession extends SessionImpl {
             reg = this.getProfileRegistry();
         }
 
-        if (isInitiator()) {
-            return new TCPSession(s, reg, CHANNEL_START_ODD,
-                                  localCred, peerCred, tuning, null);
-        } else {
-            return new TCPSession(s, reg, CHANNEL_START_EVEN,
-                                  localCred, peerCred, tuning, null);
-        }
+        Session newSession = new TCPSession(s, reg,
+                                            (isInitiator() ? CHANNEL_START_ODD:
+                                             CHANNEL_START_EVEN),
+                                            localCred, peerCred, tuning, null);
+
+        this.fireSessionReset(newSession);
+
+        return newSession;
     }
 
     /**

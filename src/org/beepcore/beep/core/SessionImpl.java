@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.2 $ $Date: 2003/04/23 15:23:04 $
+ * Session.java  $Revision: 1.3 $ $Date: 2003/05/20 16:06:15 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -40,6 +40,7 @@ import org.xml.sax.SAXException;
 import org.beepcore.beep.core.event.ChannelEvent;
 import org.beepcore.beep.core.event.ChannelListener;
 import org.beepcore.beep.core.event.SessionEvent;
+import org.beepcore.beep.core.event.SessionResetEvent;
 import org.beepcore.beep.core.event.SessionListener;
 import org.beepcore.beep.util.StringUtil;
 
@@ -61,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2003/04/23 15:23:04 $
+ * @version $Revision: 1.3 $, $Date: 2003/05/20 16:06:15 $
  *
  * @see Channel
  */
@@ -1038,6 +1039,18 @@ public abstract class SessionImpl implements Session {
             return;
 
         SessionEvent e = new SessionEvent(this);
+        for (int i=0; i<l.length; ++i) {
+            l[i].sessionClosed(e);
+        }
+    }
+
+    protected void fireSessionReset(Session newSession)
+    {
+        SessionListener[] l = this.sessionListeners;
+        if (l.length == 0)
+            return;
+
+        SessionResetEvent e = new SessionResetEvent(this, newSession);
         for (int i=0; i<l.length; ++i) {
             l[i].sessionClosed(e);
         }
