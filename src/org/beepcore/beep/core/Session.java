@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.28 $ $Date: 2002/08/20 03:08:58 $
+ * Session.java  $Revision: 1.29 $ $Date: 2002/08/22 18:09:34 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,7 +59,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.28 $, $Date: 2002/08/20 03:08:58 $
+ * @version $Revision: 1.29 $, $Date: 2002/08/22 18:09:34 $
  *
  * @see Channel
  */
@@ -1230,6 +1230,8 @@ public abstract class Session {
                 Log.logEntry(Log.SEV_DEBUG, CORE,
                              "Leaving profile response to Tuning Profile CCL");
 
+                fireChannelStarted(ch);
+
                 return true;
             } catch (StartChannelException e) {
                 try {
@@ -1248,6 +1250,8 @@ public abstract class Session {
 
                 return false;
             }
+
+            fireChannelStarted(ch);
 
             return true;
         }
