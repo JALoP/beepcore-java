@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.10 $ $Date: 2001/05/10 04:43:52 $
+ * Session.java            $Revision: 1.11 $ $Date: 2001/05/25 15:27:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2001/05/10 04:43:52 $
+ * @version $Revision: 1.11 $, $Date: 2001/05/25 15:27:10 $
  *
  * @see Channel
  */
@@ -75,8 +75,10 @@ public abstract class Session {
 
     /** @todo check this */
     private static final int MAX_PAYLOAD_SIZE = 4096;
-    private static final int MAX_FRAME_SIZE = Frame.MAX_HEADER_SIZE
-    + MAX_PAYLOAD_SIZE + Frame.TRAILER.length();
+    private static final int MAX_PCDATA_SIZE = 4096;
+    private static final int MAX_START_CHANNEL_WAIT = 60000;
+    private static final int MAX_START_CHANNEL_INTERVAL = 100;
+
     private static final String ERR_BEEP_START_CHANNEL_TIMEOUT =
         "Channel start timed out.";
     private static final String ERR_GREETING_FAILED =
@@ -96,6 +98,29 @@ public abstract class Session {
         "Unknown operation element";
     private static final String ERR_MALFORMED_PROFILE_MSG =
         "Malformed profile";
+
+    private static final String FRAGMENT_CDATA_PREFIX = "<![CDATA[";
+    private static final String FRAGMENT_CDATA_SUFFIX = "]]>";
+    private static final String FRAGMENT_CLOSE_PREFIX = "<close ";
+    private static final String FRAGMENT_NUMBER_PREFIX = "number='";
+    private static final String FRAGMENT_OK = "<ok />";
+    private static final String FRAGMENT_SERVERNAME_PREFIX = "serverName='";
+    private static final String FRAGMENT_START_PREFIX = "<start ";
+    private static final String FRAGMENT_START_SUFFIX = "</start>";
+
+    private static final String TAG_CLOSE = "close";
+    private static final String TAG_CODE = "code";
+    private static final String TAG_ENCODING = "encoding";
+    private static final String TAG_FEATURES = "features";
+    private static final String TAG_GREETING = "greeting";
+    private static final String TAG_LOCALIZE = "localize";
+    private static final String TAG_NUMBER = "number";
+    private static final String TAG_OK = "ok";
+    private static final String TAG_PROFILE = "profile";
+    private static final String TAG_START = "start";
+    private static final String TAG_SERVER_NAME = "serverName";
+    private static final String TAG_URI = "uri";
+    private static final String TAG_XML_LANG = "xml:lang";
 
     // Instance Data
     private int state;
@@ -183,17 +208,17 @@ public abstract class Session {
         int waitCount = 0;
 
         while ((state < SESSION_STATE_ACTIVE)
-               && (waitCount < Constants.MAX_START_CHANNEL_WAIT)) {
+               && (waitCount < MAX_START_CHANNEL_WAIT)) {
             try {
                 synchronized (greetingListener) {
 
                     //zero.wait(MAX_START_CHANNEL_INTERVAL);
                     greetingListener.wait(0);
 
-                    waitCount += Constants.MAX_START_CHANNEL_INTERVAL;
+                    waitCount += MAX_START_CHANNEL_INTERVAL;
                 }
             } catch (InterruptedException e) {
-                waitCount += Constants.MAX_START_CHANNEL_INTERVAL;
+                waitCount += MAX_START_CHANNEL_INTERVAL;
             }
         }
 
@@ -479,10 +504,10 @@ public abstract class Session {
         String channelNumber = getNextFreeChannelNumber();
 
         // create the message in a buffer and send it (via a StringDataStream)
-        StringBuffer startBuffer = new StringBuffer(Session.MAX_FRAME_SIZE);
+        StringBuffer startBuffer = new StringBuffer();
 
-        startBuffer.append(Constants.FRAGMENT_START_PREFIX);
-        startBuffer.append(Constants.FRAGMENT_NUMBER_PREFIX);
+        startBuffer.append(FRAGMENT_START_PREFIX);
+        startBuffer.append(FRAGMENT_NUMBER_PREFIX);
         startBuffer.append(channelNumber);
         startBuffer.append(Constants.FRAGMENT_QUOTE_ANGLE_SUFFIX);
 
@@ -505,14 +530,14 @@ public abstract class Session {
                 }
 
                 startBuffer.append(Constants.FRAGMENT_ANGLE_SUFFIX);
-                startBuffer.append(Constants.FRAGMENT_CDATA_PREFIX);
+                startBuffer.append(FRAGMENT_CDATA_PREFIX);
                 startBuffer.append(p.data);
-                startBuffer.append(Constants.FRAGMENT_CDATA_SUFFIX);
+                startBuffer.append(FRAGMENT_CDATA_SUFFIX);
                 startBuffer.append(Constants.FRAGMENT_PROFILE_SUFFIX);
             }
         }
 
-        startBuffer.append(Constants.FRAGMENT_START_SUFFIX);
+        startBuffer.append(FRAGMENT_START_SUFFIX);
 
         // @todo handle the data element
         // Create a channel
@@ -873,10 +898,10 @@ public abstract class Session {
     {
 
         // Construct Message
-        StringBuffer closeBuffer = new StringBuffer(Session.MAX_FRAME_SIZE);
+        StringBuffer closeBuffer = new StringBuffer();
 
-        closeBuffer.append(Constants.FRAGMENT_CLOSE_PREFIX);
-        closeBuffer.append(Constants.FRAGMENT_NUMBER_PREFIX);
+        closeBuffer.append(FRAGMENT_CLOSE_PREFIX);
+        closeBuffer.append(FRAGMENT_NUMBER_PREFIX);
         closeBuffer.append(channel.getNumberAsString());
         closeBuffer.append(Constants.FRAGMENT_QUOTE_SUFFIX);
         closeBuffer.append(Constants.FRAGMENT_CODE_PREFIX);
@@ -925,9 +950,9 @@ public abstract class Session {
 
         if (datum != null) {
             sb.append(Constants.FRAGMENT_QUOTE_ANGLE_SUFFIX);
-            sb.append(Constants.FRAGMENT_CDATA_PREFIX);
+            sb.append(FRAGMENT_CDATA_PREFIX);
             sb.append(datum);
-            sb.append(Constants.FRAGMENT_CDATA_SUFFIX);
+            sb.append(FRAGMENT_CDATA_SUFFIX);
             sb.append(Constants.FRAGMENT_PROFILE_SUFFIX);
         } else {
             sb.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
@@ -987,7 +1012,7 @@ public abstract class Session {
         // Send an ok
         StringDataStream sds =
             new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
-                                 Constants.FRAGMENT_OK);
+                                 FRAGMENT_OK);
 
         try {
             zero.sendRPY(sds);
@@ -1062,7 +1087,7 @@ public abstract class Session {
 
         StringDataStream sds =
             new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
-                                 Constants.FRAGMENT_OK);
+                                 FRAGMENT_OK);
 
         try {
             zero.sendRPY(sds);
@@ -1169,9 +1194,9 @@ public abstract class Session {
         }
 
         // Insane bounds check that will probably never happen
-        if (nextChannelNumber > Constants.MAX_CHANNEL_NUMBER) {
+        if (nextChannelNumber > Frame.MAX_CHANNEL_NUMBER) {
             nextChannelNumber = nextChannelNumber
-                                % Constants.MAX_CHANNEL_NUMBER;
+                                % Frame.MAX_CHANNEL_NUMBER;
             overflow = true;
         }
 
@@ -1258,19 +1283,19 @@ public abstract class Session {
         int waitCount = 0;
 
         while ((ch.getState() == expectedState)
-                && (waitCount < Constants.MAX_START_CHANNEL_WAIT)) {
+                && (waitCount < MAX_START_CHANNEL_WAIT)) {
             try {
                 synchronized (ch) {
-                    ch.wait(Constants.MAX_START_CHANNEL_INTERVAL);
+                    ch.wait(MAX_START_CHANNEL_INTERVAL);
 
-                    waitCount += Constants.MAX_START_CHANNEL_INTERVAL;
+                    waitCount += MAX_START_CHANNEL_INTERVAL;
                 }
             } catch (InterruptedException e) {
-                waitCount += Constants.MAX_START_CHANNEL_INTERVAL;
+                waitCount += MAX_START_CHANNEL_INTERVAL;
             }
         }
 
-        if (waitCount == Constants.MAX_START_CHANNEL_WAIT) {
+        if (waitCount == MAX_START_CHANNEL_WAIT) {
             Log.logEntry(Log.SEV_DEBUG, CORE, "Wait for result timed out");
         }
 
@@ -1360,12 +1385,11 @@ public abstract class Session {
             }
 
             // is this MSG a <start>
-            if (elementName.equals(Constants.TAG_START)) {
+            if (elementName.equals(TAG_START)) {
                 Log.logEntry(Log.SEV_DEBUG, CORE,
                              "Received a start channel request");
 
-                String channelNumber =
-                    topElement.getAttribute(Constants.TAG_NUMBER);
+                String channelNumber = topElement.getAttribute(TAG_NUMBER);
 
                 if (channelNumber == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
@@ -1373,10 +1397,9 @@ public abstract class Session {
                 }
 
                 // this attribute is implied
-                String serverName =
-                    topElement.getAttribute(Constants.TAG_SERVER_NAME);
+                String serverName = topElement.getAttribute(TAG_SERVER_NAME);
                 NodeList profiles =
-                    topElement.getElementsByTagName(Constants.TAG_PROFILE);
+                    topElement.getElementsByTagName(TAG_PROFILE);
 
                 if (profiles == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
@@ -1387,15 +1410,14 @@ public abstract class Session {
 
                 for (int i = 0; i < profiles.getLength(); i++) {
                     Element profile = (Element) profiles.item(i);
-                    String uri = profile.getAttribute(Constants.TAG_URI);
+                    String uri = profile.getAttribute(TAG_URI);
 
                     if (uri == null) {
                         throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
                                             "no profiles in start");
                     }
 
-                    String encoding =
-                        profile.getAttribute(Constants.TAG_ENCODING);
+                    String encoding = profile.getAttribute(TAG_ENCODING);
                     boolean b64;
 
                     if ((encoding == null) || encoding.equals("")) {
@@ -1415,7 +1437,7 @@ public abstract class Session {
                     if (dataNode != null) {
                         data = dataNode.getNodeValue();
 
-                        if (data.length() > Constants.MAX_PCDATA_SIZE) {
+                        if (data.length() > MAX_PCDATA_SIZE) {
                             throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
                                                 ERR_PCDATA_TOO_BIG_MSG);
                         }
@@ -1429,19 +1451,19 @@ public abstract class Session {
             }
 
             // is this MSG a <close>
-            else if (elementName.equals(Constants.TAG_CLOSE)) {
+            else if (elementName.equals(TAG_CLOSE)) {
                 Log.logEntry(Log.SEV_DEBUG, CORE,
                              "Received a channel close request");
 
                 String channelNumber =
-                    topElement.getAttribute(Constants.TAG_NUMBER);
+                    topElement.getAttribute(TAG_NUMBER);
 
                 if (channelNumber == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
                                         "Malformed <close>: no channel number");
                 }
 
-                String code = topElement.getAttribute(Constants.TAG_CODE);
+                String code = topElement.getAttribute(TAG_CODE);
 
                 if (code == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
@@ -1450,14 +1472,14 @@ public abstract class Session {
 
                 // this attribute is implied
                 String xmlLang =
-                    topElement.getAttribute(Constants.TAG_XML_LANG);
+                    topElement.getAttribute(TAG_XML_LANG);
                 String data = null;
                 Node dataNode = topElement.getFirstChild();
 
                 if (dataNode != null) {
                     data = dataNode.getNodeValue();
 
-                    if (data.length() > Constants.MAX_PCDATA_SIZE) {
+                    if (data.length() > MAX_PCDATA_SIZE) {
                         throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
                                             ERR_PCDATA_TOO_BIG_MSG);
                     }
@@ -1483,7 +1505,7 @@ public abstract class Session {
 
                 if (elementName == null) {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
-                } else if (!elementName.equals(Constants.TAG_GREETING)) {
+                } else if (!elementName.equals(TAG_GREETING)) {
                     throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
                 }
 
@@ -1491,11 +1513,11 @@ public abstract class Session {
 
                 // this attribute is implied
                 String features =
-                    topElement.getAttribute(Constants.TAG_FEATURES);
+                    topElement.getAttribute(TAG_FEATURES);
 
                 // This attribute has a default value
                 String localize =
-                    topElement.getAttribute(Constants.TAG_LOCALIZE);
+                    topElement.getAttribute(TAG_LOCALIZE);
 
                 if (localize == null) {
                     localize = Constants.LOCALIZE_DEFAULT;
@@ -1504,21 +1526,21 @@ public abstract class Session {
                 // Read the profiles - note, the greeting is valid
                 // with 0 profiles
                 NodeList profiles =
-                    topElement.getElementsByTagName(Constants.TAG_PROFILE);
+                    topElement.getElementsByTagName(TAG_PROFILE);
 
                 if (profiles.getLength() > 0) {
                     LinkedList profileList = new LinkedList();
 
                     for (int i = 0; i < profiles.getLength(); i++) {
                         Element profile = (Element) profiles.item(i);
-                        String uri = profile.getAttribute(Constants.TAG_URI);
+                        String uri = profile.getAttribute(TAG_URI);
 
                         if (uri == null) {
                             throw new BEEPException(ERR_MALFORMED_PROFILE_MSG);
                         }
 
                         String encoding =
-                            profile.getAttribute(Constants.TAG_ENCODING);
+                            profile.getAttribute(TAG_ENCODING);
 
                         // encoding is not allowed in greetings
                         if (encoding != null) {
@@ -1585,16 +1607,16 @@ public abstract class Session {
                 if (elementName == null) {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
                 // is this RPY a <profile>
-                } else if (elementName.equals(Constants.TAG_PROFILE)) {
+                } else if (elementName.equals(TAG_PROFILE)) {
                     try {
-                        String uri = topElement.getAttribute(Constants.TAG_URI);
+                        String uri = topElement.getAttribute(TAG_URI);
 
                         if (uri == null) {
                             throw new BEEPException(ERR_MALFORMED_PROFILE_MSG);
                         }
 
                         String encoding =
-                            topElement.getAttribute(Constants.TAG_ENCODING);
+                            topElement.getAttribute(TAG_ENCODING);
 
                         if (encoding == null) {
                             encoding = Constants.ENCODING_NONE;
@@ -1607,7 +1629,7 @@ public abstract class Session {
                         if (dataNode != null) {
                             data = dataNode.getNodeValue();
 
-                            if (data.length() > Constants.MAX_PCDATA_SIZE) {
+                            if (data.length() > MAX_PCDATA_SIZE) {
                                 throw new BEEPException(ERR_PCDATA_TOO_BIG_MSG);
                             }
                         }
@@ -1690,7 +1712,7 @@ public abstract class Session {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
                 // is this RPY an <ok> (the positive response to a
                 // channel close)
-                } else if (elementName.equals(Constants.TAG_OK)) {
+                } else if (elementName.equals(TAG_OK)) {
                     Log.logEntry(Log.SEV_DEBUG, CORE,
                                  "Received an OK for channel close");
 

@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.8 $ $Date: 2001/05/07 21:21:38 $
+ * Channel.java            $Revision: 1.9 $ $Date: 2001/05/25 15:27:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,13 +32,12 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2001/05/07 21:21:38 $
+ * @version $Revision: 1.9 $, $Date: 2001/05/25 15:27:10 $
  *
  */
 public class Channel {
 
     // class variables
-    static final int MAX_MESSAGES_WAITING_DEFAULT = 10;
     static final int STATE_UNINITIALISED = 1;
     static final int STATE_OK = 2;
     static final int STATE_CLOSING = 3;
@@ -53,6 +52,8 @@ public class Channel {
         "Channel in currently experiencing technical difficulties.";
     private static final String ERR_CHANNEL_UNINITIALISED_STATE =
         "Channel is uninitialised.";
+    private static final String ERR_CHANNEL_UNKNOWN_STATE =
+        "Channel is in an unknown state.";
     private static final String ERR_CHANNEL_INCONSISTENT_FRAME_TYPE_PREFIX =
         "Incorrect message type: was ";
     private static final String ERR_REPLY_RECEIVED_FOR_NO_MESSAGE =
@@ -63,44 +64,98 @@ public class Channel {
 
     // default values for some variables
     static final int DEFAULT_WINDOW_SIZE = 4096;
-    static final int DEFAULT_TIME_TO_LIVE = 30000;    // in millisecs
 
     // instance variables
-    String profile;         // syntax of messages
-    String encoding;        // encoding of uesed by profile
-    String number;          // channel number on the session
-    String startData;    // Used to pass data sent on the Start Channel request
-    DataListener listener;  // receiver of messages (or partial messages)
-    int lastAnswerSent;     // Used to track MSGNOs for Answers
-    private int lastMessageSent;    // number of last message sent
-    int lastReplyRecv;      // number of last reply received
-    int lastMessageRecv;    // number of last message received
-    int lastReplySent;      // number of last reply sent
-    long sentSequence;       // sequence number for messages sent
-    long recvSequence;       // sequence for messages received
-    int ansWaiting;    // message number for which we're currently receiving answers
-    List sentMSGQueue;      // messages waiting for replies
-    LinkedList recvMSGQueue;// MSG we've received by awaiting proceesing of a former MSG
-    int frameSize;          // size of the frames
-    int ansno = -1;         // counter of the answer
-    Session session;        // session this channel sends through.
-    FrameDataStream currentDataStream;    // data stream that frames are coming in
 
-    // message that we are receiving frames
+    /** syntax of messages */
+    private String profile;
+
+    /** encoding of used by profile */
+    String encoding;
+
+    /** channel number on the session */
+    String number;
+
+    /** Used to pass data sent on the Start Channel request */
+    String startData;
+
+    /** receiver of messages (or partial messages) */
+    DataListener listener;
+
+    /** Used to track MSGNOs for Answers */
+    int lastAnswerSent;
+
+    /** number of last message sent */
+    private int lastMessageSent;
+
+    /** number of last reply received */
+    int lastReplyRecv;
+
+    /** number of last message received */
+    int lastMessageRecv;
+
+    /** number of last reply sent */
+    int lastReplySent;
+
+    /** sequence number for messages sent */
+    long sentSequence;
+
+    /** sequence for messages received */
+    long recvSequence;
+
+    /** message number for which we're currently receiving answers */
+    int ansWaiting;
+
+    /** messages waiting for replies */
+    List sentMSGQueue;
+
+    /** MSG we've received by awaiting proceesing of a former MSG */
+    LinkedList recvMSGQueue;
+
+    /** size of the frames */
+    int frameSize;
+
+    /** counter of the answer */
+    int ansno = -1;
+
+    /** session this channel sends through. */
+    Session session;
+
+    /** data stream that frames are coming in */
+    FrameDataStream currentDataStream;
+
+    /** message that we are receiving frames */
     LinkedList recvReplyQueue;
-    Message sentMessage;    // message that is being processed by a listener
-    int state = STATE_UNINITIALISED;                  //
-    BEEPError errMessage;   //
+
+    /** message that is being processed by a listener */
+    Message sentMessage;
+
+    int state = STATE_UNINITIALISED;
+
+    BEEPError errMessage;
+
     Frame previousFrame;
-    int peerWindowSize;     // size of the peer's receive buffer
-    int recvWindowSize;     // size of the receive buffer
-    int recvWindowUsed;     // amount of the buffer in use
+
+    /** size of the peer's receive buffer */
+    int peerWindowSize;
+
+    /** size of the receive buffer */
+    int recvWindowSize;
+
+    /** amount of the buffer in use */
+    int recvWindowUsed;
+
     long prevAckno;
+
     int prevWindowUsed;
-    int prevWindowSize;
-    int waitTimeForPeer;    //
-    int msgsPending;        // semaphore for waiting until all ANS have been
+
+    int waitTimeForPeer;
+
+    /** semaphore for waiting until all ANS have been */
+    int msgsPending;
+
     private boolean notifyOnFirstFrame;
+
     private Object applicationData = null;
 
     // in shutting down the session
@@ -150,8 +205,8 @@ public class Channel {
         state = STATE_UNINITIALISED;
         recvWindowUsed = 0;
         recvWindowSize = DEFAULT_WINDOW_SIZE;
+        prevAckno = 0;
         prevWindowUsed = 0;
-        prevWindowSize = DEFAULT_WINDOW_SIZE;
         msgsPending = 0;
         peerWindowSize = DEFAULT_WINDOW_SIZE;
         waitTimeForPeer = 0;
@@ -234,7 +289,7 @@ public class Channel {
      * Returns the encoding used on this <code>Channel</code>
      * @todo look at removing this and adding the information to getProfile()
      */
-    public String getEncoding()
+    String getEncoding()
     {
         return encoding;
     }
@@ -823,7 +878,7 @@ public class Channel {
             case STATE_UNINITIALISED :
                 throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
             default :
-                throw new BEEPException(Constants.EMPTY_STRING);
+                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
             }
         }
 
@@ -879,7 +934,7 @@ public class Channel {
             case STATE_UNINITIALISED :
                 throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
             default :
-                throw new BEEPException(Constants.EMPTY_STRING);
+                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
             }
         }
 
@@ -1019,7 +1074,7 @@ public class Channel {
             case STATE_UNINITIALISED :
                 throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
             default :
-                throw new BEEPException(Constants.EMPTY_STRING);
+                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
             }
         }
 

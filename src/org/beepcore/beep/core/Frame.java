@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.6 $ $Date: 2001/05/16 19:44:30 $
+ * Frame.java            $Revision: 1.7 $ $Date: 2001/05/25 15:27:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/05/16 19:44:30 $
+ * @version $Revision, $Date: 2001/05/25 15:27:10 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -57,6 +57,12 @@ public class Frame {
                                                + 1      // space
                                                + 10     // ansno
                                                + 2);    // CRLF
+    public static final int MAX_ANS_NUMBER = Integer.MAX_VALUE; // 2147483647;
+    public static final int MAX_CHANNEL_NUMBER = Integer.MAX_VALUE;
+    public static final int MAX_MESSAGE_NUMBER = Integer.MAX_VALUE;
+    public static final long MAX_SEQUENCE_NUMBER = 4294967295L;
+    public static final int MAX_SIZE = Integer.MAX_VALUE;
+
     private static final String CRLF = "\r\n";
 
     /** BEEP message type of  <code>Frame</code>. */
@@ -362,7 +368,7 @@ public class Frame {
      * @author Huston Franklin
      * @author Jay Kint
      * @author Scott Pead
-     * @version $Revision: 1.6 $, $Date: 2001/05/16 19:44:30 $
+     * @version $Revision: 1.7 $, $Date: 2001/05/25 15:27:10 $
      */
     public static class BufferSegment {
 

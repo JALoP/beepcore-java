@@ -1,6 +1,6 @@
 
 /*
- * BEEPError.java            $Revision: 1.2 $ $Date: 2001/05/07 19:21:57 $
+ * BEEPError.java            $Revision: 1.3 $ $Date: 2001/05/25 15:27:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/05/07 19:21:57 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/25 15:27:10 $
  */
 public class BEEPError extends BEEPException {
 
@@ -45,6 +45,13 @@ public class BEEPError extends BEEPException {
         "Unknown operation element";
     private static final String ERR_PCDATA_TOO_BIG_MSG =
         "Element's PCDATA exceeds the maximum size";
+
+    private static final String FRAGMENT_ERROR_PREFIX = "<error ";
+    private static final String FRAGMENT_ERROR_SUFFIX = "</error>";
+
+    private static final String TAG_CODE = "code";
+    private static final String TAG_ERROR = "error";
+    private static final String TAG_XML_LANG = "xml:lang";
 
     private int code;
     private String xmlLang = null;
@@ -174,7 +181,7 @@ public class BEEPError extends BEEPException {
     {
         StringBuffer sb = new StringBuffer(128);
 
-        sb.append(Constants.FRAGMENT_ERROR_PREFIX);
+        sb.append(FRAGMENT_ERROR_PREFIX);
         sb.append(Constants.FRAGMENT_CODE_PREFIX);
         sb.append(code);
 
@@ -188,7 +195,7 @@ public class BEEPError extends BEEPException {
             sb.append(Constants.FRAGMENT_QUOTE_SUFFIX);
             sb.append(Constants.FRAGMENT_ANGLE_SUFFIX);
             sb.append(diagnostic);
-            sb.append(Constants.FRAGMENT_ERROR_SUFFIX);
+            sb.append(FRAGMENT_ERROR_SUFFIX);
         } else {
             sb.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
         }
@@ -245,27 +252,23 @@ public class BEEPError extends BEEPException {
 
         if (elementName == null) {
             throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        } else if (!elementName.equals(Constants.TAG_ERROR)) {
+        } else if (!elementName.equals(TAG_ERROR)) {
             throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
         }
 
-        String code = topElement.getAttribute(Constants.TAG_CODE);
+        String code = topElement.getAttribute(TAG_CODE);
 
         if (code == null) {
             throw new BEEPException(ERR_MALFORMED_XML_MSG);
         }
 
         // this attribute is implied
-        String xmlLang = topElement.getAttribute(Constants.TAG_XML_LANG);
+        String xmlLang = topElement.getAttribute(TAG_XML_LANG);
         Node dataNode = topElement.getFirstChild();
         String data = null;
 
         if (dataNode != null) {
             data = dataNode.getNodeValue();
-
-            if (data.length() > Constants.MAX_PCDATA_SIZE) {
-                throw new BEEPException(ERR_PCDATA_TOO_BIG_MSG);
-            }
         }
 
         return new BEEPError(Integer.parseInt(code), data, xmlLang);
