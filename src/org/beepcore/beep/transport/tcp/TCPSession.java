@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.23 $ $Date: 2002/05/02 02:07:58 $
+ * TCPSession.java  $Revision: 1.24 $ $Date: 2002/05/07 04:59:23 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -50,7 +50,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.23 $, $Date: 2002/05/02 02:07:58 $
+ * @version $Revision: 1.24 $, $Date: 2002/05/07 04:59:23 $
  */
 public class TCPSession extends Session {
 
@@ -422,13 +422,6 @@ public class TCPSession extends Session {
             InputStream is = socket.getInputStream();
 
             while (running) {
-                if (getState() == SESSION_STATE_CLOSING ||
-                    getState() == SESSION_STATE_TERMINATING ||
-                    getState() == SESSION_STATE_CLOSED)
-                {
-                    break;
-                }
-
                 if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
                     Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
                                  "Processing next frame");
@@ -447,7 +440,7 @@ public class TCPSession extends Session {
                     } while (amountRead == 0);
 
                 } catch (java.net.SocketException e) {
-                    if (getState() == SESSION_STATE_ACTIVE) {
+                    if (running) {
                         throw e;
                     }
 
@@ -506,13 +499,12 @@ public class TCPSession extends Session {
                 amountRead += n;
 
             } catch (java.net.SocketException e) {
-                if (getState() == SESSION_STATE_ACTIVE) {
+                if (running) {
                     throw e;
                 }
 
                 // socket closed intentionally (session closing)
                 // so just return
-                running = false;
                 return;
             }
 
@@ -668,13 +660,12 @@ public class TCPSession extends Session {
                 amountRead += n;
 
             } catch (java.net.SocketException e) {
-                if (getState() == SESSION_STATE_ACTIVE) {
+                if (running) {
                     throw e;
                 }
 
                 // socket closed intentionally (session closing)
                 // so just return
-                running = false;
                 return;
             }
         }
