@@ -1,5 +1,5 @@
 /*
- * SessionListener.java  $Revision: 1.1 $ $Date: 2001/11/22 15:25:29 $
+ * SessionListener.java  $Revision: 1.2 $ $Date: 2003/05/20 17:09:31 $
  *
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
@@ -24,7 +24,7 @@ import java.util.EventListener;
  * to listen for Session Events.
  *
  * @author Huston Franklin
- * @version $Revision: 1.1 $, $Date: 2001/11/22 15:25:29 $
+ * @version $Revision: 1.2 $, $Date: 2003/05/20 17:09:31 $
  */
 public interface SessionListener extends EventListener {
 
@@ -34,7 +34,12 @@ public interface SessionListener extends EventListener {
     public void greetingReceived(SessionEvent e);
 
     /**
-     * Invoked when the greeting has been received for a session.
+     * Invoked when the session is closed.
      */
     public void sessionClosed(SessionEvent e);
+
+    /**
+     * Invoked when the session is reset.
+     */
+    public void sessionReset(SessionResetEvent e);
 }
