@@ -1,5 +1,5 @@
 /*
- * TCPSession.java            $Revision: 1.7 $ $Date: 2001/04/26 16:35:05 $
+ * TCPSession.java  $Revision: 1.8 $ $Date: 2001/05/17 18:53:13 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/26 16:35:05 $
+ * @version $Revision: 1.8 $, $Date: 2001/05/17 18:53:13 $
  */
 public class TCPSession extends Session {
 
@@ -104,7 +104,8 @@ public class TCPSession extends Session {
      *
      * @param firstChannel
      *
-     * @throws BEEPException */
+     * @throws BEEPException
+     */
     TCPSession(Socket sock, ProfileRegistry registry, int firstChannel, 
                SessionCredential localCred, SessionCredential peerCred)
             throws BEEPException
@@ -353,8 +354,10 @@ public class TCPSession extends Session {
 
             OutputStream os = socket.getOutputStream();
 
-            os.write(sb.toString().getBytes("UTF-8"));
-            os.flush();
+            synchronized (writerLock) {
+                os.write(sb.toString().getBytes("UTF-8"));
+                os.flush();
+            }
         } catch (IOException x) {
             throw new BEEPException("Unable to send SEQ" + x.getMessage());
         }
