@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.5 $ $Date: 2001/05/16 18:21:02 $
+ * AnonymousAuthenticator.java  $Revision: 1.6 $ $Date: 2001/05/23 16:39:36 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/05/16 18:21:02 $
+ * @version $Revision: 1.6 $, $Date: 2001/05/23 16:39:36 $
  *
  */
 class AnonymousAuthenticator
@@ -179,7 +179,7 @@ class AnonymousAuthenticator
 
         try
         {
-            return new Blob(Blob.STATUS_COMPLETE, null);
+            return new Blob(Blob.STATUS_COMPLETE);
         }
         catch(Exception x)
         {}

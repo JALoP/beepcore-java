@@ -1,5 +1,5 @@
 /*
- * OTPAuthenticator.java  $Revision: 1.5 $ $Date: 2001/05/10 04:43:53 $
+ * OTPAuthenticator.java  $Revision: 1.6 $ $Date: 2001/05/23 16:39:36 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/05/10 04:43:53 $
+ * @version $Revision: 1.6 $, $Date: 2001/05/23 16:39:36 $
  *
  */
 class OTPAuthenticator implements MessageListener, ReplyListener {
@@ -65,22 +65,24 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
 
     // Err Messages
     static final String ERR_PEER_ABORTED =
-                                          "Our BEEP Peer has aborted this authentication sequence";
+        "Our BEEP Peer has aborted this authentication sequence";
     static final String ERR_IDENTITY_PARSE_FAILURE =
-                                                    "Invalid identity information submitted for OTP Authentication";
+        "Invalid identity information submitted for OTP Authentication";
     static final String ERR_NULL_ID =
-                                     "Invalid Authentication Info Provided";
+        "Invalid Authentication Info Provided";
     static final String ERR_OTP_AUTH_FAILURE =
-                                              "Authentication Failure: Password hash doesn't match";
+        "Authentication Failure: Password hash doesn't match";
     static final String ERR_OTP_STATE =
-                                       "Authentication Failure: Illegal OTP State Transition";
+        "Authentication Failure: Illegal OTP State Transition";
     static final String ERR_UNEXPECTED_MESSAGE = 
-                                                "Unexpected SASL-OTP Message";
-    static final String ERR_INIT = "Error while parsing init-hex or init-word=>";
+        "Unexpected SASL-OTP Message";
+    static final String ERR_INIT =
+        "Error while parsing init-hex or init-word=>";
     static final String ERR_UNKNOWN_COMMAND = "Unknown SASL OTP Command=>";
-    static final String ERR_CONCURRENT = "Authentication for that user already in progress";
+    static final String ERR_CONCURRENT =
+        "Authentication for that user already in progress";
     private static final String ERR_SEQUENCE_ZERO =
-                                                   "Authentication unable to proceed because the user's SASL OTP Sequence is 0.";
+        "Authentication unable to proceed because the user's SASL OTP Sequence is 0.";
     private static String COLON = ":";
     
     // Other
@@ -730,8 +732,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                              + " is valid for\n" + cred.toString());
                 try
                 {
-                    channel.sendRPY(new StringDataStream(new Blob(Blob.STATUS_COMPLETE,
-                                                             null).toString()));
+                    channel.sendRPY(new StringDataStream(new Blob(Blob.STATUS_COMPLETE).toString()));
                     channel.setDataListener(null);
                 }
                 catch(BEEPException x)
