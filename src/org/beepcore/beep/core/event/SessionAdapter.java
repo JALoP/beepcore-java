@@ -1,5 +1,5 @@
 /*
- * SessionAdapter.java  $Revision: 1.1 $ $Date: 2001/11/22 15:25:29 $
+ * SessionAdapter.java  $Revision: 1.2 $ $Date: 2003/05/20 21:44:56 $
  *
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
@@ -22,9 +22,10 @@ package org.beepcore.beep.core.event;
  * in <code>SessionListener</code>.
  *
  * @author Huston Franklin
- * @version $Revision: 1.1 $, $Date: 2001/11/22 15:25:29 $
+ * @version $Revision: 1.2 $, $Date: 2003/05/20 21:44:56 $
  */
 public class SessionAdapter implements SessionListener {
     public void greetingReceived(SessionEvent e) {}
     public void sessionClosed(SessionEvent e) {}
+    public void sessionReset(SessionResetEvent e) {}
 }
