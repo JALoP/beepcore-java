@@ -1,8 +1,8 @@
 /*
- * Session.java  $Revision: 1.5 $ $Date: 2003/05/27 21:37:41 $
+ * SessionImpl.java  $Revision: 1.6 $ $Date: 2003/06/03 02:33:21 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
  * Copyright (c) 2002 Kevin Kress.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
@@ -62,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2003/05/27 21:37:41 $
+ * @version $Revision: 1.6 $, $Date: 2003/06/03 02:33:21 $
  *
  * @see Channel
  */
@@ -637,18 +637,19 @@ public abstract class SessionImpl implements Session {
 
         try {
             this.changeState(SESSION_STATE_ABORTED);
-            this.disableIO();
-            channels.clear();
-
-            zero = null;
-
-            fireSessionTerminated();
         } catch (BEEPException e) {
 
             // Ignore this since we are terminating anyway.
         }
-    }
 
+        this.disableIO();
+        channels.clear();
+
+        zero = null;
+
+        fireSessionTerminated();
+    }
+    
     synchronized void changeState(int newState) throws BEEPException {
         try {
             ops[state].changeState(this, newState);
@@ -755,8 +756,19 @@ public abstract class SessionImpl implements Session {
      * @throws BEEPException
      *
      */
-    protected void postFrame(Frame f) throws BEEPException {
-        ops[state].postFrame(this, f);
+    protected boolean postFrame(Frame f) throws BEEPException {
+        try {
+            return ops[state].postFrame(this, f);
+        } catch (BEEPException e) {
+            this.terminate(e.getMessage());
+
+            return false;
+        } catch (Throwable e) {
+            log.error("Error posting frame", e);
+            this.terminate("Uncaught exception, terminating session");
+
+            return false;
+        }
     }
 
     /**
@@ -1772,7 +1784,7 @@ public abstract class SessionImpl implements Session {
 
     interface SessionOperations {
         void changeState(SessionImpl s, int newState) throws BEEPException;
-        void postFrame(SessionImpl s, Frame f) throws BEEPException;
+        boolean postFrame(SessionImpl s, Frame f) throws BEEPException;
     }
 
     static class INITIALIZED_SessionOperations implements SessionOperations {
@@ -1786,25 +1798,14 @@ public abstract class SessionImpl implements Session {
             s.state = newState;
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
-            try {
-                // If we're in a PRE-GREETING state
-                // only handle one frame at a time...
-                // to avoid processing post-greeting
-                // frames before the greeting has been
-                // fully handled.
-                synchronized (s) {
-                    ((ChannelImpl)f.getChannel()).postFrame(f);
-                }
-            } catch (BEEPException e) {
-                s.terminate(e.getMessage());
-
-                return;
-            } catch (Throwable e) {
-                log.error("Error posting frame", e);
-                s.terminate("Uncaught exception, terminating session");
-
-                return;
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
+            // If we're in a PRE-GREETING state
+            // only handle one frame at a time...
+            // to avoid processing post-greeting
+            // frames before the greeting has been
+            // fully handled.
+            synchronized (s) {
+                return ((ChannelImpl)f.getChannel()).postFrame(f);
             }
         }
 
@@ -1822,25 +1823,14 @@ public abstract class SessionImpl implements Session {
             s.state = newState;
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
-            try {
-                // If we're in a PRE-GREETING state
-                // only handle one frame at a time...
-                // to avoid processing post-greeting
-                // frames before the greeting has been
-                // fully handled.
-                synchronized (s) {
-                    ((ChannelImpl)f.getChannel()).postFrame(f);
-                }
-            } catch (BEEPException e) {
-                s.terminate(e.getMessage());
-
-                return;
-            } catch (Throwable e) {
-                log.error("Error posting frame", e);
-                s.terminate("Uncaught exception, terminating session");
-
-                return;
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
+            // If we're in a PRE-GREETING state
+            // only handle one frame at a time...
+            // to avoid processing post-greeting
+            // frames before the greeting has been
+            // fully handled.
+            synchronized (s) {
+                return ((ChannelImpl)f.getChannel()).postFrame(f);
             }
         }
 
@@ -1859,19 +1849,8 @@ public abstract class SessionImpl implements Session {
             s.state = newState;
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
-            try {
-                ((ChannelImpl)f.getChannel()).postFrame(f);
-            } catch (BEEPException e) {
-                s.terminate(e.getMessage());
-
-                return;
-            } catch (Throwable e) {
-                log.error("Error posting frame", e);
-                s.terminate("Uncaught exception, terminating session");
-
-                return;
-            }
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
+            return ((ChannelImpl)f.getChannel()).postFrame(f);
         }
 
         private Log log = LogFactory.getLog(this.getClass());
@@ -1891,20 +1870,8 @@ public abstract class SessionImpl implements Session {
             s.state = newState;
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
-            try {
-                ((ChannelImpl)f.getChannel()).postFrame(f);
-
-            } catch (BEEPException e) {
-                s.terminate(e.getMessage());
-
-                return;
-            } catch (Throwable e) {
-                log.error("Error posting frame", e);
-                s.terminate("Uncaught exception, terminating session");
-
-                return;
-            }
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
+            return ((ChannelImpl)f.getChannel()).postFrame(f);
         }
 
         private Log log = LogFactory.getLog(this.getClass());
@@ -1921,20 +1888,8 @@ public abstract class SessionImpl implements Session {
             s.state = newState;
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
-            try {
-                ((ChannelImpl)f.getChannel()).postFrame(f);
-
-            } catch (BEEPException e) {
-                s.terminate(e.getMessage());
-
-                return;
-            } catch (Throwable e) {
-                log.error("Error posting frame", e);
-                s.terminate("Uncaught exception, terminating session");
-
-                return;
-            }
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
+            return ((ChannelImpl)f.getChannel()).postFrame(f);
         }
 
         private Log log = LogFactory.getLog(this.getClass());
@@ -1952,10 +1907,11 @@ public abstract class SessionImpl implements Session {
             s.state = newState;
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
             // If we're in an error state
             log.debug("Dropping a frame because the Session state is " +
                       "no longer active.");
+            return false;
         }
 
         private Log log = LogFactory.getLog(this.getClass());
@@ -1972,19 +1928,8 @@ public abstract class SessionImpl implements Session {
             s.state = newState;
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
-            try {
-                ((ChannelImpl)f.getChannel()).postFrame(f);
-            } catch (BEEPException e) {
-                s.terminate(e.getMessage());
-
-                return;
-            } catch (Throwable e) {
-                log.error("Error posting frame", e);
-                s.terminate("Uncaught exception, terminating session");
-
-                return;
-            }
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
+            return ((ChannelImpl)f.getChannel()).postFrame(f);
         }
 
         private Log log = LogFactory.getLog(this.getClass());
@@ -1995,10 +1940,11 @@ public abstract class SessionImpl implements Session {
             throw new BEEPException("Illegal session state transition");
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
             // If we're in an error state
             log.debug("Dropping a frame because the Session state is " +
                       "no longer active.");
+            return false;
         }
 
         private Log log = LogFactory.getLog(this.getClass());
@@ -2009,10 +1955,11 @@ public abstract class SessionImpl implements Session {
             throw new BEEPException("Illegal session state transition");
         }
 
-        public void postFrame(SessionImpl s, Frame f) throws BEEPException {
+        public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
             // If we're in an error state
             log.debug("Dropping a frame because the Session state is " +
                       "no longer active.");
+            return false;
         }
 
         private Log log = LogFactory.getLog(this.getClass());
