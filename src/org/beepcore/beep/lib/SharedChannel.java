@@ -1,6 +1,6 @@
 
 /*
- * SharedChannel.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:28 $
+ * SharedChannel.java            $Revision: 1.2 $ $Date: 2001/06/18 19:28:44 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:28 $
+ * @version $Revision: 1.2 $, $Date: 2001/06/18 19:28:44 $
  */
 public class SharedChannel extends Channel {
 
@@ -200,9 +200,49 @@ public class SharedChannel extends Channel {
      * @param ml A listener of type <code>DataListener</code>
      *
      */
-    public void setDataListener(DataListener ml)
+    public void setDataListener(DataListener dl)
     {
-        channel.setDataListener(ml);
+        channel.setDataListener(dl);
+    }
+
+    public void setReceiveBufferSize( int size ) throws BEEPException
+    {
+        channel.setReceiveBufferSize( size );
+    }
+
+    public int getBufferSize()
+    {
+        return channel.getBufferSize();
+    }
+
+    public int getBufferUsed()
+    {
+        return channel.getBufferUsed();
+    }
+
+    public DataListener getDataListener()
+    {
+        return channel.getDataListener();
+    }
+
+    public boolean getNotifyMessageListenerOnFirstFrame()
+    {
+        return channel.getNotifyMessageListenerOnFirstFrame();
+    }
+
+    public int getNumber()
+    {
+        return channel.getNumber();
+    }
+
+    public Session getSession()
+    {
+        return channel.getSession();
+    }
+
+    public void setNotifyMessageListenerOnFirstFrame(boolean b)
+    {
+        channel.setNotifyMessageListenerOnFirstFrame(b);
     }
 
     /**
