@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.5 $ $Date: 2003/06/03 02:33:21 $
+ * ChannelImpl.java  $Revision: 1.6 $ $Date: 2003/06/03 16:38:35 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2003/06/03 02:33:21 $
+ * @version $Revision: 1.6 $, $Date: 2003/06/03 16:38:35 $
  *
  */
 class ChannelImpl implements Channel {
@@ -185,7 +185,7 @@ class ChannelImpl implements Channel {
         // greeting which comes in an unsolicited RPY.
         sentMSGQueue.add(new MessageStatus(this, Message.MESSAGE_TYPE_MSG, 0,
                                            null, rl));
-        recvMSGQueue.add(new MessageMSG(this, 0, null));
+        recvMSGQueue.add(new MessageMSGImpl(this, 0, null));
 
         state = STATE_ACTIVE;
     }
@@ -426,9 +426,9 @@ class ChannelImpl implements Channel {
             boolean notify = false;
 
             synchronized (recvMSGQueue) {
-                MessageMSG m = null;
+                MessageMSGImpl m = null;
                 if (recvMSGQueue.size() != 0) {
-                    m = (MessageMSG) recvMSGQueue.getLast();
+                    m = (MessageMSGImpl) recvMSGQueue.getLast();
 
                     if (m.getMsgno() != frame.getMsgno()) {
                         m = null;
@@ -451,8 +451,8 @@ class ChannelImpl implements Channel {
                     return;
                 }
 
-                m = new MessageMSG(this, frame.getMsgno(),
-                                    new InputDataStream(this));
+                m = new MessageMSGImpl(this, frame.getMsgno(),
+                                       new InputDataStream(this));
 
                 m.setNotified();
 
@@ -490,7 +490,7 @@ class ChannelImpl implements Channel {
             return;
         }
 
-        Message m = null;
+        MessageImpl m = null;
 
         // This frame must be for a reply (RPY, ERR, ANS, NUL)
         MessageStatus mstatus;
@@ -538,8 +538,8 @@ class ChannelImpl implements Channel {
                 }
             }
 
-            m = new Message(this, frame.getMsgno(), null,
-                            Message.MESSAGE_TYPE_NUL);
+            m = new MessageImpl(this, frame.getMsgno(), null,
+                                Message.MESSAGE_TYPE_NUL);
 
             mstatus.setMessageStatus(MessageStatus.MESSAGE_STATUS_RECEIVED_REPLY);
             if (log.isDebugEnabled()) {
@@ -562,7 +562,7 @@ class ChannelImpl implements Channel {
                 m = null;
 
                 while (i.hasNext()) {
-                    Message tmp = (Message) i.next();
+                    MessageImpl tmp = (MessageImpl) i.next();
 
                     if (tmp.getAnsno() == frame.getAnsno()) {
                         m = tmp;
@@ -574,8 +574,9 @@ class ChannelImpl implements Channel {
                 // if no answer was found, then create a new one and
                 // add it to the queue
                 if (m == null) {
-                    m = new Message(this, frame.getMsgno(), frame.getAnsno(),
-                                    new InputDataStream(this));
+                    m = new MessageImpl(this, frame.getMsgno(),
+                                        frame.getAnsno(),
+                                        new InputDataStream(this));
 
                     if (!frame.isLast()) {
                         recvReplyQueue.add(m);
@@ -589,9 +590,9 @@ class ChannelImpl implements Channel {
         } else {    // ERR or RPY
             synchronized (recvReplyQueue) {
                 if (recvReplyQueue.size() == 0) {
-                    m = new Message(this, frame.getMsgno(),
-                                    new InputDataStream(this),
-                                    frame.getMessageType());
+                    m = new MessageImpl(this, frame.getMsgno(),
+                                        new InputDataStream(this),
+                                        frame.getMessageType());
 
                     if (frame.isLast() == false) {
                         recvReplyQueue.add(m);
@@ -600,7 +601,7 @@ class ChannelImpl implements Channel {
 
                     // @todo sanity check: make sure this is the
                     // right Message
-                    m = (Message) recvReplyQueue.getFirst();
+                    m = (MessageImpl) recvReplyQueue.getFirst();
 
                     if (frame.isLast()) {
                         recvReplyQueue.removeFirst();
@@ -812,12 +813,12 @@ class ChannelImpl implements Channel {
             (status.getMessageType() == Message.MESSAGE_TYPE_RPY ||
              status.getMessageType() == Message.MESSAGE_TYPE_NUL))
         {
-            MessageMSG m;
+            MessageMSGImpl m;
             synchronized (recvMSGQueue) {
                 recvMSGQueue.removeFirst();
 
                 if (recvMSGQueue.size() != 0) {
-                    m = (MessageMSG) recvMSGQueue.getFirst();
+                    m = (MessageMSGImpl) recvMSGQueue.getFirst();
                     synchronized (m) {
                         m.setNotified();
                     }

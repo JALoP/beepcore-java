@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.6 $ $Date: 2003/06/03 02:33:21 $
+ * SessionImpl.java  $Revision: 1.7 $ $Date: 2003/06/03 16:38:35 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -62,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2003/06/03 02:33:21 $
+ * @version $Revision: 1.7 $, $Date: 2003/06/03 16:38:35 $
  *
  * @see Channel
  */
@@ -1344,7 +1344,7 @@ public abstract class SessionImpl implements Session {
             new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
                                      greeting);
 
-        Message m = new MessageMSG(this.zero, 0, null);
+        MessageMSG m = new MessageMSGImpl(this.zero, 0, null);
 
         // send the greeting
         m.sendRPY(f);

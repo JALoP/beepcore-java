@@ -1,7 +1,7 @@
 /*
- * MessageMSG.java  $Revision: 1.9 $ $Date: 2003/04/21 15:09:10 $
+ * MessageMSG.java  $Revision: 1.10 $ $Date: 2003/06/03 16:38:35 $
  *
- * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -17,99 +17,48 @@
 package org.beepcore.beep.core;
 
 /**
- * Represents received BEEP MSG messages. Provides methods to reply to
- * the MSG.
+ * This interface represents the operations available for messages of type MSG.
  *
- * @author Eric Dixon
  * @author Huston Franklin
- * @author Jay Kint
- * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/04/21 15:09:10 $
+ * @version $Revision: 1.10 $, $Date: 2003/06/03 16:38:35 $
  *
  */
-class MessageMSG extends Message
+public interface MessageMSG extends Message
 {
-    MessageMSG(ChannelImpl channel, int msgno, InputDataStream data) {
-        super(channel, msgno, data, MESSAGE_TYPE_MSG);
-    }
-
     /**
-     * Sends a message of type ANS.
+     * Sends an ANS reply to this MSG message.
      *
-     * @param stream Data to send in the form of <code>OutputDataStream</code>.
+     * @param stream Payload to be sent.
      *
      * @see OutputDataStream
      * @see MessageStatus
      * @see #sendNUL
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendANS(OutputDataStream stream) throws BEEPException
-    {
-        MessageStatus m;
-
-        synchronized (this) {
-            // reusing ansno (initialized to -1) from Message since
-            // this is a MSG
-            ++ansno;
-
-            m = new MessageStatus(this.channel, MESSAGE_TYPE_ANS, this.msgno,
-                                  this.ansno, stream);
-        }
-
-        this.channel.sendMessage(m);
-        return m;
-    }
+    public MessageStatus sendANS(OutputDataStream stream) throws BEEPException;
 
     /**
-     * Sends a message of type ERR.
+     * Sends an ERR reply to this MSG message.
      *
      * @param error Error to send in the form of <code>BEEPError</code>.
      *
      * @see BEEPError
      * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendERR(BEEPError error) throws BEEPException
-    {
-        OutputDataStream stream =
-            new StringOutputDataStream(error.createErrorMessage());
-        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
-                                            this.msgno, stream);
-        this.channel.sendMessage(m);
-        return m;
-    }
+    public MessageStatus sendERR(BEEPError error) throws BEEPException;
 
     /**
-     * Sends a message of type ERR.
+     * Sends an ERR reply to this MSG message.
      *
      * @param code <code>code</code> attibute in <code>error</code> element.
      * @param diagnostic Message for <code>error</code> element.
      *
      * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
      */
     public MessageStatus sendERR(int code, String diagnostic)
-        throws BEEPException
-    {
-        String error = BEEPError.createErrorMessage(code, diagnostic);
-        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
-                                            this.msgno,
-                                            new StringOutputDataStream(error));
-        this.channel.sendMessage(m);
-        return m;
-    }
+        throws BEEPException;
 
     /**
-     * Sends a message of type ERR.
+     * Sends an ERR reply to this MSG message.
      *
      * @param code <code>code</code> attibute in <code>error</code> element.
      * @param diagnostic Message for <code>error</code> element.
@@ -119,63 +68,30 @@ class MessageMSG extends Message
      * @see MessageStatus
      *
      * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
      */
     public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
-        throws BEEPException
-    {
-        String error = BEEPError.createErrorMessage(code, diagnostic, xmlLang);
-        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
-                                            this.msgno,
-                                            new StringOutputDataStream(error));
-        this.channel.sendMessage(m);
-        return m;
-    }
+        throws BEEPException;
 
     /**
-     * Sends a message of type NUL.
+     * Sends a reply of type NUL to this MSG message. This is sent as the
+     * completion to a MSG/ANS/NUL message exchange.
      *
      * @see MessageStatus
      * @see #sendANS
      *
      * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendNUL() throws BEEPException
-    {
-        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_NUL,
-                                            this.msgno, NULDataStream);
-        this.channel.sendMessage(m);
-        return m;
-    }
+    public MessageStatus sendNUL() throws BEEPException;
 
     /**
-     * Sends a message of type RPY.
+     * Sends a RPY reply to this MSG message.
      *
-     * @param stream Data to send in the form of <code>OutputDataStream</code>.
+     * @param stream Payload to be sent.
      *
      * @see OutputDataStream
      * @see MessageStatus
      *
      * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendRPY(OutputDataStream stream) throws BEEPException
-    {
-        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_RPY,
-                                            this.msgno, stream);
-        this.channel.sendMessage(m);
-        return m;
-    }
-
-    private static OutputDataStream NULDataStream;
-
-    static {
-        NULDataStream = new OutputDataStream();
-        NULDataStream.setComplete();
-    }
-
+    public MessageStatus sendRPY(OutputDataStream stream) throws BEEPException;
 }
