@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.20 $ $Date: 2001/11/27 16:04:59 $
+ * TCPSession.java  $Revision: 1.21 $ $Date: 2001/11/27 17:37:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -40,6 +40,7 @@ import org.beepcore.beep.core.SessionTuningProperties;
 import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.HeaderParser;
 import org.beepcore.beep.util.Log;
+import org.beepcore.beep.util.StringUtil;
 
 
 /**
@@ -49,7 +50,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.20 $, $Date: 2001/11/27 16:04:59 $
+ * @version $Revision: 1.21 $, $Date: 2001/11/27 17:37:22 $
  */
 public class TCPSession extends Session {
 
@@ -403,7 +404,7 @@ public class TCPSession extends Session {
             OutputStream os = socket.getOutputStream();
 
             synchronized (writerLock) {
-                os.write(sb.toString().getBytes("UTF-8"));
+                os.write(StringUtil.stringBufferToAscii(sb));
                 os.flush();
             }
         } catch (IOException x) {

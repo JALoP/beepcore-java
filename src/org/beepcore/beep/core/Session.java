@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.20 $ $Date: 2001/11/22 15:25:29 $
+ * Session.java  $Revision: 1.21 $ $Date: 2001/11/27 17:37:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -39,6 +39,7 @@ import org.beepcore.beep.core.event.ChannelListener;
 import org.beepcore.beep.core.event.SessionEvent;
 import org.beepcore.beep.core.event.SessionListener;
 import org.beepcore.beep.util.Log;
+import org.beepcore.beep.util.StringUtil;
 
 
 /**
@@ -58,7 +59,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.20 $, $Date: 2001/11/22 15:25:29 $
+ * @version $Revision: 1.21 $, $Date: 2001/11/27 17:37:22 $
  *
  * @see Channel
  */
@@ -139,8 +140,6 @@ public abstract class Session {
     private static final String TAG_SERVER_NAME = "serverName";
     private static final String TAG_URI = "uri";
     private static final String TAG_XML_LANG = "xml:lang";
-
-    private static final String DEFAULT_STRING_ENCODING = "UTF-8";
 
     // Instance Data
     private int state;
@@ -596,8 +595,8 @@ public abstract class Session {
 
         // Make a message
         OutputDataStream ds =
-            new StringOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                       startBuffer.toString());
+            new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
+                                     StringUtil.stringBufferToAscii(startBuffer));
 
         // Tell Channel Zero to start us up
         StartReplyListener reply = new StartReplyListener(ch, disableIO);
@@ -988,8 +987,8 @@ public abstract class Session {
         CloseReplyListener reply = new CloseReplyListener(channel);
         synchronized (reply) {
             OutputDataStream ds =
-                new StringOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                           closeBuffer.toString());
+                new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
+                                         StringUtil.stringBufferToAscii(closeBuffer));
 
             this.zero.sendMSG(ds,
                               reply);
@@ -1050,14 +1049,14 @@ public abstract class Session {
             sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
         }
 
-        StringOutputDataStream sds =
-            new StringOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                       sb.toString());
+        OutputDataStream ds =
+            new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
+                                     StringUtil.stringBufferToAscii(sb));
 
         // Store the Channel
         ch.setState(Channel.STATE_OK);
         channels.put(ch.getNumberAsString(), ch);
-        ((Message)zero.getAppData()).sendRPY(sds);
+        ((Message)zero.getAppData()).sendRPY(ds);
     }
 
     private void fireChannelClosed(Channel c)
@@ -1164,9 +1163,9 @@ public abstract class Session {
         }
 
         // Send an ok
-        StringOutputDataStream sds =
-            new StringOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                       FRAGMENT_OK);
+        OutputDataStream sds =
+            new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
+                                     StringUtil.stringToAscii(FRAGMENT_OK));
 
         try {
             ((Message)zero.getAppData()).sendRPY(sds);
@@ -1242,9 +1241,9 @@ public abstract class Session {
             }
         }
 
-        StringOutputDataStream sds =
-            new StringOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                       FRAGMENT_OK);
+        OutputDataStream sds =
+            new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
+                                     StringUtil.stringToAscii(FRAGMENT_OK));
 
         try {
             ((Message)zero.getAppData()).sendRPY(sds);

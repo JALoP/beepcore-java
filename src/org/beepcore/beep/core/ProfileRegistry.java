@@ -1,7 +1,8 @@
 /*
- * ProfileRegistry.java  $Revision: 1.9 $ $Date: 2001/11/09 19:12:25 $
+ * ProfileRegistry.java  $Revision: 1.10 $ $Date: 2001/11/27 17:37:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -19,20 +20,21 @@ package org.beepcore.beep.core;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+
 import org.beepcore.beep.util.Log;
+import org.beepcore.beep.util.StringUtil;
 
 
 /**
- * This class is used to save pointers in Sessions - if the peer is using
- * the same set of profile and associated StartChannelListener for all
- * sessions then they should create one of these helpers and use them in
- * the corresponding factory methods.
+ * Maintains a set of associations between URIs and
+ * <code>StartChannelListener</code>s. This set is used to generate
+ * the <code>greeting</code> and to demux <code>start</code> requests.
  *
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/11/09 19:12:25 $
+ * @version $Revision: 1.10 $, $Date: 2001/11/27 17:37:22 $
  */
 public class ProfileRegistry implements Cloneable {
 
@@ -116,8 +118,9 @@ public class ProfileRegistry implements Cloneable {
      * @param uri
      *
      */
-    public StartChannelListener getStartChannelListener(SessionTuningProperties tuning,
-                                                        String uri)
+    public StartChannelListener
+        getStartChannelListener(SessionTuningProperties tuning,
+                                String uri)
     {
 
         InternalProfile profile = (InternalProfile) profileListeners.get(uri);
@@ -172,8 +175,10 @@ public class ProfileRegistry implements Cloneable {
      * @return the previously registered <code>StartChannelListener</code>
      *
      */
-    public synchronized StartChannelListener addStartChannelListener(String profile,
-            StartChannelListener listener, SessionTuningProperties tuning)
+    public synchronized StartChannelListener
+        addStartChannelListener(String profile,
+                                StartChannelListener listener,
+                                SessionTuningProperties tuning)
     {
 
         // Replace semantics - change this if we want to prevent clobbering.
@@ -204,7 +209,8 @@ public class ProfileRegistry implements Cloneable {
      *         uri.
      *
      */
-    public synchronized StartChannelListener removeStartChannelListener(String profile)
+    public synchronized StartChannelListener
+        removeStartChannelListener(String profile)
     {
         InternalProfile temp =
             (InternalProfile) profileListeners.remove(profile);
@@ -316,8 +322,6 @@ public class ProfileRegistry implements Cloneable {
 
         sb.append(FRAGMENT_GREETING_SUFFIX);
 
-        greeting = sb.toString();
-
-        return greeting.getBytes();
+        return StringUtil.stringBufferToAscii(sb);
     }
 }

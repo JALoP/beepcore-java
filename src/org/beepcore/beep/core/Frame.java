@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.15 $ $Date: 2001/11/27 16:04:58 $
+ * Frame.java            $Revision: 1.16 $ $Date: 2001/11/27 17:37:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -18,8 +18,6 @@
 package org.beepcore.beep.core;
 
 
-import java.io.UnsupportedEncodingException;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
@@ -27,6 +25,7 @@ import java.util.StringTokenizer;
 import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.HeaderParser;
 import org.beepcore.beep.util.Log;
+import org.beepcore.beep.util.StringUtil;
 
 /**
  * Frame encapsulates a BEEP protocol frame for MSG, RPY, ERR, ANS and NUL
@@ -39,7 +38,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.15 $, $Date: 2001/11/27 16:04:58 $
+ * @version $Revision: 1.16 $, $Date: 2001/11/27 17:37:22 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -280,13 +279,10 @@ public class Frame {
 
         header.append(this.CRLF);
 
-        Log.logEntry(Log.SEV_DEBUG, header.toString());
-        try {
-            return header.toString().getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UnsupportedEncodingException" +
-                                       e.getMessage());
+        if (Log.isLogged(Log.SEV_DEBUG)) {
+            Log.logEntry(Log.SEV_DEBUG, header.toString());
         }
+        return StringUtil.stringBufferToAscii(header);
     }
 
     static Frame parseHeader(Session session, byte[] headerBuffer, int length)
@@ -359,8 +355,10 @@ public class Frame {
                 }
             }
 
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                         "getMessageType=" + types[ret] + " (" + ret + ")");
+            if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
+                Log.logEntry(Log.SEV_DEBUG_VERBOSE, "getMessageType=" +
+                             types[ret] + " (" + ret + ")");
+            }
 
             return ret;
         }
