@@ -1,6 +1,6 @@
 
 /*
- * ChannelPool.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:27 $
+ * ChannelPool.java            $Revision: 1.2 $ $Date: 2001/04/19 16:16:31 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -41,7 +41,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:27 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/19 16:16:31 $
  */
 public class ChannelPool {
 
@@ -234,15 +234,13 @@ public class ChannelPool {
             long ttl = now.getTime() - timeToLive;
 
             synchronized (availableChannels) {
-                for (int i = 0; i < availableChannels.size(); i++) {
-                    if (ttl > ((SharedChannel) availableChannels.get(i)).getTTL()) {
+                while (availableChannels.size() > 0){
+                    if (ttl > ((SharedChannel) availableChannels.get(0)).getTTL()) {
 
                         // channel has out lived its time to live
                         // die, die, die
                         SharedChannel shCh =
-                            (SharedChannel) availableChannels.get(i);
-
-                        availableChannels.remove(i);
+                            (SharedChannel) availableChannels.remove(0);
 
                         try {
                             Log.logEntry(Log.SEV_DEBUG_VERBOSE,
