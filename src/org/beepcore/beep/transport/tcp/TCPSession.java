@@ -1,5 +1,5 @@
 /*
- * TCPSession.java            $Revision: 1.5 $ $Date: 2001/04/16 17:03:03 $
+ * TCPSession.java            $Revision: 1.6 $ $Date: 2001/04/18 05:37:15 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/16 17:03:03 $
+ * @version $Revision, $Date: 2001/04/18 05:37:15 $
  */
 public class TCPSession extends Session {
 
@@ -224,11 +224,11 @@ public class TCPSession extends Session {
                 Iterator i = f.getBytes();
                 while (i.hasNext()) {
                     Frame.BufferSegment b = (Frame.BufferSegment) i.next();
-                    os.write(b.getBytes(), b.getOffset(), b.getLength());
+                    os.write(b.data, b.offset, b.length);
 
                     Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                 new String(b.getBytes(), b.getOffset(),
-                                            b.getLength()));
+                                 new String(b.data, b.offset,
+                                            b.length));
                 }
 
                 os.flush();
