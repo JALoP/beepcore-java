@@ -1,5 +1,5 @@
 /*
- * TLSProfile.java  $Revision: 1.6 $ $Date: 2001/05/03 21:56:49 $
+ * TLSProfile.java  $Revision: 1.7 $ $Date: 2001/05/10 04:46:35 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -552,19 +552,12 @@ public class TLSProfile
      * anonymous connection with a peer that doesn't support an
      * anonymous cipher suite).  
 	 */
-    public static Session startTLS(TCPSession session)
+    public static TCPSession startTLS(TCPSession session)
             throws BEEPException
     {
-        /*
-        if (session.getProfileRegistry().getStartChannelListener(TLSProfile.URI)
-                == null) {
-            throw new BEEPException(ERR_TLS_NOT_SUPPORTED_BY_SESSION);
-        }
-        */
-
         TLSProfile tempProfile = new TLSProfile();
-        Channel ch = tempProfile.startChannel(session, TLSProfile.URI, false, READY2,
-                                          null);
+        Channel ch = tempProfile.startChannel(session, TLSProfile.URI, false,
+                                              READY2, null);
 
         // See if we got start data back
         String data = ch.getStartData();
@@ -622,8 +615,8 @@ public class TLSProfile
             session.close();
             throw new BEEPException( ERR_TLS_NO_AUTHENTICATION );
         } else {
-            return reset(session, generateCredential(), l.cred,
-                         session.getProfileRegistry(), newSocket);
+            return (TCPSession) reset(session, generateCredential(), l.cred,
+                                      session.getProfileRegistry(), newSocket);
         }
     }
 
