@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.3 $ $Date: 2001/04/16 20:03:58 $
+ * Channel.java            $Revision: 1.4 $ $Date: 2001/04/18 05:38:19 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/16 20:03:58 $
+ * @version $Revision: 1.4 $, $Date: 2001/04/18 05:38:19 $
  *
  */
 public class Channel {
@@ -187,7 +187,7 @@ public class Channel {
 
         // @todo the other BEEP peer may refuse this request
         // should we return a boolean or throw a CloseChannelException?
-        session.closeChannel(this, BEEPError.CODE_SUCCESS, null, null);
+        session.closeChannel(this, BEEPError.CODE_SUCCESS, null);
     }
 
     // instance methods

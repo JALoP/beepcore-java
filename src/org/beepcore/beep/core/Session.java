@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.6 $ $Date: 2001/04/16 17:11:10 $
+ * Session.java            $Revision: 1.7 $ $Date: 2001/04/18 05:38:19 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/04/16 17:11:10 $
+ * @version $Revision: 1.7 $, $Date: 2001/04/18 05:38:19 $
  *
  * @see Channel
  */
@@ -244,7 +244,7 @@ public abstract class Session {
         Log.logEntry(Log.SEV_DEBUG,
                      "Closing Session with " + channels.size() + " channels");
 
-        changeState(SESSION_STATE_CLOSING);
+        //        changeState(SESSION_STATE_CLOSING);
 
         Iterator i = channels.values().iterator();
 
@@ -861,11 +861,10 @@ public abstract class Session {
      * @param channel
      * @param code
      * @param xmlLang
-     * @param data
      *
      * @throws BEEPException
      */
-    void closeChannel(Channel channel, int code, String xmlLang, String data)
+    void closeChannel(Channel channel, int code, String xmlLang)
             throws BEEPException
     {
 
@@ -888,10 +887,8 @@ public abstract class Session {
         closeBuffer.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
 
         // Make a message
-        DataStream ds = null;
-
-        ds = new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
-                                  closeBuffer.toString());
+        DataStream ds = new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
+                                             closeBuffer.toString());
 
         // Lock necessary because we have to know the msgNo
         // before we send the message, in order to be able
@@ -1004,6 +1001,7 @@ public abstract class Session {
     {
         // closing the session
         // @todo fireEvent(SESSION_STATE_CLOSING);
+        /*
         try {
             if (!changeState(SESSION_STATE_CLOSING)) {
 
@@ -1014,16 +1012,19 @@ public abstract class Session {
             throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
                                 e.getMessage());
         }
+        */
 
         Log.logEntry(Log.SEV_DEBUG,
                      "Closing Session with " + channels.size() + " channels");
 
+        /*
         try {
             changeState(SESSION_STATE_CLOSING);
         } catch (BEEPException x) {
             terminate("Error changing Session state to closing.");
             return;
         }
+        */
 
         Iterator i = channels.values().iterator();
 
@@ -1116,12 +1117,15 @@ public abstract class Session {
         /**
          * @todo CCL
          */
+        /*
         StartChannelListener scl =
             profileRegistry.getStartChannelListener(channel.getProfile());
 
         if (scl != null) {
             scl.closeChannel(channel);
         }
+        */
+        // @todo we should fire an event instead.
 
         // set the state
         channel.setState(Channel.STATE_CLOSING);
@@ -1676,7 +1680,6 @@ public abstract class Session {
             try {
                 Element topElement = processMessage(message);
 
-                // is this RPY a <greeting>
                 String elementName = topElement.getTagName();
 
                 if (elementName == null) {
