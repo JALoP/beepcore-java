@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.4 $ $Date: 2001/04/16 17:08:50 $
+ * Frame.java            $Revision: 1.5 $ $Date: 2001/04/18 01:43:50 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/16 17:08:50 $
+ * @version $Revision, $Date: 2001/04/18 01:43:50 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -119,7 +119,7 @@ public class Frame {
         this.seqno = seqno;
         this.ansno = ansno;
         this.payload = payload;
-        this.size = payload.getLength() - payload.getOffset();
+        this.size = payload.length - payload.offset;
         this.last = last;
     }
 
@@ -143,45 +143,6 @@ public class Frame {
     public void addPayload(BufferSegment buf)
     {
         this.payload = buf;
-    }
-
-    /**
-     * Builds a BEEP Header from the given <code>Frame</code> and returns it
-     * as a byte array.
-     *
-     * @param f <code>Frame</code> from which we derive the BEEP Header.
-     */
-    public byte[] buildHeader()
-    {
-        // @todo throw an exception if a malformed header results
-        StringBuffer header = new StringBuffer(Frame.MAX_HEADER_SIZE);
-
-        // Create header
-        header.append(MessageType.getMessageType(this.messageType));
-        header.append(' ');
-        header.append(this.channel.getNumberAsString());
-        header.append(' ');
-        header.append(this.msgno);
-        header.append(' ');
-        header.append((this.last ? '.' : '*'));
-        header.append(' ');
-        header.append(this.seqno);
-        header.append(' ');
-        header.append(this.size);
-
-        if (this.messageType == Message.MESSAGE_TYPE_ANS) {
-            header.append(' ');
-            header.append(this.ansno);
-        }
-
-        header.append(this.CRLF);
-
-        try {
-            return header.toString().getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UnsupportedEncodingException" +
-                                       e.getMessage());
-        }
     }
 
     /**
@@ -279,6 +240,45 @@ public class Frame {
         return this.last;
     }
 
+    /**
+     * Builds a BEEP Header from the given <code>Frame</code> and returns it
+     * as a byte array.
+     *
+     * @param f <code>Frame</code> from which we derive the BEEP Header.
+     */
+    byte[] buildHeader()
+    {
+        // @todo throw an exception if a malformed header results
+        StringBuffer header = new StringBuffer(Frame.MAX_HEADER_SIZE);
+
+        // Create header
+        header.append(MessageType.getMessageType(this.messageType));
+        header.append(' ');
+        header.append(this.channel.getNumberAsString());
+        header.append(' ');
+        header.append(this.msgno);
+        header.append(' ');
+        header.append((this.last ? '.' : '*'));
+        header.append(' ');
+        header.append(this.seqno);
+        header.append(' ');
+        header.append(this.size);
+
+        if (this.messageType == Message.MESSAGE_TYPE_ANS) {
+            header.append(' ');
+            header.append(this.ansno);
+        }
+
+        header.append(this.CRLF);
+
+        try {
+            return header.toString().getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("UnsupportedEncodingException" +
+                                       e.getMessage());
+        }
+    }
+
     static Frame parseHeader(Session session, byte[] headerBuffer, int length)
         throws BEEPException
     {
@@ -362,13 +362,13 @@ public class Frame {
      * @author Huston Franklin
      * @author Jay Kint
      * @author Scott Pead
-     * @version $Revision: 1.4 $, $Date: 2001/04/16 17:08:50 $
+     * @version $Revision: 1.5 $, $Date: 2001/04/18 01:43:50 $
      */
     public static class BufferSegment {
 
-        private byte[] data;    // the byte array
-        private int offset;     // starting offset
-        private int length;     // number of bytes from offset
+        public byte[] data;    // the byte array
+        public int offset;     // starting offset
+        public int length;     // number of bytes from offset
 
         /**
          * Constructor BufferSegment
@@ -396,32 +396,6 @@ public class Frame {
             this.data = data;
             this.offset = offset;
             this.length = length;
-        }
-
-        /**
-         * Method <code>getBytes</code> returns a byte array.
-         */
-        public byte[] getBytes()
-        {
-            return this.data;
-        }
-
-        /**
-         * Method <code>getOffset</code> returns the starting offset into the
-         * <code>BufferSegment</code>s byte array.
-         */
-        public int getOffset()
-        {
-            return this.offset;
-        }
-
-        /**
-         * Method <code>getLength</code> returns the number of valid bytes
-         * from the starting offset for the byte array.
-         */
-        public int getLength()
-        {
-            return this.length;
         }
     }
 

@@ -1,6 +1,6 @@
 
 /*
- * FrameDataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
+ * FrameDataStream.java            $Revision: 1.3 $ $Date: 2001/04/18 01:43:50 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +44,7 @@ import java.util.Iterator;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/17 22:44:00 $
+ * @version $Revision, $Date: 2001/04/18 01:43:50 $
  */
 public class FrameDataStream extends DataStream {
 
@@ -104,7 +104,7 @@ public class FrameDataStream extends DataStream {
 
         this.frames.add(frame);
 
-        this.length = frame.getPayload().getLength();
+        this.length = frame.getPayload().length;
 
         if (frame.isLast()) {
             this.haveLast = true;
@@ -277,13 +277,13 @@ public class FrameDataStream extends DataStream {
     {
         if( !this.streamOpen && this.release ) {
             frame.getChannel()
-              .freeReceiveBufferBytes(frame.getPayload().getLength());
+              .freeReceiveBufferBytes(frame.getPayload().length);
             return;
         }
 
         this.frames.add(frame);
 
-        this.length += frame.getPayload().getLength();
+        this.length += frame.getPayload().length;
 
         if (frame.isLast()) {
             haveLast = true;
@@ -354,7 +354,7 @@ public class FrameDataStream extends DataStream {
         this.offset++;
         this.bytesRead++;
 
-        if (this.offset >= f.getPayload().getLength()) {
+        if (this.offset >= f.getPayload().length) {
             this.offset = 0;
 
             // now check if we should free the frame from our list
@@ -363,13 +363,13 @@ public class FrameDataStream extends DataStream {
             // call channel to free the bytes from its buffer
             if( this.release )
             {
-              f.getChannel().freeReceiveBufferBytes(f.getPayload().getLength());
+              f.getChannel().freeReceiveBufferBytes(f.getPayload().length);
             }
         }
 
-        byte[] b = f.getPayload().getBytes();
+        byte[] b = f.getPayload().data;
 
-        return b[f.getPayload().getOffset() + pos] & 0xff;
+        return b[f.getPayload().offset + pos] & 0xff;
     }
 
     int read(byte[] dest) throws BEEPException
@@ -428,13 +428,13 @@ public class FrameDataStream extends DataStream {
             Frame f = (Frame) this.frames.getFirst();
 
             // let exceptions handle arraycopy() error cases
-            bytesAvailable = f.getPayload().getLength() - this.offset;
+            bytesAvailable = f.getPayload().length - this.offset;
 
             // if there is enough room to copy all available bytes,
             // do it, else just fill the remaining space.
             if (destLen - count >= bytesAvailable) {
-                System.arraycopy(f.getPayload().getBytes(),
-                                 f.getPayload().getOffset() + this.offset,
+                System.arraycopy(f.getPayload().data,
+                                 f.getPayload().offset + this.offset,
                                  dest, destOffset + count, bytesAvailable);
 
                 this.offset = 0;
@@ -444,12 +444,12 @@ public class FrameDataStream extends DataStream {
                 // call channel to free the bytes from its buffer
                 if( this.release )
                 {
-                  f.getChannel().freeReceiveBufferBytes(f.getPayload().getLength());
+                  f.getChannel().freeReceiveBufferBytes(f.getPayload().length);
                 }
                 this.frames.removeFirst();
             } else {
-                System.arraycopy(f.getPayload().getBytes(),
-                                 f.getPayload().getOffset() + this.offset,
+                System.arraycopy(f.getPayload().data,
+                                 f.getPayload().offset + this.offset,
                                  dest, destOffset + count, destLen - count);
 
                 this.bytesRead += destLen - count;
@@ -484,7 +484,7 @@ public class FrameDataStream extends DataStream {
                     return -1;
                 }
 
-                curBytes = ((Frame) i.next()).getPayload().getBytes();
+                curBytes = ((Frame) i.next()).getPayload().data;
                 pos = 0;
             }
 
@@ -583,13 +583,13 @@ public class FrameDataStream extends DataStream {
                 this.offset++;
                 this.bytesRead++;
 
-                if (this.offset == f.getPayload().getLength()) {
+                if (this.offset == f.getPayload().length) {
                     this.offset = 0;
 
                     frames.removeFirst();
                     if( this.release )
                     {
-                      f.getChannel().freeReceiveBufferBytes(f.getPayload().getLength());
+                      f.getChannel().freeReceiveBufferBytes(f.getPayload().length);
                     }
 
                     f = (Frame) frames.getFirst();
@@ -610,7 +610,7 @@ public class FrameDataStream extends DataStream {
         for(int i=0; i < this.frames.size(); i++ )
         {
           Frame f = (Frame)this.frames.get(i);
-          f.getChannel().freeReceiveBufferBytes(f.getPayload().getLength());
+          f.getChannel().freeReceiveBufferBytes(f.getPayload().length);
         }
       }
       this.frames.clear();
