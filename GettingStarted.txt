@@ -4,6 +4,25 @@ Getting Started
 Here is a quick overview of how to get started with the Java BEEP Core
 library.
 
+BEEP Terminology
+----------------
+
+Peer - A BEEP Peer is an endpoint which acts in a intiator/client or
+       listener/server role or may do both simultaneously.
+
+Session - A BEEP Session represents a connection between two Peers
+
+Message - A BEEP Message is request or reply interaction sent from one Peer
+          to another.
+
+Profile - A BEEP Profile defines the valid set of request-reply interactions
+          between Peers.  It is a syntax for a Channel.
+
+Channel - A BEEP Channel is the object used to send and receive Messages.
+          Channels have an associated Profile that is specified when the
+	  Channel is started.  Many Channels may exists within a single
+	   Session.
+
 BEEP basics
 -----------
 
@@ -18,8 +37,6 @@ to peer 'B' on the channel that 'B' initiated.
 BEEP uses a request-reply model for sending messages. Requests are
 messages of type MSG and replies are messages of type RPY, ERR, or
 ANS/NUL. For each request there must be a reply.
-
-A profile defines the valid set of request-reply interactions.
 
 Starting a Session
 ------------------
@@ -42,6 +59,16 @@ The ProfileRegistry specified in both of these examples contains the
 list of profiles advertised to the other peer when the Session is
 started. This is used by the peer to determine which profiles it may
 specify when starting a Channel.
+
+Registering a Profile
+---------------------
+
+To act in the listener role for a profile the application must
+implement the StartChannelListener interface and register it with the
+Session. This is done by adding it to the ProfileRegister used in
+creating the Session:
+
+  profileReg.addStartChannelListener(ExampleProfile.URI, example);
 
 Starting a Channel
 ------------------
@@ -113,12 +140,55 @@ startChannel callback in StartChannelListener).
 
   channel.setDataListener(this);
 
-Registering a Profile
----------------------
+Basic Server
+------------
 
-To act in the listener role for a profile the application must
-implement the StartChannelListener interface and register it with the
-Session. This is done by adding it to the ProfileRegister used in
-creating the Session:
+(see example Beepd)
 
-  profileReg.addStartChannelListener(ExampleProfile.URI, example);
+  ProfileRegistry reg = new ProfileRegistry();
+  EchoProfile echo = new EchoProfile();
+
+  echo.init(profileConfig);
+  reg.addStartChannelListener(echo.getURI(),
+                              echo.getStartChannelListener());
+  while (true) {
+      AutomatedTCPSessionCreator.listen(port, reg);
+  }
+
+Basic Profile
+-------------
+
+(see EchoProfile)
+
+  public void receiveMSG(Message message) throws BEEPError
+  {
+      Log.logEntry(Log.SEV_DEBUG, "Received MSG Callback [ECHO]");
+
+      try {
+          message.getChannel().sendRPY(message.getDataStream());
+      } catch (BEEPException e) {
+          throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                              "Error sending RPY");
+      }
+  }
+
+Basic Client
+------------
+
+(see example Bing)
+
+  Session session = AutomatedTCPSessionCreator.initiate(host, port,
+                                                        new ProfileRegistry());
+  Channel channel = session.startChannel(EchoProfile.ECHO_URI);
+
+  Reply reply = new Reply();
+  channel.sendMSG(new StringDataStream("Hello"), reply);
+
+  DataStream ds = reply.getNextReply().getDataStream();
+  InputStream is = ds.getInputStream();
+
+  int replyLength = 0;
+  while (ds.isComplete() == false || is.available() > 0) {
+      is.read();
+      ++replyLength;
+  }
