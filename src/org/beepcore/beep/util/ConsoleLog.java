@@ -1,6 +1,6 @@
 
 /*
- * ConsoleLog.java            $Revision: 1.3 $ $Date: 2001/04/27 01:29:00 $
+ * ConsoleLog.java            $Revision: 1.4 $ $Date: 2001/05/23 13:54:04 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,15 +26,15 @@ package org.beepcore.beep.util;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/27 01:29:00 $
+ * @version $Revision, $Date: 2001/05/23 13:54:04 $
  */
 public class ConsoleLog implements LogService {
 
-    private int severity = Log.SEV_DEBUG;
+    private int severity;
 
     public ConsoleLog()
     {
-        this.severity = Log.SEV_DEBUG;
+        this.severity = Log.SEV_ERROR;
     }
 
     public ConsoleLog(int severity)
