@@ -1,5 +1,5 @@
 /*
- * BEEPException.java  $Revision: 1.3 $ $Date: 2001/12/16 01:02:13 $
+ * BEEPException.java  $Revision: 1.4 $ $Date: 2002/05/07 04:57:51 $
  *
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
@@ -23,7 +23,7 @@ package org.beepcore.beep.core;
  * similar to what is available in JDK 1.4.
  *
  * @author Huston Franklin
- * @version $Revision: 1.3 $, $Date: 2001/12/16 01:02:13 $
+ * @version $Revision: 1.4 $, $Date: 2002/05/07 04:57:51 $
  */
 public class BEEPException extends Exception {
     private final Throwable cause;
@@ -52,15 +52,6 @@ public class BEEPException extends Exception {
     public BEEPException(Throwable cause) {
         super(cause == null ? null : cause.toString());
         this.cause = cause;
-    }
-
-    /*
-     *  requests to fill in the stack trace we will have to ignore.
-     *  We can't throw an exception here, because this method is
-     *  called by the constructor of Throwable
-     */
-    public Throwable fillInStackTrace() {
-        return this;
     }
 
     /**
