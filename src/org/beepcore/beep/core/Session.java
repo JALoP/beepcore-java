@@ -1,8 +1,9 @@
 /*
- * Session.java  $Revision: 1.29 $ $Date: 2002/08/22 18:09:34 $
+ * Session.java  $Revision: 1.30 $ $Date: 2002/09/05 23:03:51 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2002 Kevin Kress.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -59,7 +60,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.29 $, $Date: 2002/08/22 18:09:34 $
+ * @version $Revision: 1.30 $, $Date: 2002/09/05 23:03:51 $
  *
  * @see Channel
  */
@@ -196,7 +197,7 @@ public abstract class Session {
                 synchronized (greetingListener) {
 
                     //zero.wait(MAX_START_CHANNEL_INTERVAL);
-                    greetingListener.wait(0);
+                    greetingListener.wait(MAX_START_CHANNEL_INTERVAL);
 
                     waitCount += MAX_START_CHANNEL_INTERVAL;
                 }
