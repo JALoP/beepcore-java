@@ -1,6 +1,6 @@
 
 /*
- * BEEPInterruptedException.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * BEEPInterruptedException.java            $Revision: 1.2 $ $Date: 2001/04/16 17:04:16 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -40,7 +40,7 @@ public class BEEPInterruptedException extends BEEPException {
      *
      * @serial
      */
-    public int bytesTransferred;
+    public int bytesTransferred = 0;
 
     /**
      * Constructor BEEPException
