@@ -53,7 +53,7 @@
 
     <target name="core" depends="init">
         <mkdir dir="${core.build.dir}"/>
-        <javac srcdir="${core.src.dir}/" destdir="${core.build.dir}" >
+	<javac srcdir="${core.src.dir}/" destdir="${core.build.dir}" >
             <include name="**/core/*.java"/>
             <include name="**/lib/*.java"/>
             <include name="**/profile/*.java"/>
@@ -120,9 +120,9 @@
                  cr="remove" eof="remove" includes="*.htm"/>
     </target>
 
-    <target name="example-compile" depends="core-jar,sasl-jar">
+    <target name="example-compile" depends="core-jar,sasl">
         <mkdir dir="${example.build.dir}"/>
-        <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
+	<javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
             <include name="**/*.java"/>
             <exclude name="**/util/Log4JLog.java"/>
 	    <classpath>
@@ -153,7 +153,7 @@
 
     <target name="test" depends="example">
         <mkdir dir="${test.build.dir}"/>
-        <javac srcdir="${test.src.dir}/" destdir="${test.build.dir}" >
+	<javac srcdir="${test.src.dir}/" destdir="${test.build.dir}" deprecation="on" >
             <include name="**/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -164,9 +164,9 @@
         </javac>
     </target>
 
-    <target name="sasl" depends="core">
+    <target name="sasl-compile" depends="core">
         <mkdir dir="${sasl.build.dir}"/>
-        <javac srcdir="${sasl.src.dir}/" destdir="${sasl.build.dir}" >
+        <javac srcdir="${sasl.src.dir}/" destdir="${sasl.build.dir}" deprecation="on" >
             <include name="**/sasl/**/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -175,7 +175,7 @@
         </javac>
     </target>
 
-    <target name="sasl-jar" depends="sasl">
+    <target name="sasl" depends="sasl-compile">
         <mkdir dir="${release.dir}/lib"/>
         <jar jarfile="${release.dir}/lib/${sasl.jar.name}"
 	     basedir="${sasl.build.dir}">
@@ -183,7 +183,7 @@
 	</jar>
     </target>
 
-    <target name="sasl-doc" depends="sasl-jar">
+    <target name="sasl-doc" depends="sasl">
         <mkdir dir="${sasl.doc.dir}"/>
 	<javadoc packagenames="${sasl.packages}"
                  sourcepath="${sasl.src.dir}/"
