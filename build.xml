@@ -27,7 +27,6 @@
     <property name="sasl.build.dir" value="${build.dir}/sasl"/>
     <property name="sasl.doc.dir" value="${release.dir}/doc/sasl"/>
     <property name="sasl.jar.name" value="beepsasl.jar"/>
-    <property name="sasl.packages" value="org.beepcore.beep.profile.sasl.*"/>
     <property name="sasl.src.dir" value="src"/>
 
     <property name="source.jar.name" value="beepsource.jar"/>
@@ -61,15 +60,18 @@
             <include name="**/profile/tls/*.java"/>
             <include name="**/transport/**/*.java"/>
             <include name="**/util/*.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${beepcore.home}/lib/concurrent.jar"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+            </classpath>
         </javac>
     </target>
 
     <target name="core-jar" depends="core">
         <mkdir dir="${release.dir}/lib"/>
         <jar jarfile="${release.dir}/lib/${core.jar.name}"
-	     basedir="${core.build.dir}">
-	    <include name="**/*.class"/>
-	</jar>
+	     basedir="${core.build.dir}"/>
     </target>
 
     <target name="core-doc" depends="core-jar" description="Creates the API documentation for Core">
@@ -85,6 +87,7 @@
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${beepcore.home}/lib/concurrent.jar"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
             </classpath>
         </javadoc>
@@ -123,7 +126,6 @@
     <target name="example-compile" depends="core-jar,sasl">
         <mkdir dir="${example.build.dir}"/>
 	<javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
-            <include name="**/*.java"/>
             <exclude name="**/util/Log4JLog.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -178,14 +180,12 @@
     <target name="sasl" depends="sasl-compile">
         <mkdir dir="${release.dir}/lib"/>
         <jar jarfile="${release.dir}/lib/${sasl.jar.name}"
-	     basedir="${sasl.build.dir}">
-	    <include name="**"/>
-	</jar>
+	     basedir="${sasl.build.dir}"/>
     </target>
 
     <target name="sasl-doc" depends="sasl">
         <mkdir dir="${sasl.doc.dir}"/>
-	<javadoc packagenames="${sasl.packages}"
+	<javadoc packagenames="org.beepcore.beep.profile.sasl.*"
                  sourcepath="${sasl.src.dir}/"
 	         destdir="${sasl.doc.dir}"
 		 author="false"
@@ -261,9 +261,7 @@
     <target name="tls-ptls" depends="tls-ptls-compile">
         <mkdir dir="${release.dir}/lib"/>
         <jar jarfile="${release.dir}/lib/${tls-ptls.jar.name}"
-	     basedir="${tls-ptls.build.dir}">
-	    <include name="**"/>
-	</jar>
+	     basedir="${tls-ptls.build.dir}"/>
     </target>
 
     <target name="tls-ptls-doc" depends="tls-ptls,core-doc">
