@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.25 $ $Date: 2002/08/20 03:08:58 $
+ * Channel.java  $Revision: 1.26 $ $Date: 2002/09/02 13:44:39 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.25 $, $Date: 2002/08/20 03:08:58 $
+ * @version $Revision: 1.26 $, $Date: 2002/09/02 13:44:39 $
  *
  */
 public class Channel {
@@ -844,10 +844,11 @@ public class Channel {
         synchronized (pendingSendMessages) {
             pendingSendMessages.add(status);
         }
+        status.getMessageData().setChannel(this);
         sendQueuedMessages();
     }
 
-    private synchronized void sendQueuedMessages() throws BEEPException
+    synchronized void sendQueuedMessages() throws BEEPException
     {
         while (true) {
             MessageStatus status;
