@@ -1,63 +1,189 @@
-<project name="beeplib" default="jar" basedir=".">
-    <property name="app.name"   value="beeplib" />
-    <property name="build.dir"  value="build" />
-    <property name="doc.dir"  value="doc" />
-    <property name="example.dir"  value="example" />
-    <property name="src.dir"  value="src" />
+<project name="beepcore" default="core-jar" basedir=".">
+    <property name="name" value="beepcore" />
+    <property name="Name" value="BEEP Core" />
+    <property name="version" value="0.9.0" />
+    <property name="release.name" value="${name}-${version}" />
+
+    <property name="beepcore.home" value="."/>
+    <property name="build.dir" value="build" />
+    <property name="release.dir" value="${build.dir}/${release.name}" />
+
+    <property name="core.build.dir" value="${build.dir}/core" />
+    <property name="core.doc.dir" value="${release.dir}/doc/core" />
+    <property name="core.jar.name" value="${release.name}.jar" />
+    <property name="core.src.dir" value="src" />
+    <property name="core.packages" value="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile"/>
+
+    <property name="example.dir" value="example" />
     <property name="test.dir"  value="test" />
 
-    <target name="core">
-        <mkdir dir="${build.dir}/classes"/>
-        <javac srcdir="${src.dir}/" destdir="${build.dir}/classes" >
+    <property name="sasl.build.dir" value="${build.dir}/sasl"/>
+    <property name="sasl.doc.dir" value="${release.dir}/doc/sasl"/>
+    <property name="sasl.jar.name" value="beepsasl-${version}.jar"/>
+    <property name="sasl.packages" value="org.beepcore.beep.profile.sasl.*"/>
+    <property name="sasl.src.dir" value="src"/>
+
+    <property name="tls.build.dir" value="${build.dir}/tls" />
+    <property name="tls.doc.dir" value="${release.dir}/doc/tls" />
+    <property name="tls.jar.name" value="beeptls-${version}.jar" />
+    <property name="tls.src.dir" value="src" />
+
+    <target name="init">
+        <mkdir dir="${core.build.dir}" />
+    </target>
+
+    <target name="core" depends="init">
+        <mkdir dir="${core.build.dir}"/>
+        <javac srcdir="${core.src.dir}/" destdir="${core.build.dir}" >
             <include name="**/core/*.java"/>
+            <include name="**/lib/*.java"/>
+            <include name="**/transport/**/*.java"/>
+            <include name="**/util/*.java"/>
         </javac>
     </target>
 
-    <target name="compile" depends="core">
-        <mkdir dir="${build.dir}/classes"/>
-        <javac srcdir="${src.dir}/" destdir="${build.dir}/classes" >
-            <include name="**/*.java"/>
-        </javac>
-    </target>
-
-    <target name="build-example" depends="compile">
-        <mkdir dir="${build.dir}/classes"/>
-        <javac srcdir="${example.dir}/" destdir="${build.dir}/classes" >
-            <include name="**/*.java"/>
-        </javac>
-    </target>
-
-    <target name="build-test" depends="compile">
-        <mkdir dir="${build.dir}/classes"/>
-        <javac srcdir="${test.dir}/" destdir="${build.dir}/classes" >
-            <include name="**/*.java"/>
-        </javac>
-    </target>
-
-    <target name="jar" depends="compile">
-        <mkdir dir="${build.dir}/lib"/>
-        <jar jarfile="${build.dir}/lib/${app.name}.jar" basedir="${build.dir}/classes">
-             <include name="org/**/*.class"/>
-	     <exclude name="**/example/*"/>
-	     <exclude name="**/test/*"/>
+    <target name="core-jar" depends="core">
+        <mkdir dir="${release.dir}/lib"/>
+        <jar jarfile="${release.dir}/lib/${core.jar.name}"
+	     basedir="${core.build.dir}">
+	    <include name="**/*.class"/>
 	</jar>
     </target>
 
-    <target name="doc" depends="compile">
-        <mkdir dir="${doc.dir}"/>
-	<javadoc sourcepath="${src.dir}/" destdir="${doc.dir}"
+    <target name="core-doc" depends="core-jar" description="Creates the API documentation for Core">
+        <mkdir dir="${core.doc.dir}"/>
+	<javadoc packagenames="${core.packages}"
+                 sourcepath="${core.src.dir}/"
+	         destdir="${core.doc.dir}"
 		 author="false"
 		 version="false"
-		 Overview="${src.dir}/overview.html"
-		 packagenames="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile,org.beepcore.beep.profile.tls">
-		 <link offline="true" href="http://java.sun.com/products/jdk/1.3/docs/api" packagelistLoc="doc/jdk" />
-		 <link offline="true" href="http://java.sun.com/products/jsse/doc/apidoc" packagelistLoc="doc/jsse" />
-	         <classpath>
-		         <pathelement path="${java.class.path}"/>
-		         <pathelement location="${build.dir}/lib/${app.name}.jar"/>
-                 </classpath>
+		 overview="${core.src.dir}/overview.html"
+		 windowtitle="${Name} API"
+		 doctitle="${Name}"
+		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+            </classpath>
         </javadoc>
     </target>
+
+    <target name="core-dist" depends="core-jar,core-doc">
+        <mkdir dir="${release.dir}/src"/>
+
+        <copy todir="${release.dir}/src">
+            <fileset dir="${core.src.dir}"/>
+        </copy>
+    </target>
+
+    <target name="example" depends="core-jar">
+        <mkdir dir="${example.build.dir}"/>
+        <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
+            <include name="**/*.java"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="example">
+        <mkdir dir="${test.build.dir}"/>
+        <javac srcdir="${test.src.dir}/" destdir="${test.build.dir}" >
+            <include name="**/*.java"/>
+        </javac>
+    </target>
+
+    <target name="sasl" depends="core">
+        <mkdir dir="${sasl.build.dir}"/>
+        <javac srcdir="${sasl.src.dir}/" destdir="${sasl.build.dir}" >
+            <include name="**/sasl/*.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="sasl-jar" depends="sasl">
+        <mkdir dir="${release.dir}/lib"/>
+        <jar jarfile="${release.dir}/lib/${sasl.jar.name}"
+	     basedir="${sasl.build.dir}">
+	    <include name="**"/>
+	</jar>
+    </target>
+
+    <target name="sasl-doc" depends="sasl-jar">
+        <mkdir dir="${sasl.doc.dir}"/>
+	<javadoc packagenames="${sasl.packages}"
+                 sourcepath="${sasl.src.dir}/"
+	         destdir="${sasl.doc.dir}"
+		 author="false"
+		 version="false"
+		 windowtitle="SASL Profile API"
+		 doctitle="SASL Profile"
+		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
+            </classpath>
+        </javadoc>
+    </target>
+
+    <target name="tls" depends="core">
+        <mkdir dir="${tls.build.dir}"/>
+        <javac srcdir="${tls.src.dir}/" destdir="${tls.build.dir}" >
+            <include name="**/tls/*.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="tls-jar" depends="tls">
+        <mkdir dir="${release.dir}/lib"/>
+        <jar jarfile="${release.dir}/lib/${tls.jar.name}"
+	     basedir="${tls.build.dir}">
+	    <include name="**"/>
+	</jar>
+    </target>
+
+    <target name="tls-doc" depends="tls-jar">
+        <mkdir dir="${tls.doc.dir}"/>
+	<javadoc packagenames="org.beepcore.beep.profile.tls"
+                 sourcepath="${tls.src.dir}/"
+	         destdir="${tls.doc.dir}"
+		 author="false"
+		 version="false"
+		 windowtitle="TLS Profile API"
+		 doctitle="TLS Profile"
+		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
+	    <link offline="true" href="http://java.sun.com/products/jdk/1.3/docs/api" packagelistLoc="doc/jdk" />
+	    <link offline="true" href="http://java.sun.com/products/jsse/doc/apidoc" packagelistLoc="doc/jsse" />
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${tls.jar.name}"/>
+            </classpath>
+        </javadoc>
+    </target>
+
+    <target name="doc" depends="core-doc,sasl-doc,tls-doc"/>
+
+    <!-- Packages the distribution with ZIP -->
+    <target name="dist-zip" depends="doc">
+        <zip zipfile="${build.dir}/${release.name}.zip"
+	     basedir="${release.dir}/.." includes="${release.name}/**"/>
+    </target>
+
+    <!-- Packages the distribution with TAR-GZIP -->
+    <target name="dist-tgz" depends="doc">
+        <tar tarfile="${build.dir}/${release.name}.tar"
+	     basedir="${release.dir}/.." includes="${release.name}/**"/>
+        <gzip zipfile="${build.dir}/${release.name}.tgz"
+	      src="${build.dir}/${release.name}.tar"/>
+	<delete file="${build.dir}/${release.name}.tar"/>
+    </target>
+
+    <target name="dist" depends="dist-zip,dist-tgz"/>
 
     <target name="clean">
         <delete dir="${build.dir}" />
