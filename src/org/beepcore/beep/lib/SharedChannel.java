@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.11 $ $Date: 2003/06/10 18:59:22 $
+ * SharedChannel.java            $Revision: 1.12 $ $Date: 2003/11/07 23:01:12 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002, 2003 Huston Franklin.  All rights reserved.
@@ -42,7 +42,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2003/06/10 18:59:22 $
+ * @version $Revision: 1.12 $, $Date: 2003/11/07 23:01:12 $
  */
 public class SharedChannel implements Channel {
 
@@ -144,6 +144,11 @@ public class SharedChannel implements Channel {
     public Session getSession()
     {
         return channel.getSession();
+    }
+    
+    public int getState()
+    {
+        return channel.getState();
     }
 
     /**

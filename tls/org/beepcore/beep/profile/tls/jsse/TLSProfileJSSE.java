@@ -1,7 +1,8 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.10 $ $Date: 2003/10/30 14:30:45 $
+ * TLSProfileJSSE.java  $Revision: 1.11 $ $Date: 2003/11/07 23:01:34 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -501,7 +502,7 @@ public class TLSProfileJSSE extends TLSProfile
         } catch (Exception e) {
             log.error(e);
 
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         }
     }
 
@@ -693,7 +694,7 @@ public class TLSProfileJSSE extends TLSProfile
             log.debug("Handshake done waiting");
         } catch (javax.net.ssl.SSLException e) {
             log.error(e);
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         } catch (java.io.IOException e) {
             log.error(e);
             throw new BEEPException(ERR_TLS_SOCKET);

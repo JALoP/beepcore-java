@@ -1,5 +1,5 @@
 /*
- * TLSProfile.java  $Revision: 1.15 $ $Date: 2003/04/23 15:23:06 $
+ * TLSProfile.java  $Revision: 1.16 $ $Date: 2003/11/07 23:01:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -119,7 +119,7 @@ public abstract class TLSProfile extends TuningProfile implements Profile {
         } catch (ClassNotFoundException e) {
             throw new BEEPException("Provider '" + provider + "' not found.");
         } catch (Exception e) {
-            throw new BEEPException(e.getMessage());
+            throw new BEEPException(e);
         }
     }
 }

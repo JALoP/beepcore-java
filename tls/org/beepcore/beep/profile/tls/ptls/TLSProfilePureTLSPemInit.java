@@ -1,5 +1,5 @@
 /*
- * TLSProfilePureTLSPemInit.java  $Revision: 1.5 $ $Date: 2003/06/07 17:29:47 $
+ * TLSProfilePureTLSPemInit.java  $Revision: 1.6 $ $Date: 2003/11/07 23:01:36 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -185,7 +185,7 @@ public class TLSProfilePureTLSPemInit extends TLSProfile {
             try {
                 tlsp.setCipherSuite(ciphers);
             } catch (Exception e) {
-                throw new BEEPException(e.getMessage());
+                throw new BEEPException(e);
             }
         }
 

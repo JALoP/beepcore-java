@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.34 $ $Date: 2003/11/07 17:39:21 $
+ * TCPSession.java  $Revision: 1.35 $ $Date: 2003/11/07 23:01:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -47,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.34 $, $Date: 2003/11/07 17:39:21 $
+ * @version $Revision: 1.35 $, $Date: 2003/11/07 23:01:11 $
  */
 public class TCPSession extends SessionImpl {
 
@@ -410,7 +410,7 @@ public class TCPSession extends SessionImpl {
                 os.flush();
             }
         } catch (IOException x) {
-            throw new BEEPException("Unable to send SEQ" + x.getMessage());
+            throw new BEEPException("Unable to send SEQ", x);
         }
 
         return true;
