@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.19 $ $Date: 2001/11/12 16:12:41 $
+ * Channel.java  $Revision: 1.20 $ $Date: 2001/12/15 00:07:19 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.19 $, $Date: 2001/11/12 16:12:41 $
+ * @version $Revision: 1.20 $, $Date: 2001/12/15 00:07:19 $
  *
  */
 public class Channel {
@@ -45,21 +45,6 @@ public class Channel {
     static final int STATE_CLOSING = 3;
     static final int STATE_CLOSED = 4;
     static final int STATE_ERROR = 5;
-    private static final String ERR_CHANNEL_MESSAGE_NUMBER_PREFIX =
-        "Incorrect message number: was ";
-    private static final String ERR_CHANNEL_MIDDLE = "; expecting ";
-    private static final String ERR_CHANNEL_SEQUENCE_NUMBER_PREFIX =
-        "Incorrect sequence number: was ";
-    private static final String ERR_CHANNEL_ERROR_STATE =
-        "Channel in currently experiencing technical difficulties.";
-    private static final String ERR_CHANNEL_UNINITIALISED_STATE =
-        "Channel is uninitialised.";
-    private static final String ERR_CHANNEL_UNKNOWN_STATE =
-        "Channel is in an unknown state.";
-    private static final String ERR_CHANNEL_INCONSISTENT_FRAME_TYPE_PREFIX =
-        "Incorrect message type: was ";
-    private static final String ERR_REPLY_RECEIVED_FOR_NO_MESSAGE =
-        "Reply received for a message never sent.";
     private static final BufferSegment zeroLengthSegment =
         new BufferSegment(new byte[0]);
 
@@ -286,7 +271,8 @@ public class Channel {
             // make sure we aren't setting the size less than what is currently
             // in the buffer right now.
             if (size < recvWindowUsed) {
-                throw new BEEPException("Size must be less than what is currently in use.");
+                throw new BEEPException("Size must be less than what is " +
+					"currently in use.");
             }
 
             // @TODO what if they decide to shrink the buffer?  Is that even
@@ -363,11 +349,12 @@ public class Channel {
         if (state != STATE_OK) {
             switch (state) {
             case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
+                throw new BEEPException("Channel in currently experiencing " +
+					"technical difficulties.");
             case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
+                throw new BEEPException("Channel is uninitialised.");
             default :
-                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
+                throw new BEEPException("Channel is in an unknown state.");
             }
         }
 
@@ -685,9 +672,9 @@ public class Channel {
             if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
                 if (previousFrame != null) {
                     if (frame.getMsgno() != previousFrame.getMsgno()) {
-                        throw new BEEPException(ERR_CHANNEL_MESSAGE_NUMBER_PREFIX
+                        throw new BEEPException("Incorrect message number: was "
                                                 + frame.getMsgno()
-                                                + ERR_CHANNEL_MIDDLE
+                                                + "; expecting "
                                                 + previousFrame.getMsgno());
                     }
                 } else {
@@ -719,29 +706,28 @@ public class Channel {
                 }
 
                 if (frame.getMsgno() != mstatus.getMsgno()) {
-                    throw new BEEPException(ERR_CHANNEL_MESSAGE_NUMBER_PREFIX
+                    throw new BEEPException("Incorrect message number: was "
                                             + frame.getMsgno()
-                                            + ERR_CHANNEL_MIDDLE
+                                            + "; expecting "
                                             + mstatus.getMsgno());
                 }
             }
 
             // is the sequence number correct?
             if (frame.getSeqno() != recvSequence) {
-                throw new BEEPException(ERR_CHANNEL_SEQUENCE_NUMBER_PREFIX
-                                             + frame.getSeqno()
-                                             + ERR_CHANNEL_MIDDLE
-                                             + recvSequence);
+                throw new BEEPException("Incorrect sequence number: was "
+					+ frame.getSeqno() + "; expecting "
+					+ recvSequence);
             }
 
             // is the message type the same as the previous frames?
             if ((previousFrame != null)
                     && (previousFrame.getMessageType()
                         != frame.getMessageType())) {
-                throw new BEEPException(ERR_CHANNEL_INCONSISTENT_FRAME_TYPE_PREFIX
-                                             + frame.getMessageTypeString()
-                                             + ERR_CHANNEL_MIDDLE
-                                             + previousFrame.getMessageTypeString());
+                throw new BEEPException("Incorrect message type: was "
+					+ frame.getMessageTypeString()
+					+ "; expecting "
+					+ previousFrame.getMessageTypeString());
             }
         }
 
@@ -796,11 +782,12 @@ public class Channel {
         if (state != STATE_OK) {
             switch (state) {
             case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
+                throw new BEEPException("Channel in currently experiencing " +
+					"technical difficulties.");
             case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
+                throw new BEEPException("Channel is uninitialised.");
             default :
-                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
+                throw new BEEPException("Channel is in an unknown state.");
             }
         }
 
