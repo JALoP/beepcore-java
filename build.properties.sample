@@ -1,0 +1,14 @@
+
+debug="on"
+optimize="on"
+deprecation="off"
+
+concurrent.jar=${basedir}/lib/concurrent.jar
+
+commons-logging.jar=${basedir}/lib/commons-logging.jar
+
+xml-parser.jar=${basedir}/lib/xerces.jar
+
+cryptix.jar=${basedir}/lib/cryptix32.jar
+cryptix-asn1.jar=${basedir}/lib/cryptix-asn1.jar
+puretls.jar=${basedir}/lib/puretls.jar

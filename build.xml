@@ -1,4 +1,8 @@
 <project name="beepcore" default="core-jar" basedir=".">
+
+    <!-- The build.properties file defines the parth to local jar files -->
+    <property file="build.properties"/>               
+
     <property name="name" value="beepcore" />
     <property name="Name" value="BEEP Core" />
     <property name="version" value="0.9.07" />
@@ -6,51 +10,73 @@
 
     <property name="debug"             value="on"/>
     <property name="optimize"          value="on"/>
-    <property name="deprecation"       value="on"/>
+    <property name="deprecation"       value="off"/>
+
+    <!-- Construct classpath for building core -->
+    <path id="core.compile.classpath">
+        <pathelement location="${concurrent.jar}"/>
+        <pathelement location="${commons-logging.jar}"/>
+        <pathelement location="${xml-parser.jar}"/>
+    </path>
 
     <property name="beepcore.home" value="."/>
     <property name="build.dir" value="build" />
     <property name="release.dir" value="${build.dir}/${release.name}" />
 
+    <!-- Core properties -->
     <property name="core.build.dir" value="${build.dir}/core" />
     <property name="core.doc.dir" value="${release.dir}/doc/core" />
     <property name="core.jar.name" value="beepcore.jar" />
     <property name="core.src.dir" value="src" />
     <property name="core.packages" value="org.beepcore.beep.core,org.beepcore.beep.util,org.beepcore.beep.transport.tcp,org.beepcore.beep.lib,org.beepcore.beep.profile,org.beepcore.beep.profile.echo,org.beepcore.beep.profile.tls"/>
 
+    <property name="source.jar.name" value="beepsource.jar"/>
+
+    <!-- Construct classpath for building sub-projects -->
+    <path id="compile.classpath">
+        <path refid="core.compile.classpath"/>
+        <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+    </path>
+
+    <!-- Examples properties -->
     <property name="example.build.dir" value="${build.dir}/example" />
     <property name="example.jar.name" value="example.jar" />
     <property name="example.src.dir" value="example" />
 
     <property name="jdk.doc.dir" value="doc/jdk" />
 
-    <property name="jsse.doc.dir" value="doc/jsse" />
-
-    <property name="puretls.doc.dir" value="doc/puretls" />
-
+    <!-- SASL properties -->
     <property name="sasl.build.dir" value="${build.dir}/sasl"/>
     <property name="sasl.doc.dir" value="${release.dir}/doc/sasl"/>
     <property name="sasl.jar.name" value="beepsasl.jar"/>
     <property name="sasl.src.dir" value="src"/>
 
-    <property name="source.jar.name" value="beepsource.jar"/>
-
-    <property name="test.build.dir"  value="${build.dir}/test" />
-    <property name="test.src.dir"  value="test" />
-
+    <!-- JSSE TLS properties -->
     <property name="tls-jsse.build.dir" value="${build.dir}/tls-jsse" />
     <property name="tls-jsse.doc.dir" value="${release.dir}/doc/tls-jsse" />
     <property name="tls-jsse.jar.name" value="beeptls-jsse.jar" />
 
+    <property name="jsse.doc.dir" value="doc/jsse" />
+
+    <!-- PTLS TLS properties -->
     <property name="tls-ptls.build.dir" value="${build.dir}/tls-ptls" />
     <property name="tls-ptls.doc.dir" value="${release.dir}/doc/tls-ptls" />
     <property name="tls-ptls.jar.name" value="beeptls-ptls.jar" />
 
+    <property name="puretls.doc.dir" value="doc/puretls" />
+
+    <!-- TLS properties -->
     <property name="tls.src.dir" value="tls" />
 
     <property name="doc-ref-offline" value="false" />
 
-    <target name="init">
+    <!-- Test properties -->
+    <property name="test.build.dir"  value="${build.dir}/test" />
+    <property name="test.src.dir"  value="test" />
+
+
+
+    <target name="-init">
         <mkdir dir="${core.build.dir}" />
         <condition property="javadoc.param" value="-breakiterator">
             <or>
@@ -61,13 +87,15 @@
         <property name="javadoc.param" value="" />
     </target>
 
-    <target name="core" depends="init">
+    <!-- Core targets -->
+    <target name="core" depends="-init">
         <mkdir dir="${core.build.dir}"/>
 	<javac srcdir="${core.src.dir}/"
 	       destdir="${core.build.dir}"
-           debug="${debug}"
-           optimize="${optimize}"
-           deprecation="${deprecation}">
+	       classpathref="core.compile.classpath"
+	       debug="${debug}"
+	       optimize="${optimize}"
+	       deprecation="${deprecation}">
             <include name="**/core/*.java"/>
             <include name="**/lib/*.java"/>
             <include name="**/profile/*.java"/>
@@ -75,11 +103,6 @@
             <include name="**/profile/tls/*.java"/>
             <include name="**/transport/**/*.java"/>
             <include name="**/util/*.java"/>
-	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${beepcore.home}/lib/concurrent.jar"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
-            </classpath>
         </javac>
     </target>
 
@@ -101,11 +124,7 @@
 		 doctitle="${Name}"
 		 additionalparam="${javadoc.param}"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
-	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${beepcore.home}/lib/concurrent.jar"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
-            </classpath>
+	    <classpath refid="compile.classpath"/>
         </javadoc>
     </target>
 
@@ -127,7 +146,7 @@
         <jar jarfile="${release.dir}/${source.jar.name}"
 	     basedir="${build.dir}/src"/>
 
-	<copy file="lib/concurrent.jar"
+	<copy file="${concurrent.jar}"
 	      tofile="${release.dir}/lib/concurrent.jar"/>
 	<copy file="lib/xerces.jar"
 	      tofile="${release.dir}/lib/xerces.jar"/>
@@ -149,6 +168,7 @@
                  cr="remove" eof="remove" includes="*.htm"/>
     </target>
 
+    <!-- Example targets -->
     <target name="example-compile" depends="core-jar,sasl">
         <mkdir dir="${example.build.dir}"/>
 	<javac srcdir="${example.src.dir}/"
@@ -158,14 +178,13 @@
                deprecation="${deprecation}">
             <exclude name="**/util/Log4JLog.java"/>
 	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+                 <path refid="compile.classpath"/>
 		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
             </classpath>
         </javac>
     </target>
 
-    <target name="example" depends="example-compile,log4jlog,14log">
+    <target name="example" depends="example-compile">
         <mkdir dir="${release.dir}/lib"/>
         <jar jarfile="${release.dir}/lib/${example.jar.name}"
 	     basedir="${example.build.dir}">
@@ -183,19 +202,7 @@
 	<fixcrlf srcdir="${release.dir}/example" cr="remove" eof="remove"/>
     </target>
 
-    <target name="ptls-dist" depends="tls-ptls">
-	<copy file="lib/cryptix32.jar"
-	      tofile="${release.dir}/lib/cryptix32.jar"/>
-	<copy file="lib/cryptix-asn1.jar"
-	      tofile="${release.dir}/lib/cryptix-asn1.jar"/>
-	<copy file="lib/puretls.jar"
-	      tofile="${release.dir}/lib/puretls.jar"/>
-	<copy file="lib/LICENSE.cryptix"
-	      tofile="${release.dir}/LICENSE.cryptix"/>
-	<copy file="lib/LICENSE.puretls"
-	      tofile="${release.dir}/LICENSE.puretls"/>
-    </target>
-
+    <!-- Test targets -->
     <target name="test" depends="example">
         <mkdir dir="${test.build.dir}"/>
 	<javac srcdir="${test.src.dir}/"
@@ -205,26 +212,23 @@
                deprecation="${deprecation}">
             <include name="**/*.java"/>
 	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+                 <path refid="compile.classpath"/>
 		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
 		 <pathelement location="${example.build.dir}"/>
             </classpath>
         </javac>
     </target>
 
+    <!-- SASL targets -->
     <target name="sasl-compile" depends="core-jar">
         <mkdir dir="${sasl.build.dir}"/>
         <javac srcdir="${sasl.src.dir}/"
 	       destdir="${sasl.build.dir}"
+	       classpathref="compile.classpath"
                debug="${debug}"
                optimize="${optimize}"
                deprecation="${deprecation}">
             <include name="**/sasl/**/*.java"/>
-	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
-            </classpath>
         </javac>
     </target>
 
@@ -246,25 +250,22 @@
 		 additionalparam="${javadoc.param}"
 		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
 	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+                 <path refid="compile.classpath"/>
 		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
             </classpath>
         </javadoc>
     </target>
 
+    <!-- JSSE targets -->
     <target name="tls-jsse-compile" depends="core-jar">
         <mkdir dir="${tls-jsse.build.dir}"/>
         <javac srcdir="${tls.src.dir}/"
 	       destdir="${tls-jsse.build.dir}"
+	       classpathref="compile.classpath"
                debug="${debug}"
                optimize="${optimize}"
-               deprecation="off">
+               deprecation="${deprecation}">
             <include name="**/jsse/*.java"/>
-	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
-            </classpath>
         </javac>
     </target>
 
@@ -297,13 +298,14 @@
 	          href="file://../core"
 		  packagelistLoc="${core.doc.dir}" />
 	    <classpath>
-		 <pathelement path="${java.class.path}"/>
+                 <path refid="core.compile.classpath"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
 		 <pathelement location="${release.dir}/lib/${tls-jsse.jar.name}"/>
             </classpath>
         </javadoc>
     </target>
 
+    <!-- PTLS targets -->
     <target name="tls-ptls-compile" depends="core-jar">
         <mkdir dir="${tls-ptls.build.dir}"/>
         <javac srcdir="${tls.src.dir}/"
@@ -313,8 +315,10 @@
                deprecation="${deprecation}">
             <include name="**/ptls/*.java"/>
 	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+                 <path refid="compile.classpath"/>
+                 <pathelement location="${cryptix.jar}"/>
+                 <pathelement location="${cryptix-asn1.jar}"/>
+                 <pathelement location="${puretls.jar}"/>
             </classpath>
         </javac>
     </target>
@@ -343,14 +347,27 @@
 	          href="file://../core"
 		  packagelistLoc="${core.doc.dir}" />
 	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+                 <path refid="compile.classpath"/>
+                 <pathelement location="${cryptix.jar}"/>
+                 <pathelement location="${cryptix-asn1.jar}"/>
+                 <pathelement location="${puretls.jar}"/>
 		 <pathelement location="${release.dir}/lib/${tls-ptls.jar.name}"/>
             </classpath>
         </javadoc>
     </target>
 
-    <target name="doc" depends="core-doc,sasl-doc,tls-jsse-doc,tls-ptls-doc"/>
+    <target name="ptls-dist" depends="tls-ptls">
+	<copy file="lib/cryptix32.jar"
+	      tofile="${release.dir}/lib/cryptix32.jar"/>
+	<copy file="lib/cryptix-asn1.jar"
+	      tofile="${release.dir}/lib/cryptix-asn1.jar"/>
+	<copy file="lib/puretls.jar"
+	      tofile="${release.dir}/lib/puretls.jar"/>
+	<copy file="lib/LICENSE.cryptix"
+	      tofile="${release.dir}/LICENSE.cryptix"/>
+	<copy file="lib/LICENSE.puretls"
+	      tofile="${release.dir}/LICENSE.puretls"/>
+    </target>
 
     <!-- Packages the distribution with ZIP -->
     <target name="dist-zip" depends="core-dist,doc,example-dist,ptls-dist">
@@ -369,50 +386,10 @@
 
     <target name="dist" depends="dist-zip,dist-tgz"/>
 
+    <target name="doc" depends="core-doc,sasl-doc,tls-jsse-doc,tls-ptls-doc"/>
+
     <target name="clean">
         <delete dir="${build.dir}" />
         <delete dir="${doc.dir}" />
-    </target>
-
-    <target name="log4jCheck">
-      <available classname="org.apache.log4j.Category"
-         property="log4j-present"
-         classpath="${java.class.path}"/>
-    </target>
-
-    <target name="log4jlog" depends="init,core-jar,log4jCheck" if="log4j-present">
-        <mkdir dir="${example.build.dir}"/>
-        <javac srcdir="${example.src.dir}/"
-	       destdir="${example.build.dir}"
-               debug="${debug}"
-               optimize="${optimize}"
-               deprecation="${deprecation}">
-            <include name="**/util/Log4JLog.java"/>
-	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
-            </classpath>
-        </javac>
-    </target>
-
-    <target name="14LoggingCheck">
-        <available classname="java.util.loggin.Logger"
-            property="14logging-present"
-            classpath="${java.class.path}"/>
-    </target>
-
-    <target name="14log" depends="init,core-jar,14LoggingCheck" if="14logging-present">
-        <mkdir dir="${example.build.dir}"/>
-        <javac srcdir="${example.src.dir}/"
-	       destdir="${example.build.dir}"
-               debug="${debug}"
-               optimize="${optimize}"
-               deprecation="${deprecation}">
-            <include name="**/util/BeepLogger.java"/>
-	    <classpath>
-		 <pathelement path="${java.class.path}"/>
-		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
-            </classpath>
-        </javac>
     </target>
 </project>
