@@ -1,5 +1,5 @@
 /*
- * ProfileRegistry.java  $Revision: 1.13 $ $Date: 2002/10/05 15:29:10 $
+ * ProfileRegistry.java  $Revision: 1.14 $ $Date: 2003/11/07 17:38:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2002/10/05 15:29:10 $
+ * @version $Revision: 1.14 $, $Date: 2003/11/07 17:38:11 $
  */
 public class ProfileRegistry implements Cloneable {
 
@@ -245,13 +245,13 @@ public class ProfileRegistry implements Cloneable {
                 &&!localize.equals(Constants.LOCALIZE_DEFAULT)) {
             sb.append(" localize='");
             sb.append(localize);
-            sb.append("' ");
+            sb.append('\'');
         }
 
         if (features != null) {
-            sb.append("features='");
+            sb.append(" features='");
             sb.append(features);
-            sb.append("' ");
+            sb.append('\'');
         }
 
         sb.append('>');
