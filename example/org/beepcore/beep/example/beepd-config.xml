@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<config>
+    <beepd port="10288">
+        <profile uri="http://iana.org/beep/TLS"
+                 class="org.beepcore.beep.profile.tls.TLSProfile"/>
+
+        <profile uri="http://xml.resource.org/profiles/NULL/ECHO"
+                 class="org.beepcore.beep.profile.echo.EchoProfile"/>
+    </beepd>
+</config>
