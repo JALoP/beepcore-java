@@ -1,12 +1,13 @@
 /*
- * TCPSessionCreator.java  $Revision: 1.4 $ $Date: 2001/11/08 03:59:37 $
+ * TCPSessionCreator.java  $Revision: 1.5 $ $Date: 2001/11/08 05:26:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
  *
- * You may obtain a copy of the License at http://www.invisible.net/
+ * You may obtain a copy of the License at http://www.beepcore.org/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License
@@ -36,21 +37,11 @@ import org.beepcore.beep.core.SessionTuningProperties;
  * This class provides a means for applications or other libraries to create
  * a TCP-based BEEP Session with another BEEP peer.
  *
- * The Socket-based initiate and listen calls are in the
- * <code>AutomatedTCPSessionFactory</code>.
- *
- * Opportunities for polymorphic factory methods are rampant here, depending
- * upon how one wants to represent hosts, and whether helper objects
- * (such as the dreaded profile manager concept) might be used as parameters
- * in classes that extend this one.
- * It is assumed that the callpath started here in Session Factory handles the
- * Greeting exchange and so on, done either here or in the constructors.
- *
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/11/08 03:59:37 $
+ * @version $Revision: 1.5 $, $Date: 2001/11/08 05:26:29 $
  */
 public class TCPSessionCreator {
 

@@ -1,12 +1,13 @@
 /*
- * TCPSession.java  $Revision: 1.14 $ $Date: 2001/11/08 03:59:37 $
+ * TCPSession.java  $Revision: 1.15 $ $Date: 2001/11/08 05:26:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
  *
- * You may obtain a copy of the License at http://www.invisible.net/
+ * You may obtain a copy of the License at http://www.beepcore.org/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License
@@ -41,17 +42,13 @@ import org.beepcore.beep.util.Log;
 
 
 /**
- * This class encapsulates the notion of a BEEP Session ( a relationship
- * between BEEP peers) that exists over a TCP (socket-based) connection.
- * Notice that I've set up properties for both the TCPSession class (statics)
- * and the instance itself.  This may change, but for now it provides us
- * a general management facility with various degrees of granularity.
+ * Provides the TCP transport mapping for BEEP according to RFC 3081.
  *
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2001/11/08 03:59:37 $
+ * @version $Revision: 1.15 $, $Date: 2001/11/08 05:26:29 $
  */
 public class TCPSession extends Session {
 
@@ -137,7 +134,8 @@ public class TCPSession extends Session {
     }
 
     /**
-     * Method initiate
+     * Creates a TCPSession for a Socket that was created by
+     * initiating a connection.
      *
      *
      * @param sock
@@ -155,7 +153,8 @@ public class TCPSession extends Session {
     }
 
     /**
-     * Method listen
+     * Creates a TCPSession for a Socket that was created by
+     * listening and accepting a connection.
      *
      *
      * @param sock
@@ -244,9 +243,8 @@ public class TCPSession extends Session {
     }
 
     /**
-     * Socket-level call to send a frame along a socket.  Generates
-     * a header, then writes the header, payload, and trailer to
-     * the wire.
+     * Generates a header, then writes the header, payload, and
+     * trailer to the wire.
      *
      * @param f the Frame to send.
      * @returns boolean true of the frame was sent, false otherwise.
@@ -327,24 +325,8 @@ public class TCPSession extends Session {
     }
 
     /**
-     * This method is designed to allow for flow control across the multiplexed
-     * connection we have.  The only subclass at present - TCPSession -
-     * implements
-     * a real version of it.  The idea is to throttle data being sent over this
-     * session to be manageable per Channel, so that a given Channel doesn't
-     * take
-     * up all the bandwidth.  The Java implementation is constrained a bit by a
-     * dependency on the Socket's get/setReceiveBufferSize calls.  Because of
-     * how we've designed the library, it's impossible for us to actually have
-     * a socket during the greeting period, therefore, we use a default minimal
-     * buffer size of 4k bytes in the initial SEQ frame.  Once the constructor
-     * for TCPSession has completed (the greeting has been sent) and we have
-     * a real socket, then we attempt to set the buffer size based on the
-     * definitions in <code>Constants</code>, and allow things to go.
-     *
-     * This method restricts the bufferSize, per the beep spec, to be at most
-     * two-thirds of the socket's receiveBufferSize.  If a size is requested
-     * beyond that, an exception is thrown.
+     * Update the channel window size with the remote peer by sending
+     * SEQ frames as per RFC 3081.
      *
      *
      * @param channel
