@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.5 $ $Date: 2001/04/13 21:42:32 $
+ * Session.java            $Revision: 1.6 $ $Date: 2001/04/16 17:11:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,9 +17,7 @@
 package org.beepcore.beep.core;
 
 
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -53,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/04/13 21:42:32 $
+ * @version $Revision: 1.6 $, $Date: 2001/04/16 17:11:10 $
  *
  * @see Channel
  */
@@ -65,9 +63,10 @@ public abstract class Session {
     public static final int SESSION_STATE_GREETING_SENT = 2;
     public static final int SESSION_STATE_GREETING_RECEIVED = 4;
     public static final int SESSION_STATE_ACTIVE = 7;
-    public static final int SESSION_STATE_CLOSED = 8;
+    public static final int SESSION_STATE_TUNING = 7;
     public static final int SESSION_STATE_CLOSING = 15;
     public static final int SESSION_STATE_TERMINATING = 16;
+    public static final int SESSION_STATE_CLOSED = 8;
 
     private static final String CORE = "core";
     private static final int DEFAULT_CHANNELS_SIZE = 4;
@@ -961,29 +960,7 @@ public abstract class Session {
 
         // @todo fix close channel
         if (channelNumber.equals(Constants.CHANNEL_ZERO)) {
-
-            // closing the session
-            // @todo fireEvent(SESSION_STATE_CLOSING);
-            try {
-                if (!changeState(SESSION_STATE_CLOSING)) {
-
-                    // @todo got consecutive shutdowns... now what... log it?
-                    // Utility.assert(ERR_ILLEGAL_SHUTDOWN, -1);
-                }
-            } catch (BEEPException e) {
-                throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                    e.getMessage());
-            }
-
-            try {
-                close();
-            } catch (BEEPError e) {
-                throw e;
-            } catch (BEEPException e) {
-                throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2,
-                                    e.getMessage());
-            }
-
+            receiveCloseChannelZero();
             return;
         }
 
@@ -1021,6 +998,83 @@ public abstract class Session {
         // We're past the CCL approval
         channel.setState(Channel.STATE_CLOSED);
         channels.remove(channel.getNumberAsString());
+    }
+
+    private void receiveCloseChannelZero() throws BEEPError
+    {
+        // closing the session
+        // @todo fireEvent(SESSION_STATE_CLOSING);
+        try {
+            if (!changeState(SESSION_STATE_CLOSING)) {
+
+                // @todo got consecutive shutdowns... now what... log it?
+                // Utility.assert(ERR_ILLEGAL_SHUTDOWN, -1);
+            }
+        } catch (BEEPException e) {
+            throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                e.getMessage());
+        }
+
+        Log.logEntry(Log.SEV_DEBUG,
+                     "Closing Session with " + channels.size() + " channels");
+
+        try {
+            changeState(SESSION_STATE_CLOSING);
+        } catch (BEEPException x) {
+            terminate("Error changing Session state to closing.");
+            return;
+        }
+
+        Iterator i = channels.values().iterator();
+
+        while (i.hasNext()) {
+            Channel ch = (Channel) i.next();
+
+            // if this channel is not zero, call the channel's scl
+            if (ch.getNumber() == 0) {
+                continue;
+            }
+
+            StartChannelListener scl =
+                profileRegistry.getStartChannelListener(ch.getProfile());
+
+            // check locally first to see if it is ok to close the channel
+            try {
+                scl.closeChannel(ch);
+                i.remove();
+            } catch (CloseChannelException e) {
+                try {
+                    changeState(SESSION_STATE_ACTIVE);
+
+                    throw e;
+                } catch (BEEPException x) {
+                    terminate("Error changing Session state from closing " +
+                              "to active");
+                    return;
+                }
+            }
+        }
+
+        StringDataStream sds =
+            new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
+                                 Constants.FRAGMENT_OK);
+
+        try {
+            zero.sendRPY(sds);
+        } catch (BEEPException x) {
+            terminate("Error sending RPY for <close> for channel 0");
+            return;
+        }
+
+        this.disableIO();
+
+        try {
+            this.changeState(SESSION_STATE_CLOSED);
+        } catch (BEEPException e) {
+            Log.logEntry(Log.SEV_ERROR, e);
+        }
+
+        fireEvent(SessionEvent.SESSION_CLOSED_EVENT_CODE,this);
     }
 
     private void receiveStartChannelResultOk(Channel channel, String data)
@@ -1421,61 +1475,61 @@ public abstract class Session {
 
                 if (elementName == null) {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
-                } else if (elementName.equals(Constants.TAG_GREETING)) {
-                    Log.logEntry(Log.SEV_DEBUG, CORE, "Received a greeting");
+                } else if (!elementName.equals(Constants.TAG_GREETING)) {
+                    throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
+                }
 
-                    // this attribute is implied
-                    String features =
-                        topElement.getAttribute(Constants.TAG_FEATURES);
+                Log.logEntry(Log.SEV_DEBUG, CORE, "Received a greeting");
 
-                    // This attribute has a default value
-                    String localize =
-                        topElement.getAttribute(Constants.TAG_LOCALIZE);
+                // this attribute is implied
+                String features =
+                    topElement.getAttribute(Constants.TAG_FEATURES);
 
-                    if (localize == null) {
-                        localize = Constants.LOCALIZE_DEFAULT;
-                    }
+                // This attribute has a default value
+                String localize =
+                    topElement.getAttribute(Constants.TAG_LOCALIZE);
 
-                    // Read the profiles - note, the greeting is valid
-                    // with 0 profiles
-                    NodeList profiles =
-                        topElement.getElementsByTagName(Constants.TAG_PROFILE);
+                if (localize == null) {
+                    localize = Constants.LOCALIZE_DEFAULT;
+                }
 
-                    if (profiles.getLength() > 0) {
-                        LinkedList profileList = new LinkedList();
+                // Read the profiles - note, the greeting is valid
+                // with 0 profiles
+                NodeList profiles =
+                    topElement.getElementsByTagName(Constants.TAG_PROFILE);
 
-                        for (int i = 0; i < profiles.getLength(); i++) {
-                            Element profile = (Element) profiles.item(i);
-                            String uri = profile.getAttribute(Constants.TAG_URI);
+                if (profiles.getLength() > 0) {
+                    LinkedList profileList = new LinkedList();
 
-                            if (uri == null) {
-                                throw new BEEPException(ERR_MALFORMED_PROFILE_MSG);
-                            }
+                    for (int i = 0; i < profiles.getLength(); i++) {
+                        Element profile = (Element) profiles.item(i);
+                        String uri = profile.getAttribute(Constants.TAG_URI);
 
-                            String encoding =
-                                profile.getAttribute(Constants.TAG_ENCODING);
-
-                            // encoding is not allowed in greetings
-                            if (encoding != null) {
-
-                                // @todo check this
-                                //                            terminate("Invalid attribute 'encoding' in greeting.");
-                                //                            return;
-                            }
-
-                            profileList.add(i, profile);
+                        if (uri == null) {
+                            throw new BEEPException(ERR_MALFORMED_PROFILE_MSG);
                         }
 
-                        Session.this.peerSupportedProfiles = profileList;
+                        String encoding =
+                            profile.getAttribute(Constants.TAG_ENCODING);
+
+                        // encoding is not allowed in greetings
+                        if (encoding != null) {
+
+                            // @todo check this
+                            // terminate("Invalid attribute 'encoding' in greeting.");
+                            // return;
+                        }
+
+                        profileList.add(i, profile);
                     }
 
-                    changeState(Session.SESSION_STATE_GREETING_RECEIVED);
+                    Session.this.peerSupportedProfiles = profileList;
+                }
 
-                    synchronized (this) {
-                        this.notifyAll();
-                    }
-                } else {
-                    throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
+                changeState(Session.SESSION_STATE_GREETING_RECEIVED);
+
+                synchronized (this) {
+                    this.notifyAll();
                 }
             } catch (BEEPException e) {
                 terminate("Problem with RPY: " + e.getMessage());
