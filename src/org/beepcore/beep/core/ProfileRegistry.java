@@ -1,5 +1,5 @@
 /*
- * ProfileRegistry.java  $Revision: 1.10 $ $Date: 2001/11/27 17:37:22 $
+ * ProfileRegistry.java  $Revision: 1.11 $ $Date: 2001/11/29 04:00:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -34,28 +34,9 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2001/11/27 17:37:22 $
+ * @version $Revision: 1.11 $, $Date: 2001/11/29 04:00:00 $
  */
 public class ProfileRegistry implements Cloneable {
-
-    private static final String SPACE = " ";
-    private static final String FRAGMENT_ANGLE_SUFFIX = ">";
-    private static final String FRAGMENT_FEATURES_PREFIX = "features='";
-    private static final String FRAGMENT_GREETING_PREFIX = "<greeting";
-    private static final String FRAGMENT_GREETING_SUFFIX = "</greeting>";
-    private static final String FRAGMENT_LOCALIZE_PREFIX = "localize='";
-    private static final String FRAGMENT_PROFILE_PREFIX = "<profile ";
-    private static final String FRAGMENT_QUOTE_ANGLE_SUFFIX = "'>";
-    private static final String FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX = "' />";
-    private static final String FRAGMENT_QUOTE_SUFFIX = "' ";
-    private static final String FRAGMENT_URI_PREFIX = "uri='";
-    private static final int FRAGMENT_GREETING_LENGTH =
-        FRAGMENT_GREETING_PREFIX.length()
-        + FRAGMENT_QUOTE_ANGLE_SUFFIX.length()
-        + FRAGMENT_GREETING_SUFFIX.length();
-    private static final int FRAGMENT_PROFILE_LENGTH =
-        FRAGMENT_PROFILE_PREFIX.length()
-        + FRAGMENT_QUOTE_ANGLE_SUFFIX.length();
 
     // Instance Data
     private class InternalProfile {
@@ -64,9 +45,7 @@ public class ProfileRegistry implements Cloneable {
     }
 
     private Hashtable profileListeners;
-    String greeting;
     String localize;
-    String features;
 
     // Constructors
 
@@ -77,25 +56,19 @@ public class ProfileRegistry implements Cloneable {
      */
     public ProfileRegistry()
     {
-        this.greeting = null;
-        this.features = null;
         this.localize = Constants.LOCALIZE_DEFAULT;
         this.profileListeners = new Hashtable();
     }
 
-    private ProfileRegistry(String greeting, String localize,
-                            String features, Hashtable profiles)
+    private ProfileRegistry(String localize, Hashtable profiles)
     {
-        this.greeting = greeting;
-        this.features = features;
         this.localize = localize;
         this.profileListeners = profiles;
     }
 
     public Object clone()
     {
-        return new ProfileRegistry(this.greeting, this.localize,
-                                   this.features,
+        return new ProfileRegistry(this.localize,
                                    (Hashtable) this.profileListeners.clone());
     }
 
@@ -240,9 +213,13 @@ public class ProfileRegistry implements Cloneable {
         return this.localize;
     }
 
-    byte[] getGreeting(Session session)
+    byte[] getGreeting(Session session) {
+        return getGreeting(session, null);
+    }
+
+    byte[] getGreeting(Session session, String features)
     {
-        int bufferSize = FRAGMENT_GREETING_LENGTH;
+        int bufferSize = "<greeting></greeting>".length();
         int profileCount = 0;
 
         profileCount = profileListeners.size();
@@ -251,7 +228,7 @@ public class ProfileRegistry implements Cloneable {
 
         while (e.hasMoreElements()) {
             bufferSize += ((String) e.nextElement()).length()
-                          + FRAGMENT_PROFILE_LENGTH;
+                + "<profile>".length();
         }
 
         bufferSize++;
@@ -262,23 +239,22 @@ public class ProfileRegistry implements Cloneable {
         // Wish I could reset these.
         Enumeration f = profileListeners.keys();
 
-        sb.append(FRAGMENT_GREETING_PREFIX);
+        sb.append("<greeting");
 
         if ((localize != null)
                 &&!localize.equals(Constants.LOCALIZE_DEFAULT)) {
-            sb.append(this.SPACE);
-            sb.append(FRAGMENT_LOCALIZE_PREFIX);
+            sb.append(" localize='");
             sb.append(localize);
-            sb.append(FRAGMENT_QUOTE_SUFFIX);
+            sb.append("' ");
         }
 
         if (features != null) {
-            sb.append(FRAGMENT_FEATURES_PREFIX);
+            sb.append("features='");
             sb.append(features);
-            sb.append(FRAGMENT_QUOTE_SUFFIX);
+            sb.append("' ");
         }
 
-        sb.append(FRAGMENT_ANGLE_SUFFIX);
+        sb.append('>');
 
         while (f.hasMoreElements()) {
 
@@ -308,10 +284,9 @@ public class ProfileRegistry implements Cloneable {
                     (callAdvertise &&
                      profile.listener.advertiseProfile(session)))
                 {
-                    sb.append(FRAGMENT_PROFILE_PREFIX);
-                    sb.append(FRAGMENT_URI_PREFIX);
-                    sb.append((String) profileName);
-                    sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+                    sb.append("<profile uri='");
+                    sb.append(profileName);
+                    sb.append("' />");
                 }
             } catch (BEEPException x) {
                 x.printStackTrace();
@@ -320,7 +295,7 @@ public class ProfileRegistry implements Cloneable {
             }
         }
 
-        sb.append(FRAGMENT_GREETING_SUFFIX);
+        sb.append("</greeting>");
 
         return StringUtil.stringBufferToAscii(sb);
     }

@@ -1,6 +1,6 @@
 
 /*
- * BEEPError.java            $Revision: 1.5 $ $Date: 2001/11/08 05:51:34 $
+ * BEEPError.java            $Revision: 1.6 $ $Date: 2001/11/29 04:00:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -36,27 +36,11 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.6 $, $Date: 2001/11/29 04:00:00 $
  */
 public class BEEPError extends BEEPException {
 
     private static final String ERR_MALFORMED_XML_MSG = "Malformed XML";
-    private static final String ERR_UNKNOWN_OPERATION_ELEMENT_MSG =
-        "Unknown operation element";
-    private static final String ERR_PCDATA_TOO_BIG_MSG =
-        "Element's PCDATA exceeds the maximum size";
-
-    private static final String FRAGMENT_ANGLE_SUFFIX = ">";
-    private static final String FRAGMENT_CODE_PREFIX = "code='";
-    private static final String FRAGMENT_ERROR_PREFIX = "<error ";
-    private static final String FRAGMENT_ERROR_SUFFIX = "</error>";
-    private static final String FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX = "' />";
-    private static final String FRAGMENT_QUOTE_SUFFIX = "' ";
-    private static final String FRAGMENT_XML_LANG_PREFIX = "xml:lang='";
-
-    private static final String TAG_CODE = "code";
-    private static final String TAG_ERROR = "error";
-    private static final String TAG_XML_LANG = "xml:lang";
 
     private int code;
     private String xmlLang = null;
@@ -186,23 +170,20 @@ public class BEEPError extends BEEPException {
     {
         StringBuffer sb = new StringBuffer(128);
 
-        sb.append(FRAGMENT_ERROR_PREFIX);
-        sb.append(FRAGMENT_CODE_PREFIX);
+        sb.append("<error code='");
         sb.append(code);
 
         if (xmlLang != null) {
-            sb.append(FRAGMENT_QUOTE_SUFFIX);
-            sb.append(FRAGMENT_XML_LANG_PREFIX);
+            sb.append("' xml:lang='");
             sb.append(xmlLang);
         }
 
         if (diagnostic != null) {
-            sb.append(FRAGMENT_QUOTE_SUFFIX);
-            sb.append(FRAGMENT_ANGLE_SUFFIX);
+            sb.append("' >");
             sb.append(diagnostic);
-            sb.append(FRAGMENT_ERROR_SUFFIX);
+            sb.append("</error>");
         } else {
-            sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+            sb.append("' />");
         }
 
         return sb.toString();
@@ -257,18 +238,18 @@ public class BEEPError extends BEEPException {
 
         if (elementName == null) {
             throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        } else if (!elementName.equals(TAG_ERROR)) {
-            throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
+        } else if (!elementName.equals("error")) {
+            throw new BEEPException("Unknown operation element");
         }
 
-        String code = topElement.getAttribute(TAG_CODE);
+        String code = topElement.getAttribute("code");
 
         if (code == null) {
             throw new BEEPException(ERR_MALFORMED_XML_MSG);
         }
 
         // this attribute is implied
-        String xmlLang = topElement.getAttribute(TAG_XML_LANG);
+        String xmlLang = topElement.getAttribute("xml:lang");
         Node dataNode = topElement.getFirstChild();
         String data = null;
 

@@ -1,5 +1,5 @@
 /*
- * Blob.java            $Revision: 1.4 $ $Date: 2001/11/08 05:51:34 $
+ * Blob.java            $Revision: 1.5 $ $Date: 2001/11/29 04:00:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -41,7 +41,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.5 $, $Date: 2001/11/29 04:00:00 $
  *
  */
 public class Blob
@@ -60,25 +60,10 @@ public class Blob
     // Data Constants
     public final static int DEFAULT_BLOB_SIZE = 1024;
     // Error Constants
-    public final static String ERR_INVALID_STATUS_VALUE = "Invalid SASL Status for Blob";
-    public final static String ERR_MEANINGLESS_BLOB = "No valid data in blob";
-    public final static String ERR_BASE64 = "Base64 encode or decode failure";
-    public final static String ERR_XML_PARSE_FAILURE = "Failed to parse xml";
+    private final static String ERR_INVALID_STATUS_VALUE =
+        "Invalid SASL Status for Blob";
+    private final static String ERR_XML_PARSE_FAILURE = "Failed to parse xml";
     // XML Fragment Constants
-    public final static String FRAGMENT_ANGLE_SUFFIX = ">";
-    public final static String FRAGMENT_BLOB_PREFIX = "<blob ";
-    public final static String FRAGMENT_BLOB_SUFFIX = "</blob>";
-    public final static String FRAGMENT_CDATA_PREFIX = "<![CDATA[";
-    public final static String FRAGMENT_CDATA_SUFFIX = "]]>";
-    public static final String FRAGMENT_ERROR_PREFIX = "<error ";
-    public static final String FRAGMENT_ERROR_SUFFIX = "</error>";
-    public static final String FRAGMENT_QUOTE_SUFFIX = "'";
-    public static final String FRAGMENT_QUOTE_ANGLE_SUFFIX = "'>";
-    public static final String FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX = "'/>";
-    public static final String FRAGMENT_SLASH_ANGLE_SUFFIX = "/>";
-    public final static String FRAGMENT_STATUS_PREFIX = "status='";
-    public static final String TAG_BLOB = "blob";
-    public static final String TAG_STATUS = "status";
 
 
     // Class data
@@ -119,20 +104,20 @@ public class Blob
         this.status = status;
 
         StringBuffer buff = new StringBuffer(DEFAULT_BLOB_SIZE);
-        buff.append(FRAGMENT_BLOB_PREFIX);
+        buff.append("<blob ");
 
         if (status != STATUS_NONE) {
-            buff.append(FRAGMENT_STATUS_PREFIX);
+            buff.append("status='");
             buff.append(statusMappings[status]);
-            buff.append(FRAGMENT_QUOTE_SUFFIX);
+            buff.append('\'');
         }
 
         if (blobData == null) {
-            buff.append(FRAGMENT_SLASH_ANGLE_SUFFIX);
+            buff.append("/>");
         } else {
-            buff.append(FRAGMENT_ANGLE_SUFFIX);
+            buff.append(">");
             buff.append(blobData);
-            buff.append(FRAGMENT_BLOB_SUFFIX);
+            buff.append("</blob>");
         }
 
         stringified = buff.toString();
@@ -174,20 +159,20 @@ public class Blob
         }
 
         StringBuffer buff = new StringBuffer(DEFAULT_BLOB_SIZE);
-        buff.append(FRAGMENT_BLOB_PREFIX);
+        buff.append("<blob ");
 
         if (status != STATUS_NONE) {
-            buff.append(FRAGMENT_STATUS_PREFIX);
+            buff.append("status='");
             buff.append(statusMappings[status]);
-            buff.append(FRAGMENT_QUOTE_SUFFIX);
+            buff.append('\'');
         }
 
         if (blobData == null) {
-            buff.append(FRAGMENT_SLASH_ANGLE_SUFFIX);
+            buff.append("/>");
         } else {
-            buff.append(FRAGMENT_ANGLE_SUFFIX);
+            buff.append(">");
             buff.append(blobData);
-            buff.append(FRAGMENT_BLOB_SUFFIX);
+            buff.append("</blob>");
         }
 
         stringified = buff.toString();
@@ -222,20 +207,20 @@ public class Blob
         }
         
         StringBuffer buff = new StringBuffer(DEFAULT_BLOB_SIZE);
-        buff.append(FRAGMENT_BLOB_PREFIX);
+        buff.append("<blob ");
 
         if (status != STATUS_NONE) {
-            buff.append(FRAGMENT_STATUS_PREFIX);
+            buff.append("status='");
             buff.append(statusMappings[status]);
-            buff.append(FRAGMENT_QUOTE_SUFFIX);
+            buff.append('\'');
         }
 
         if (blobData == null) {
-            buff.append(FRAGMENT_SLASH_ANGLE_SUFFIX);
+            buff.append("/>");
         } else {
-            buff.append(FRAGMENT_ANGLE_SUFFIX);
+            buff.append(">");
             buff.append(blobData);
-            buff.append(FRAGMENT_BLOB_SUFFIX);
+            buff.append("</blob>");
         }
         
         stringified = buff.toString();
@@ -284,7 +269,7 @@ public class Blob
         }
 
         if (status == STATUS_NONE && blobData == null) {
-            throw new SASLException(ERR_MEANINGLESS_BLOB);
+            throw new SASLException("No valid data in blob");
         }
         
         Log.logEntry(Log.SEV_DEBUG, "Received Blob of =>" + stringified);
@@ -421,17 +406,17 @@ public class Blob
     private static String extractStatusFromBlob(String blob)
             throws SASLException
     {
-        if ((blob == null) || (blob.indexOf(FRAGMENT_BLOB_PREFIX) == -1)) {
+        if ((blob == null) || (blob.indexOf("<blob ") == -1)) {
             return null;
         }
 
         Element top = processMessage(blob);
 
-        if (!top.getTagName().equals(TAG_BLOB)) {
+        if (!top.getTagName().equals("blob")) {
             throw new SASLException(ERR_XML_PARSE_FAILURE);
         }
 
-        return top.getAttribute(TAG_STATUS);
+        return top.getAttribute("status");
     }
 
     /**
@@ -453,7 +438,7 @@ public class Blob
         String result;
         Element top = processMessage(blob);
 
-        if (!top.getTagName().equals(TAG_BLOB)) {
+        if (!top.getTagName().equals("blob")) {
             throw new SASLException(ERR_XML_PARSE_FAILURE);
         }
 
@@ -483,7 +468,7 @@ public class Blob
         try {
             return new String(encoder.encodeBuffer(data.getBytes()));
         } catch (Exception x) {
-            throw new SASLException(ERR_BASE64);
+            throw new SASLException("Base64 encode or decode failure");
         }
     }
 

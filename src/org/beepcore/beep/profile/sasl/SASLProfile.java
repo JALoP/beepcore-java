@@ -1,5 +1,5 @@
 /*
- * SASLProfile.java  $Revision: 1.6 $ $Date: 2001/11/08 05:51:34 $
+ * SASLProfile.java  $Revision: 1.7 $ $Date: 2001/11/29 04:00:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,19 +42,16 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.7 $, $Date: 2001/11/29 04:00:00 $
  *
  */
 public abstract class SASLProfile extends TuningProfile {
 
     // Constants
     public static final String COMPLETE = "<blob status='complete'>";
-    public final static String ERR_INVALID_SASL_STATUS =
-        "Invalid SASL Status attribute value employed";
     public static final String ENCODING_NONE = "none";
     public static final String ENCODING_BASE64 = "base64";
     public static final String ENCODING_DEFAULT = ENCODING_NONE;
-    public static final String FRAGMENT_ERROR_PREFIX = "<error ";
     public static final String LOCALIZE_DEFAULT = "i-default";
     public final static String SASL = "sasl";
     public final static String SASL_STATUS_ABORT = "abort";

@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.5 $ $Date: 2001/11/08 05:51:34 $
+ * SASLAnonymousProfile.java  $Revision: 1.6 $ $Date: 2001/11/29 04:00:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -44,7 +44,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.6 $, $Date: 2001/11/29 04:00:00 $
  *
  */
 public class SASLAnonymousProfile
@@ -214,7 +214,7 @@ public class SASLAnonymousProfile
         Log.logEntry(Log.SEV_DEBUG, "Got start data of " + ch.getStartData());
 
         if ((ch.getStartData() != null)
-                && (ch.getStartData().indexOf(FRAGMENT_ERROR_PREFIX) != -1)) {
+                && (ch.getStartData().indexOf("<error ") != -1)) {
             throw new BEEPException(ch.getStartData());
         }
 

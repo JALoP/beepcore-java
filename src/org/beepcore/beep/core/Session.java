@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.21 $ $Date: 2001/11/27 17:37:22 $
+ * Session.java  $Revision: 1.22 $ $Date: 2001/11/29 04:00:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,7 +59,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.21 $, $Date: 2001/11/27 17:37:22 $
+ * @version $Revision: 1.22 $, $Date: 2001/11/29 04:00:00 $
  *
  * @see Channel
  */
@@ -82,68 +82,21 @@ public abstract class Session {
     private static final int DEFAULT_POLL_INTERVAL = 500;
 
     /** @todo check this */
-    private static final int MAX_PAYLOAD_SIZE = 4096;
     private static final int MAX_PCDATA_SIZE = 4096;
     private static final int MAX_START_CHANNEL_WAIT = 60000;
     private static final int MAX_START_CHANNEL_INTERVAL = 100;
 
     private static final String CHANNEL_ZERO = "0";
 
-    private static final String ERR_GREETING_FAILED =
-        "Greeting exchange failed";
-    private static final String ERR_ILLEGAL_SHUTDOWN =
-        "Illegal state for shutdown";
-    private static final String ERR_PROFILES_UNAVAILABLE =
-        "all requested profiles are unsupported";
-    private static final String ERR_NONEXISTENT_CHANNEL =
-        "Session call on nonexistent channel.";
-    private static final String ERR_STATE_CHANGE =
-        "Illegal session state transition";
     private static final String ERR_MALFORMED_XML_MSG = "Malformed XML";
-    private static final String ERR_PCDATA_TOO_BIG_MSG =
-        "Element's PCDATA exceeds the maximum size";
     private static final String ERR_UNKNOWN_OPERATION_ELEMENT_MSG =
         "Unknown operation element";
-    private static final String ERR_MALFORMED_PROFILE_MSG =
-        "Malformed profile";
 
-    private static final String FRAGMENT_ANGLE_SUFFIX = ">";
-    private static final String FRAGMENT_CDATA_PREFIX = "<![CDATA[";
-    private static final String FRAGMENT_CDATA_SUFFIX = "]]>";
-    private static final String FRAGMENT_CLOSE_PREFIX = "<close ";
-    private static final String FRAGMENT_CODE_PREFIX = "code='";
-    private static final String FRAGMENT_ENCODING_PREFIX = "encoding='";
-    private static final String FRAGMENT_NUMBER_PREFIX = "number='";
-    private static final String FRAGMENT_OK = "<ok />";
-    private static final String FRAGMENT_PROFILE_PREFIX = "<profile ";
-    private static final String FRAGMENT_PROFILE_SUFFIX = "</profile>";
-    private static final String FRAGMENT_QUOTE_ANGLE_SUFFIX = "'>";
-    private static final String FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX = "' />";
-    private static final String FRAGMENT_QUOTE_SUFFIX = "' ";
-    private static final String FRAGMENT_SERVERNAME_PREFIX = "serverName='";
-    private static final String FRAGMENT_SLASH_ANGLE_SUFFIX = " />";
-    private static final String FRAGMENT_START_PREFIX = "<start ";
-    private static final String FRAGMENT_START_SUFFIX = "</start>";
-    private static final String FRAGMENT_URI_PREFIX = "uri='";
-    private static final String FRAGMENT_XML_LANG_PREFIX = "xml:lang='";
-
-    private static final String TAG_CLOSE = "close";
-    private static final String TAG_CODE = "code";
-    private static final String TAG_ENCODING = "encoding";
-    private static final String TAG_FEATURES = "features";
-    private static final String TAG_GREETING = "greeting";
-    private static final String TAG_LOCALIZE = "localize";
-    private static final String TAG_NUMBER = "number";
-    private static final String TAG_OK = "ok";
-    private static final String TAG_PROFILE = "profile";
-    private static final String TAG_START = "start";
-    private static final String TAG_SERVER_NAME = "serverName";
-    private static final String TAG_URI = "uri";
-    private static final String TAG_XML_LANG = "xml:lang";
+    private static final byte[] OK_ELEMENT =
+        StringUtil.stringToAscii("<ok />");
 
     // Instance Data
     private int state;
-    private long messageNumber;
     private long nextChannelNumber = 0;
     private Channel zero;
     private Hashtable channels = null;
@@ -247,7 +200,7 @@ public abstract class Session {
 
         // check the channel state and return the appropriate exception
         if (zero.getState() == Channel.STATE_ERROR) {
-            throw new BEEPException(ERR_GREETING_FAILED);
+            throw new BEEPException("Greeting exchange failed");
         }
     }
 
@@ -556,10 +509,9 @@ public abstract class Session {
         // create the message in a buffer and send it
         StringBuffer startBuffer = new StringBuffer();
 
-        startBuffer.append(FRAGMENT_START_PREFIX);
-        startBuffer.append(FRAGMENT_NUMBER_PREFIX);
+        startBuffer.append("<start number='");
         startBuffer.append(channelNumber);
-        startBuffer.append(FRAGMENT_QUOTE_ANGLE_SUFFIX);
+        startBuffer.append("'>");
 
         Iterator i = profiles.iterator();
 
@@ -567,27 +519,24 @@ public abstract class Session {
             StartChannelProfile p = (StartChannelProfile) i.next();
 
             // @todo maybe we should check these against peerSupportedProfiles
-            startBuffer.append(FRAGMENT_PROFILE_PREFIX);
-            startBuffer.append(FRAGMENT_URI_PREFIX);
+            startBuffer.append("<profile uri='");
             startBuffer.append(p.uri);
-            startBuffer.append(FRAGMENT_QUOTE_SUFFIX);
+            startBuffer.append("' ");
 
             if (p.data == null) {
-                startBuffer.append(FRAGMENT_SLASH_ANGLE_SUFFIX);
+                startBuffer.append(" />");
             } else {
                 if (p.base64Encoding) {
                     startBuffer.append("encoding='base64' ");
                 }
 
-                startBuffer.append(FRAGMENT_ANGLE_SUFFIX);
-                startBuffer.append(FRAGMENT_CDATA_PREFIX);
+                startBuffer.append("><![CDATA[");
                 startBuffer.append(p.data);
-                startBuffer.append(FRAGMENT_CDATA_SUFFIX);
-                startBuffer.append(FRAGMENT_PROFILE_SUFFIX);
+                startBuffer.append("]]></profile>");
             }
         }
 
-        startBuffer.append(FRAGMENT_START_SUFFIX);
+        startBuffer.append("</start>");
 
         // @todo handle the data element
         // Create a channel
@@ -665,21 +614,21 @@ public abstract class Session {
         if ((state == SESSION_STATE_UNINITIALIZED)
                 &&!((newState == SESSION_STATE_INITIALIZED)
                     || (newState == SESSION_STATE_CLOSED))) {
-            throw new BEEPException(ERR_STATE_CHANGE);
+            throw new BEEPException("Illegal session state transition");
         }
 
         if ((state == SESSION_STATE_INITIALIZED)
                 &&!((newState == SESSION_STATE_GREETING_SENT)
                     || (newState == SESSION_STATE_GREETING_RECEIVED)
                     || (newState == SESSION_STATE_CLOSED))) {
-            throw new BEEPException(ERR_STATE_CHANGE);
+            throw new BEEPException("Illegal session state transition");
         }
 
         if ((state == SESSION_STATE_ACTIVE)
                 && (newState != SESSION_STATE_CLOSED)
                 && (newState != SESSION_STATE_TERMINATING)
                 && (newState != SESSION_STATE_CLOSING)) {
-            throw new BEEPException(ERR_STATE_CHANGE);
+            throw new BEEPException("Illegal session state transition");
         }
 
         state |= newState;
@@ -744,7 +693,7 @@ public abstract class Session {
         Channel ch = (Channel) channels.get(Integer.toString(channel));
 
         if (ch == null) {
-            throw new BEEPException(ERR_NONEXISTENT_CHANNEL);
+            throw new BEEPException("Session call on nonexistent channel.");
         }
 
         return ch.getAvailableWindow();
@@ -966,20 +915,17 @@ public abstract class Session {
         // Construct Message
         StringBuffer closeBuffer = new StringBuffer();
 
-        closeBuffer.append(FRAGMENT_CLOSE_PREFIX);
-        closeBuffer.append(FRAGMENT_NUMBER_PREFIX);
+        closeBuffer.append("<close number='");
         closeBuffer.append(channel.getNumberAsString());
-        closeBuffer.append(FRAGMENT_QUOTE_SUFFIX);
-        closeBuffer.append(FRAGMENT_CODE_PREFIX);
+        closeBuffer.append("' code='");
         closeBuffer.append(code);
 
         if (xmlLang != null) {
-            closeBuffer.append(FRAGMENT_QUOTE_SUFFIX);
-            closeBuffer.append(FRAGMENT_XML_LANG_PREFIX);
+            closeBuffer.append("' xml:lang='");
             closeBuffer.append(xmlLang);
         }
 
-        closeBuffer.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+        closeBuffer.append("' />");
 
         // Lock necessary because we have to know the msgNo
         // before we send the message, in order to be able
@@ -1022,7 +968,7 @@ public abstract class Session {
         Channel ch = (Channel) channels.get(Integer.toString(number));
 
         if (ch == null) {
-            throw new BEEPException(ERR_NONEXISTENT_CHANNEL);
+            throw new BEEPException("Session call on nonexistent channel.");
         }
 
         return ch;
@@ -1035,18 +981,15 @@ public abstract class Session {
         // Send the profile
         StringBuffer sb = new StringBuffer();
 
-        sb.append(FRAGMENT_PROFILE_PREFIX);
-        sb.append(FRAGMENT_URI_PREFIX);
+        sb.append("<profile uri='");
         sb.append(uri);
 
         if (datum != null) {
-            sb.append(FRAGMENT_QUOTE_ANGLE_SUFFIX);
-            sb.append(FRAGMENT_CDATA_PREFIX);
+            sb.append("'><![CDATA[");
             sb.append(datum);
-            sb.append(FRAGMENT_CDATA_SUFFIX);
-            sb.append(FRAGMENT_PROFILE_SUFFIX);
+            sb.append("]]></profile>");
         } else {
-            sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+            sb.append("' />");
         }
 
         OutputDataStream ds =
@@ -1165,7 +1108,7 @@ public abstract class Session {
         // Send an ok
         OutputDataStream sds =
             new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                     StringUtil.stringToAscii(FRAGMENT_OK));
+                                     OK_ELEMENT);
 
         try {
             ((Message)zero.getAppData()).sendRPY(sds);
@@ -1191,7 +1134,7 @@ public abstract class Session {
             if (!changeState(SESSION_STATE_CLOSING)) {
 
                 // @todo got consecutive shutdowns... now what... log it?
-                // Utility.assert(ERR_ILLEGAL_SHUTDOWN, -1);
+                // Utility.assert("Illegal state for shutdown", -1);
             }
         } catch (BEEPException e) {
             throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
@@ -1243,7 +1186,7 @@ public abstract class Session {
 
         OutputDataStream sds =
             new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                     StringUtil.stringToAscii(FRAGMENT_OK));
+                                     OK_ELEMENT);
 
         try {
             ((Message)zero.getAppData()).sendRPY(sds);
@@ -1356,7 +1299,7 @@ public abstract class Session {
         }
 
         try {
-            ((Message)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, ERR_PROFILES_UNAVAILABLE);
+            ((Message)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, "all requested profiles are unsupported");
         } catch (Exception x) {
             terminate("Error sending error. " + x.getMessage());
         }
@@ -1445,11 +1388,11 @@ public abstract class Session {
             }
 
             // is this MSG a <start>
-            if (elementName.equals(TAG_START)) {
+            if (elementName.equals("start")) {
                 Log.logEntry(Log.SEV_DEBUG, CORE,
                              "Received a start channel request");
 
-                String channelNumber = topElement.getAttribute(TAG_NUMBER);
+                String channelNumber = topElement.getAttribute("number");
 
                 if (channelNumber == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
@@ -1457,9 +1400,9 @@ public abstract class Session {
                 }
 
                 // this attribute is implied
-                String serverName = topElement.getAttribute(TAG_SERVER_NAME);
+                String serverName = topElement.getAttribute("serverName");
                 NodeList profiles =
-                    topElement.getElementsByTagName(TAG_PROFILE);
+                    topElement.getElementsByTagName("profile");
 
                 if (profiles == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
@@ -1470,14 +1413,14 @@ public abstract class Session {
 
                 for (int i = 0; i < profiles.getLength(); i++) {
                     Element profile = (Element) profiles.item(i);
-                    String uri = profile.getAttribute(TAG_URI);
+                    String uri = profile.getAttribute("uri");
 
                     if (uri == null) {
                         throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
                                             "no profiles in start");
                     }
 
-                    String encoding = profile.getAttribute(TAG_ENCODING);
+                    String encoding = profile.getAttribute("encoding");
                     boolean b64;
 
                     if ((encoding == null) || encoding.equals("")) {
@@ -1499,7 +1442,8 @@ public abstract class Session {
 
                         if (data.length() > MAX_PCDATA_SIZE) {
                             throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                                ERR_PCDATA_TOO_BIG_MSG);
+                                                "Element's PCDATA exceeds " +
+                                                "the maximum size");
                         }
                     }
 
@@ -1511,18 +1455,18 @@ public abstract class Session {
             }
 
             // is this MSG a <close>
-            else if (elementName.equals(TAG_CLOSE)) {
+            else if (elementName.equals("close")) {
                 Log.logEntry(Log.SEV_DEBUG, CORE,
                              "Received a channel close request");
 
-                String channelNumber = topElement.getAttribute(TAG_NUMBER);
+                String channelNumber = topElement.getAttribute("number");
 
                 if (channelNumber == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
                                         "Malformed <close>: no channel number");
                 }
 
-                String code = topElement.getAttribute(TAG_CODE);
+                String code = topElement.getAttribute("code");
 
                 if (code == null) {
                     throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
@@ -1530,7 +1474,7 @@ public abstract class Session {
                 }
 
                 // this attribute is implied
-                String xmlLang = topElement.getAttribute(TAG_XML_LANG);
+                String xmlLang = topElement.getAttribute("xml:lang");
                 String data = null;
                 Node dataNode = topElement.getFirstChild();
 
@@ -1539,7 +1483,8 @@ public abstract class Session {
 
                     if (data.length() > MAX_PCDATA_SIZE) {
                         throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                            ERR_PCDATA_TOO_BIG_MSG);
+                                            "Element's PCDATA exceeds " +
+                                            "the maximum size");
                     }
                 }
 
@@ -1565,17 +1510,17 @@ public abstract class Session {
 
                 if (elementName == null) {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
-                } else if (!elementName.equals(TAG_GREETING)) {
+                } else if (!elementName.equals("greeting")) {
                     throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
                 }
 
                 Log.logEntry(Log.SEV_DEBUG, CORE, "Received a greeting");
 
                 // this attribute is implied
-                String features = topElement.getAttribute(TAG_FEATURES);
+                String features = topElement.getAttribute("features");
 
                 // This attribute has a default value
-                String localize = topElement.getAttribute(TAG_LOCALIZE);
+                String localize = topElement.getAttribute("localize");
 
                 if (localize == null) {
                     localize = Constants.LOCALIZE_DEFAULT;
@@ -1584,20 +1529,20 @@ public abstract class Session {
                 // Read the profiles - note, the greeting is valid
                 // with 0 profiles
                 NodeList profiles =
-                    topElement.getElementsByTagName(TAG_PROFILE);
+                    topElement.getElementsByTagName("profile");
 
                 if (profiles.getLength() > 0) {
                     LinkedList profileList = new LinkedList();
 
                     for (int i = 0; i < profiles.getLength(); i++) {
                         Element profile = (Element) profiles.item(i);
-                        String uri = profile.getAttribute(TAG_URI);
+                        String uri = profile.getAttribute("uri");
 
                         if (uri == null) {
-                            throw new BEEPException(ERR_MALFORMED_PROFILE_MSG);
+                            throw new BEEPException("Malformed profile");
                         }
 
-                        String encoding = profile.getAttribute(TAG_ENCODING);
+                        String encoding = profile.getAttribute("encoding");
 
                         // encoding is not allowed in greetings
                         if (encoding != null) {
@@ -1667,16 +1612,16 @@ public abstract class Session {
                     throw new BEEPException(ERR_MALFORMED_XML_MSG);
 
                     // is this RPY a <profile>
-                } else if (elementName.equals(TAG_PROFILE)) {
+                } else if (elementName.equals("profile")) {
                     try {
-                        String uri = topElement.getAttribute(TAG_URI);
+                        String uri = topElement.getAttribute("uri");
 
                         if (uri == null) {
-                            throw new BEEPException(ERR_MALFORMED_PROFILE_MSG);
+                            throw new BEEPException("Malformed profile");
                         }
 
                         String encoding =
-                            topElement.getAttribute(TAG_ENCODING);
+                            topElement.getAttribute("encoding");
 
                         if (encoding == null) {
                             encoding = Constants.ENCODING_NONE;
@@ -1690,7 +1635,9 @@ public abstract class Session {
                             data = dataNode.getNodeValue();
 
                             if (data.length() > MAX_PCDATA_SIZE) {
-                                throw new BEEPException(ERR_PCDATA_TOO_BIG_MSG);
+                                throw new BEEPException("Element's PCDATA " +
+                                                        "exceeds the " +
+                                                        "maximum size");
                             }
                         }
 
@@ -1791,7 +1738,7 @@ public abstract class Session {
 
                     // is this RPY an <ok> (the positive response to a
                     // channel close)
-                } else if (elementName.equals(TAG_OK)) {
+                } else if (elementName.equals("ok")) {
                     Log.logEntry(Log.SEV_DEBUG, CORE,
                                  "Received an OK for channel close");
                     channel.setErrorMessage(null);
