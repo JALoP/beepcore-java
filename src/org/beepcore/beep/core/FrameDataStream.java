@@ -1,5 +1,5 @@
 /*
- * FrameDataStream.java  $Revision: 1.6 $ $Date: 2001/05/16 18:46:20 $
+ * FrameDataStream.java  $Revision: 1.7 $ $Date: 2001/07/28 17:25:52 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import java.util.Iterator;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/05/16 18:46:20 $
+ * @version $Revision: 1.7 $, $Date: 2001/07/28 17:25:52 $
  */
 public class FrameDataStream extends DataStream {
 
@@ -242,6 +242,7 @@ public class FrameDataStream extends DataStream {
 
             // reset the mark to data portion of payload
             this.headersParsed = true;
+            this.parsingHeaders = false;
 
             return;
         }
