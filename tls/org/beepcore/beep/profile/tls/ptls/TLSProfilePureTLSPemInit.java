@@ -1,6 +1,5 @@
-
 /*
- * TLSProfilePureTLSPemInit.java  $Revision: 1.1 $ $Date: 2001/07/09 05:57:05 $
+ * TLSProfilePureTLSPemInit.java  $Revision: 1.2 $ $Date: 2001/08/14 14:41:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -54,6 +53,8 @@ public class TLSProfilePureTLSPemInit implements Profile {
     /**
      * @see #init
      */
+    public static final String PROPERTY_CLIENT_AUTH_REQUIRED = 
+        "Client Authenticaton Required";
     public static final String PROPERTY_CIPHER_SUITE = "Cipher Suite";
     public static final String PROPERTY_CERTIFICATES = "Certificates";
     public static final String PROPERTY_PRIVATE_KEY = "Private Key";
@@ -113,14 +114,13 @@ public class TLSProfilePureTLSPemInit implements Profile {
         TLSProfilePureTLS tlsp = new TLSProfilePureTLS();
 
         // set whether or not peer must send a certificate
-        //              if( config.get( PROPERTY_PEER_AUTHENTICATION_REQUIRED ) != null ) { 
-        //                      if( new Boolean( (String) config.get( PROPERTY_PEER_AUTHENTICATION_REQUIRED )).booleanValue() == true ) {
-        //                              tlsp.setNeedPeerAuthentication( true );
-        //                      }
-        //                      else {
-        //                              tlsp.setNeedPeerAuthentication( false );
-        //                      }
-        //              }
+        if (config.get(PROPERTY_CLIENT_AUTH_REQUIRED) != null) {
+            if (new Boolean((String) config.get(PROPERTY_CLIENT_AUTH_REQUIRED)).booleanValue() == true) {
+                tlsp.setNeedPeerAuthentication(true);
+            } else {
+                tlsp.setNeedPeerAuthentication(false);
+            }
+        }
         // set the cipher suites
         if (config.get(PROPERTY_CIPHER_SUITE) != null) {
 
@@ -182,6 +182,30 @@ public class TLSProfilePureTLSPemInit implements Profile {
         // pre_master_secret (server) or encrypting the Certificate Verify 
         // (client)
         try {
+            // set the certificate(s) by which we are known.  We can
+            // actually verify clients with several root certificates,
+            // but this is the certificates that we present according
+            // to the negotiated cipher suite.  We assume that the
+            // peer has a root that is in common with us.
+            String certFile = (String) config.get(PROPERTY_CERTIFICATES);
+            BufferedReader certbr =
+                new BufferedReader(new FileReader(certFile));
+            StringBuffer certType = new StringBuffer();
+            Vector certs = new Vector();
+
+            while (true) {
+                byte[] cert = WrappedObject.loadObject(certbr, "CERTIFICATE",
+                                                       certType);
+
+                if (cert == null) {
+                    break;
+                }
+
+                certs.add(cert);
+            }
+
+            tlsp.setCertChain(certs);
+
             String keyFile = (String) config.get(PROPERTY_PRIVATE_KEY);
             BufferedReader keybr =
                 new BufferedReader(new FileReader(keyFile));
@@ -207,30 +231,6 @@ public class TLSProfilePureTLSPemInit implements Profile {
                                                         passphrase.getBytes());
 
             tlsp.setPrivateKey(key);
-
-            // set the certificate(s) by which we are known.  We can
-            // actually verify clients with several root certificates, but
-            // this is the certificates that we present according to the negotiated
-            // cipher suite.  We assume that the peer has a root that is in common
-            // with us.
-            String certFile = (String) config.get(PROPERTY_CERTIFICATES);
-            BufferedReader certbr =
-                new BufferedReader(new FileReader(certFile));
-            StringBuffer certType = new StringBuffer();
-            Vector certs = new Vector();
-
-            while (true) {
-                byte[] cert = WrappedObject.loadObject(certbr, "CERTIFICATE",
-                                                       certType);
-
-                if (cert == null) {
-                    break;
-                }
-
-                certs.add(cert);
-            }
-
-            tlsp.setCertChain(certs);
 
             // verify that the object passed in is either a list or a String
             certFile = (String) config.get(PROPERTY_TRUSTED_CERTS);

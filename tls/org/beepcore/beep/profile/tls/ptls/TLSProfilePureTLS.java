@@ -1,6 +1,5 @@
-
 /*
- * TLSProfilePureTLS.java  $Revision: 1.2 $ $Date: 2001/07/12 07:09:10 $
+ * TLSProfilePureTLS.java  $Revision: 1.3 $ $Date: 2001/08/14 14:41:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -36,6 +35,7 @@ import COM.claymoresystems.cert.*;
 
 import java.io.FileInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 
 /**
@@ -95,6 +95,8 @@ public class TLSProfilePureTLS extends TLSProfile
 
     // property names
     //      public static final String PROPERTY_PEER_AUTHENTICATION_REQUIRED = "Peer Authentication Required";
+    public static final String PROPERTY_CLIENT_AUTH_REQUIRED = 
+        "Client Authenticaton Required";
     public static final String PROPERTY_CIPHER_SUITE = "Cipher Suite";
     public static final String PROPERTY_CERTIFICATES = "Certificates";
     public static final String PROPERTY_PRIVATE_KEY = "Private Key";
@@ -240,27 +242,25 @@ public class TLSProfilePureTLS extends TLSProfile
         context = new SSLContext();
 
         policy.negotiateTLS(true);    // we don't support SSL v3
-        policy.acceptUnverifiableCertificates(false);
-        policy.checkCertificateDates(true);
-        policy.requireClientAuth(true);
 
-        needPeerAuth = true;
+        // set whether or not peer must send a certificate
+        if (config.get(PROPERTY_CLIENT_AUTH_REQUIRED) instanceof String &&
+            Boolean.valueOf((String) config.get(PROPERTY_CLIENT_AUTH_REQUIRED )).booleanValue() == false) {
+            policy.acceptUnverifiableCertificates(true);
+            policy.checkCertificateDates(false);
+            policy.requireClientAuth(false);
+
+            needPeerAuth = false;
+        } else {
+            policy.acceptUnverifiableCertificates(false);
+            policy.checkCertificateDates(true);
+            policy.requireClientAuth(true);
+
+            needPeerAuth = true;
+        }
 
         context.setPolicy(policy);
 
-        // set whether or not peer must send a certificate
-        // @todo add support for anonymous but encrypted communication
-        //              if( config.get( PROPERTY_PEER_AUTHENTICATION_REQUIRED ) != null ) { 
-        //                      if( !config.get( PROPERTY_PEER_AUTHENTICATION_REQUIRED ).getClass().getName().equals( "Boolean" )) {
-        //                              throw new BEEPException( "Configuration for " + 
-        //                                                                               PROPERTY_PEER_AUTHENTICATION_REQUIRED +
-        //                                                                               " must be Boolean." );
-        //                      }
-        //                      needPeerAuth = ((Boolean) config.get( PROPERTY_PEER_AUTHENTICATION_REQUIRED )).booleanValue();
-        //                      policy.requireClientAuth( needPeerAuth );
-        //                      policy.acceptUnverifiableCertificates( true );
-        //                      policy.checkCertificateDates( false );
-        //              }
         // set the cipher suites
         if (config.get(PROPERTY_CIPHER_SUITE) != null) {
             try {
@@ -358,8 +358,7 @@ public class TLSProfilePureTLS extends TLSProfile
     public void startChannel(Channel channel, String encoding, String data)
             throws StartChannelException
     {
-        try {
-            TCPSession oldSession = (TCPSession) channel.getSession();
+        TCPSession oldSession = (TCPSession) channel.getSession();
 
             // if the data is <ready/> then respond with <proceed/>
             if (data != null) {
@@ -371,26 +370,62 @@ public class TLSProfilePureTLS extends TLSProfile
                 }
             }
 
-            // Freeze this Peer
-            // Send a profile back with data in the 3rd argument
+        // Freeze this Peer
+        //             SSLDebug.setDebug( SSLDebug.DEBUG_ALL );
+        SSLSocket newSocket = null;
+        SessionCredential peerCred = null;
+        try {
+            // Send a profile back with dat "<proceed />"
             this.begin(channel, URI, data);
 
             // negotiate TLS over a new socket
             context.setPolicy(policy);
 
-            SessionCredential peerCred = null;
             Socket oldSocket = oldSession.getSocket();
-            SSLSocket newSocket =
+            newSocket =
                 new SSLSocket(context, oldSocket.getInputStream(),
                               oldSocket.getOutputStream(),
                               oldSocket.getInetAddress().getHostName(),
                               oldSocket.getPort(), SSLSocket.SERVER);
+        } catch (BEEPException e) {
+            Log.logEntry(Log.SEV_ERROR, e.getMessage());
+            e.printStackTrace();
+            oldSession.terminate(e.getMessage());
+        } catch (SSLThrewAlertException e) {
+            Log.logEntry(Log.SEV_ERROR, e.getMessage());
+            e.printStackTrace();
+            oldSession.terminate(e.getMessage());
+        } catch (IOException e) {
+            Log.logEntry(Log.SEV_ERROR, e.getMessage());
+            e.printStackTrace();
+            oldSession.terminate(e.getMessage());    
+        }
 
+        try {
             // get the credentials of the peer
             Vector cc = null;
 
             if (needPeerAuth) {
                 cc = newSocket.getCertificateChain();
+                if (cc == null) {
+                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+                                 "No certificate chain when there should " +
+                                 "be one. ");
+                    throw new StartChannelException(550, "No certificate " +
+                                                    "chain when there " +
+                                                    "should be one. ");
+                }
+                Enumeration enum = cc.elements();
+                while (enum.hasMoreElements()) {
+                    X509Cert cert = (X509Cert) enum.nextElement();
+                    String subject = cert.getSubjectName().getNameString();
+                    String issuer = cert.getIssuerName().getNameString();
+                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+                                 "Name = " + subject + " issued by " + issuer);
+                }
+            } else {
+                Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+                             "No peer authentication needed");
             }
 
             int cs = newSocket.getCipherSuite();
@@ -532,11 +567,37 @@ public class TLSProfilePureTLS extends TLSProfile
                               oldSocket.getInetAddress().getHostName(),
                               oldSocket.getPort(), SSLSocket.CLIENT);
 
+        } catch (SSLThrewAlertException e) {
+            session.terminate(e.getMessage());
+            throw new BEEPException(e.getMessage());
+        } catch (IOException e) {
+            session.terminate(e.getMessage());
+            throw new BEEPException(e.getMessage());
+        }
+
+        try {
             // get the credentials of the peer
             Vector cc = null;
 
             if (needPeerAuth) {
                 cc = newSocket.getCertificateChain();
+                if (cc == null) {
+                    Log.logEntry(Log.SEV_DEBUG_VERBOSE, "No certificate " +
+                                 "chain when there should be one. ");
+                    throw new BEEPException("No certificate chain when " +
+                                            "there should be one. ");
+                }
+                Enumeration enum = cc.elements();
+                while (enum.hasMoreElements()) {
+                    X509Cert cert = (X509Cert) enum.nextElement();
+                    String subject = cert.getSubjectName().getNameString();
+                    String issuer = cert.getIssuerName().getNameString();
+                    Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+                                 "Name = " + subject + " issued by " + issuer);
+                }
+            } else {
+                Log.logEntry(Log.SEV_DEBUG_VERBOSE,
+                             "No peer authentication needed");
             }
 
             int cs = newSocket.getCipherSuite();
@@ -701,12 +762,14 @@ public class TLSProfilePureTLS extends TLSProfile
     }
 
     /**
-     * allows an initializer class to set the allowed ciphers for the profile.
-     * The initializers are profile classes with a custom {@link init} method
-     * that takes the array of ciphers as a <code>short []</code> from a given source, such as a
-     * file or database and calls this method.  The numbers in the array for
-     * the ciphers are defined in the <a href="http://www.ietf.org/rfc/rfc2246.txt">TLS spec</a>
-     * in Appendix A.
+     * allows an initializer class to set the allowed ciphers for the
+     * profile.  The initializers are profile classes with a custom
+     * {@link init} method that takes the array of ciphers as a
+     * <code>short []</code> from a given source, such as a file or
+     * database and calls this method.  The numbers in the array for
+     * the ciphers are defined in the
+     * <a href="http://www.ietf.org/rfc/rfc2246.txt">TLS spec</a> in
+     * Appendix A.
      * @param ciphers
      */
     void setCipherSuite(short[] ciphers) throws BEEPException
@@ -726,18 +789,24 @@ public class TLSProfilePureTLS extends TLSProfile
         }
     }
 
-    //      /**
-    //       * sets whether or not the the peer we're talking to must be authenticated
-    //       * @param needAuth
-    //       */
-    //      void setNeedPeerAuthentication( boolean needAuth ) {
-    //              needPeerAuth = needAuth;
-    //              policy.requireClientAuth( needPeerAuth );
-    //      }
-    //      SSLPolicyInt getPolicy() {
-    //              return policy;
-    //      }
-    //      SSLContext getContext() {
-    //              return context;
-    //      }
+    /**
+     * sets whether or not the the peer we're talking to must be authenticated
+     * @param needAuth
+     */
+    void setNeedPeerAuthentication( boolean needAuth ) {
+
+        if (needAuth == false) {
+            policy.acceptUnverifiableCertificates(true);
+            policy.checkCertificateDates(false);
+            policy.requireClientAuth(false);
+
+            needPeerAuth = false;
+        } else {
+            policy.acceptUnverifiableCertificates(false);
+            policy.checkCertificateDates(true);
+            policy.requireClientAuth(true);
+
+            needPeerAuth = true;
+        }
+    }
 }
