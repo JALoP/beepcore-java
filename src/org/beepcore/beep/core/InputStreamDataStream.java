@@ -1,5 +1,6 @@
+
 /*
- * InputStreamDataStream.java  $Revision: 1.2 $ $Date: 2001/04/18 10:00:06 $
+ * InputStreamDataStream.java            $Revision: 1.3 $ $Date: 2001/04/24 22:52:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,8 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
 
-import java.lang.SecurityException;
-
 /**
  * <code>FileDataStream</code> represents a BEEP message's payload.
  * Allows the implementor to treat a <code>File</code> or
@@ -38,20 +37,107 @@ import java.lang.SecurityException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/18 10:00:06 $
+ * @version $Revision, $Date: 2001/04/24 22:52:02 $
  */
 public class InputStreamDataStream extends DataStream {
 
     protected InputStream data = null;
+    private boolean complete = false;
+    private long length = -1;
+    private long bytesRead = 0;
+    private long markBytesRead = 0;
 
     /**
      * Creates a <code>InputStreamDataStream</code> with a content type of
      * <code>DEFAULT_CONTENT_TYPE</code> and a transfer encoding
      * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Once <code>length</code> bytes are read from the stream,
+     * <code>isComplete</code> will return <code>true</code>.
+     * Subsequent reads from the stream will return -1.
+     *
+     * @param data  the stream to be opened for reading.
+     * @param length the length of the stream.
+     *
+     * @see isComplete
+     */
+    public InputStreamDataStream(InputStream data, long length)
+    {
+        super();
+
+        this.data = data;
+        if( length <= 0 ) {
+            throw new IllegalArgumentException("Length must be greater than zero");
+        }
+        this.length = length;
+    }
+
+    /**
+     * Creates a <code>InputStreamDataStream</code> with a specified content
+     * type and a transfer encoding
+     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Once <code>length</code> bytes are read from the stream,
+     * <code>isComplete</code> will return <code>true</code>.
+     * Subsequent reads from the stream will return -1.
+     *
+     * @param contentType Content type of <code>stream</code>.
+     * @param data  the stream to be opened for reading.
+     * @param length the length of the stream.
+     *
+     * @see isComplete
+     */
+    public InputStreamDataStream(String contentType, InputStream data,
+                                 long length)
+    {
+        super(contentType, DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
+
+        this.data = data;
+        if( length <= 0 ) {
+            throw new IllegalArgumentException("Length must be greater than zero");
+        }
+        this.length = length;
+    }
+
+    /**
+     * Creates a <code>InputStreamDataStream</code> with a specified content
+     * type and a transfer encoding
+     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Once <code>length</code> bytes are read from the stream,
+     * <code>isComplete</code> will return <code>true</code>.
+     * Subsequent reads from the stream will return -1.
+     *
+     * @param contentType Content type of <code>stream</code>.
+     * @param transferEncoding Encoding Transfer encoding type of
+     * <code>stream</code>.
+     * @param data  the stream to be opened for reading.
+     * @param length the length of the stream.
+     *
+     * @see isComplete
+     */
+    public InputStreamDataStream(String contentType, String transferEncoding,
+                                 InputStream data, long length)
+    {
+        super(contentType, transferEncoding);
+
+        this.data = data;
+        if( length <= 0 ) {
+            throw new IllegalArgumentException("Length must be greater than zero");
+        }
+        this.length = length;
+    }
+
+
+    /**
+     * Creates a <code>InputStreamDataStream</code> with a content type of
+     * <code>DEFAULT_CONTENT_TYPE</code> and a transfer encoding
+     * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Depending on the particular type of the input stream and how it was
+     * created, <code>isComplete</code> may never return <code>true</code>.
+     * If this constructor is used in a sub-class, you must implement the
+     * <code>isComplete</code> method.
      *
      * @param data  the stream to be opened for reading.
      */
-    public InputStreamDataStream(InputStream data)
+    protected InputStreamDataStream(InputStream data)
     {
         super();
 
@@ -62,11 +148,15 @@ public class InputStreamDataStream extends DataStream {
      * Creates a <code>InputStreamDataStream</code> with a specified content
      * type and a transfer encoding
      * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Depending on the particular type of the input stream and how it was
+     * created, <code>isComplete</code> may never return <code>true</code>.
+     * If this constructor is used in a sub-class, you must implement the
+     * <code>isComplete</code> method.
      *
      * @param contentType Content type of <code>stream</code>.
      * @param data  the stream to be opened for reading.
      */
-    public InputStreamDataStream(String contentType, InputStream data)
+    protected InputStreamDataStream(String contentType, InputStream data)
     {
         super(contentType, DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
 
@@ -76,13 +166,17 @@ public class InputStreamDataStream extends DataStream {
     /**
      * Creates a <code>InputStreamDataStream</code> with a specified content
      * type and a transfer encoding <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Depending on the particular type of the input stream and how it was
+     * created, <code>isComplete</code> may never return <code>true</code>.
+     * If this constructor is used in a sub-class, you must implement the
+     * <code>isComplete</code> method.
      *
      * @param contentType Content type of <code>stream</code>.
      * @param transferEncoding Encoding Transfer encoding type of
      * <code>stream</code>.
      * @param data  the stream to be opened for reading.
      */
-    public InputStreamDataStream(String contentType, String transferEncoding,
+    protected InputStreamDataStream(String contentType, String transferEncoding,
                                  InputStream data)
     {
         super(contentType, transferEncoding);
@@ -97,6 +191,17 @@ public class InputStreamDataStream extends DataStream {
     public InputStream getInputStream()
     {
         return this.data;
+    }
+
+    /**
+     * An <code>InputStreamDataStream</code> will always return false.
+     * To detect the end of stream look for <code>read</code> to return a -1.
+     *
+     * @return false
+     */
+    public boolean isComplete()
+    {
+        return this.complete;
     }
 
     /**
@@ -131,7 +236,17 @@ public class InputStreamDataStream extends DataStream {
     int read() throws BEEPException
     {
         try {
-            return this.data.read();
+            if( this.length != -1 && this.bytesRead >= this.length )
+            {
+              return -1;
+            }
+            int b = this.data.read();
+            this.bytesRead++;
+            if( this.length != -1 && this.bytesRead >= this.length )
+            {
+              this.complete = true;
+            }
+            return b;
         } catch (IOException e) {
             throw new BEEPException(e.getMessage());
         }
@@ -152,11 +267,7 @@ public class InputStreamDataStream extends DataStream {
      */
     int read(byte[] buf) throws BEEPException
     {
-        try {
-            return this.data.read(buf);
-        } catch (IOException e) {
-            throw new BEEPException(e.getMessage());
-        }
+        return read( buf, 0, buf.length );
     }
 
     /**
@@ -175,7 +286,20 @@ public class InputStreamDataStream extends DataStream {
     int read(byte[] buf, int off, int len) throws BEEPException
     {
         try {
-            return this.data.read(buf, off, len);
+            if( this.length != -1 && this.bytesRead >= this.length )
+            {
+              return -1;
+            }
+            int count = this.data.read( buf, off, len );
+            if( count != -1 )
+            {
+              this.bytesRead += count;
+              if( this.length != -1 && this.bytesRead >= this.length )
+              {
+                this.complete = true;
+              }
+            }
+            return count;
         } catch (IOException e) {
             throw new BEEPException(e.getMessage());
         }
@@ -193,6 +317,10 @@ public class InputStreamDataStream extends DataStream {
     long skip(long n) throws BEEPException
     {
         try {
+            if(this.length != -1 && (n + this.bytesRead > this.length)) {
+                return 0;
+            }
+            this.bytesRead += n;
             return this.data.skip(n);
         } catch (IOException e) {
             throw new BEEPException(e.getMessage());
@@ -206,6 +334,7 @@ public class InputStreamDataStream extends DataStream {
         } catch (IOException e) {
             throw new BEEPException(e.getMessage());
         }
+        this.bytesRead = this.markBytesRead;
     }
 
     boolean markSupported()
@@ -215,6 +344,7 @@ public class InputStreamDataStream extends DataStream {
 
     void mark(int readlimit)
     {
+        this.markBytesRead = this.bytesRead;
         this.data.mark(readlimit);
     }
 

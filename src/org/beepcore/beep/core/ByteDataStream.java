@@ -1,6 +1,6 @@
 
 /*
- * ByteDataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
+ * ByteDataStream.java            $Revision: 1.3 $ $Date: 2001/04/24 22:52:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -39,7 +39,7 @@ import java.io.UnsupportedEncodingException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/17 22:44:00 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/24 22:52:02 $
  */
 public class ByteDataStream extends InputStreamDataStream {
 
@@ -144,5 +144,23 @@ public class ByteDataStream extends InputStreamDataStream {
     void setData( byte[] data )
     {
         this.data = new ByteArrayInputStream(data);
+    }
+
+    /**
+     * Returns this data stream as an <code>InputStream</code>
+     */
+    public InputStream getInputStream()
+    {
+        return this.data;
+    }
+
+    /**
+     * Returns <code>true</code> if no more bytes will be added to those
+     * currently available, if any, on this stream.  Returns
+     * <code>false</code> if more bytes are expected.
+     */
+    public boolean isComplete()
+    {
+      return true;
     }
 }

@@ -1,6 +1,6 @@
 
 /*
- * DataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
+ * DataStream.java            $Revision: 1.3 $ $Date: 2001/04/24 22:52:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import java.util.Enumeration;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/17 22:44:00 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/24 22:52:02 $
  */
 public abstract class DataStream {
 
@@ -460,10 +460,7 @@ public abstract class DataStream {
      * currently available, if any, on this stream.  Returns
      * <code>false</code> if more bytes are expected.
      */
-    public boolean isComplete()
-    {
-        return true;
-    }
+    abstract public boolean isComplete();
 
     /**
      * Returns this data stream as an <code>InputStream</code>.

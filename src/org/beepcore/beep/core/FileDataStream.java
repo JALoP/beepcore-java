@@ -1,6 +1,6 @@
 
 /*
- * FileDataStream.java            $Revision: 1.2 $ $Date: 2001/04/17 22:44:00 $
+ * FileDataStream.java            $Revision: 1.3 $ $Date: 2001/04/24 22:52:02 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import java.lang.SecurityException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/17 22:44:00 $
+ * @version $Revision, $Date: 2001/04/24 22:52:02 $
  */
 public class FileDataStream extends InputStreamDataStream {
     /**
@@ -157,5 +157,23 @@ public class FileDataStream extends InputStreamDataStream {
             throws FileNotFoundException, SecurityException
     {
         super(contentType, new FileInputStream(name));
+    }
+
+    /**
+     * Returns this data stream as an <code>InputStream</code>
+     */
+    public InputStream getInputStream()
+    {
+        return this.data;
+    }
+
+    /**
+     * Returns <code>true</code> if no more bytes will be added to those
+     * currently available, if any, on this stream.  Returns
+     * <code>false</code> if more bytes are expected.
+     */
+    public boolean isComplete()
+    {
+      return true;
     }
 }
