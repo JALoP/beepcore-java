@@ -1,5 +1,5 @@
 /*
- * Channel.java  $Revision: 1.27 $ $Date: 2002/09/04 14:42:50 $
+ * Channel.java  $Revision: 1.28 $ $Date: 2002/09/06 02:34:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.27 $, $Date: 2002/09/04 14:42:50 $
+ * @version $Revision: 1.28 $, $Date: 2002/09/06 02:34:28 $
  *
  */
 public class Channel {
@@ -1055,7 +1055,7 @@ public class Channel {
      *
      * called by Channel Zero
      */
-    void setStartData(String data)
+    public void setStartData(String data)
     {
         startData = data;
     }
