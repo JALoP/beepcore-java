@@ -26,10 +26,15 @@
     <property name="sasl.packages" value="org.beepcore.beep.profile.sasl.*"/>
     <property name="sasl.src.dir" value="src"/>
 
-    <property name="tls.build.dir" value="${build.dir}/tls" />
-    <property name="tls.doc.dir" value="${release.dir}/doc/tls" />
-    <property name="tls.jar.name" value="beeptls.jar" />
-    <property name="tls.src.dir" value="src" />
+    <property name="tls-jsse.build.dir" value="${build.dir}/tls-jsse" />
+    <property name="tls-jsse.doc.dir" value="${release.dir}/doc/tls-jsse" />
+    <property name="tls-jsse.jar.name" value="beeptls-jsse.jar" />
+
+    <property name="tls-ptls.build.dir" value="${build.dir}/tls-ptls" />
+    <property name="tls-ptls.doc.dir" value="${release.dir}/doc/tls-ptls" />
+    <property name="tls-ptls.jar.name" value="beeptls-ptls.jar" />
+
+    <property name="tls.src.dir" value="tls" />
 
     <target name="init">
         <mkdir dir="${core.build.dir}" />
@@ -42,6 +47,7 @@
             <include name="**/lib/*.java"/>
             <include name="**/profile/*.java"/>
             <include name="**/profile/echo/*.java"/>
+            <include name="**/profile/tls/*.java"/>
             <include name="**/transport/**/*.java"/>
             <include name="**/util/*.java"/>
         </javac>
@@ -86,7 +92,7 @@
 	      tofile="${release.dir}/GettingStarted.txt"/>
     </target>
 
-    <target name="example" depends="core-jar,sasl-jar,tls-jar">
+    <target name="example" depends="core-jar,sasl-jar">
         <mkdir dir="${example.build.dir}"/>
         <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
             <include name="**/*.java"/>
@@ -94,7 +100,6 @@
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
 		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
-		 <pathelement location="${release.dir}/lib/${tls.jar.name}"/>
             </classpath>
         </javac>
     </target>
@@ -115,7 +120,6 @@
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
 		 <pathelement location="${release.dir}/lib/${sasl.jar.name}"/>
-		 <pathelement location="${release.dir}/lib/${tls.jar.name}"/>
 		 <pathelement location="${example.build.dir}"/>
             </classpath>
         </javac>
@@ -158,10 +162,10 @@
         </javadoc>
     </target>
 
-    <target name="tls" depends="core">
-        <mkdir dir="${tls.build.dir}"/>
-        <javac srcdir="${tls.src.dir}/" destdir="${tls.build.dir}" >
-            <include name="**/tls/*.java"/>
+    <target name="tls-jsse-compile" depends="core-jar">
+        <mkdir dir="${tls-jsse.build.dir}"/>
+        <javac srcdir="${tls.src.dir}/" destdir="${tls-jsse.build.dir}" >
+            <include name="**/jsse/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
@@ -169,19 +173,19 @@
         </javac>
     </target>
 
-    <target name="tls-jar" depends="tls">
+    <target name="tls-jsse" depends="tls-jsse-compile">
         <mkdir dir="${release.dir}/lib"/>
-        <jar jarfile="${release.dir}/lib/${tls.jar.name}"
-	     basedir="${tls.build.dir}">
+        <jar jarfile="${release.dir}/lib/${tls-jsse.jar.name}"
+	     basedir="${tls-jsse.build.dir}">
 	    <include name="**"/>
 	</jar>
     </target>
 
-    <target name="tls-doc" depends="tls-jar">
-        <mkdir dir="${tls.doc.dir}"/>
+    <target name="tls-jsse-doc" depends="tls-jsse">
+        <mkdir dir="${tls-jsse.doc.dir}"/>
 	<javadoc packagenames="org.beepcore.beep.profile.tls"
                  sourcepath="${tls.src.dir}/"
-	         destdir="${tls.doc.dir}"
+	         destdir="${tls-jsse.doc.dir}"
 		 author="false"
 		 version="false"
 		 windowtitle="TLS Profile API"
@@ -192,12 +196,51 @@
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
 		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
-		 <pathelement location="${release.dir}/lib/${tls.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${tls-jsse.jar.name}"/>
             </classpath>
         </javadoc>
     </target>
 
-    <target name="doc" depends="core-doc,sasl-doc,tls-doc"/>
+    <target name="tls-ptls-compile" depends="core-jar">
+        <mkdir dir="${tls-ptls.build.dir}"/>
+        <javac srcdir="${tls.src.dir}/" destdir="${tls-ptls.build.dir}" >
+            <include name="**/ptls/*.java"/>
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="tls-ptls" depends="tls-ptls-compile">
+        <mkdir dir="${release.dir}/lib"/>
+        <jar jarfile="${release.dir}/lib/${tls-ptls.jar.name}"
+	     basedir="${tls-ptls.build.dir}">
+	    <include name="**"/>
+	</jar>
+    </target>
+
+    <target name="tls-ptls-doc" depends="tls-ptls">
+        <mkdir dir="${tls-ptls.doc.dir}"/>
+	<javadoc packagenames="org.beepcore.beep.profile.tls"
+                 sourcepath="${tls.src.dir}/"
+	         destdir="${tls-ptls.doc.dir}"
+		 author="false"
+		 version="false"
+		 windowtitle="TLS Profile API"
+		 doctitle="TLS Profile"
+		 bottom="Copyright &#169; 2001 Invisible Worlds, Inc. All Rights Reserved.">
+	    <link offline="true" href="http://java.sun.com/products/jdk/1.3/docs/api" packagelistLoc="doc/jdk" />
+	    <link offline="true" href="http://java.sun.com/products/jsse/doc/apidoc" packagelistLoc="doc/jsse" />
+	    <classpath>
+		 <pathelement path="${java.class.path}"/>
+		 <pathelement location="${release.dir}/lib/${core.jar.name}"/>
+		 <pathelement location="${release.dir}/lib/${tls-ptls.jar.name}"/>
+            </classpath>
+        </javadoc>
+    </target>
+
+    <target name="doc" depends="core-doc,sasl-doc,tls-jsse-doc,tls-ptls-doc"/>
 
     <!-- Packages the distribution with ZIP -->
     <target name="dist-zip" depends="core-dist,doc,example-dist">

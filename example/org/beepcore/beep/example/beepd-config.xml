@@ -3,7 +3,7 @@
 <config>
     <beepd port="10288">
         <profile uri="http://iana.org/beep/TLS"
-                 class="org.beepcore.beep.profile.tls.TLSProfile"/>
+                 class="org.beepcore.beep.profile.tls.jsse.TLSProfileJSSE"/>
 
         <profile uri="http://xml.resource.org/profiles/NULL/ECHO"
                  class="org.beepcore.beep.profile.echo.EchoProfile"/>

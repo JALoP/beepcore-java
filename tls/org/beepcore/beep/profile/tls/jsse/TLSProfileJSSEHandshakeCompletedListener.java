@@ -1,6 +1,6 @@
 
 /*
- * TLSProfileHandshakeCompletedListener.java  $Revision: 1.2 $ $Date: 2001/07/09 05:57:04 $
+ * TLSProfileJSSEHandshakeCompletedListener.java  $Revision: 1.1 $ $Date: 2001/07/09 05:57:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -15,7 +15,7 @@
  * License.
  *
  */
-package org.beepcore.beep.profile.tls;
+package org.beepcore.beep.profile.tls.jsse;
 
 
 import org.beepcore.beep.core.*;
@@ -32,7 +32,7 @@ import javax.net.ssl.HandshakeCompletedListener;
  * @see org.beepcore.beep.core.Session
  * @see javax.net.ssl.HandshakeCompletedListener
  */
-public interface TLSProfileHandshakeCompletedListener {
+public interface TLSProfileJSSEHandshakeCompletedListener {
 
     /**
      * called after the SSL handshake has completed to allow verification
