@@ -1,5 +1,5 @@
 /*
- * SASLAnonymousProfile.java  $Revision: 1.10 $ $Date: 2003/06/10 18:59:22 $
+ * SASLAnonymousProfile.java  $Revision: 1.11 $ $Date: 2003/09/14 04:30:15 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2003/06/10 18:59:22 $
+ * @version $Revision: 1.11 $, $Date: 2003/09/14 04:30:15 $
  *
  */
 public class SASLAnonymousProfile
@@ -120,6 +120,7 @@ public class SASLAnonymousProfile
                 data = null;
                 blob = new Blob(Blob.STATUS_COMPLETE,data);
                 sendProfile(t, uri, blob.toString(), channel);
+                enableIO(channel.getSession());
             } catch (Exception x) {
                 channel.getSession().terminate(x.getMessage());
                 return;
@@ -133,6 +134,7 @@ public class SASLAnonymousProfile
                 AnonymousAuthenticator auth = new AnonymousAuthenticator(this);
                 auth.started(channel);
                 sendProfile(t, uri, null, channel);
+                enableIO(channel.getSession());
             } catch (Exception x) {
                 channel.getSession().terminate(x.getMessage());
                 return;
