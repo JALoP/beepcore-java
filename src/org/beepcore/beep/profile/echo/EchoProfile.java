@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.7 $ $Date: 2001/07/03 20:51:28 $
+ * EchoProfile.java    $Revision: 1.8 $ $Date: 2001/07/20 23:26:13 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2001/07/03 20:51:28 $
+ * @version $Revision: 1.8 $, $Date: 2001/07/20 23:26:13 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener
@@ -90,7 +90,6 @@ public class EchoProfile
             InputStream is = ds.getInputStream();
 
             while (true) {
-
                 try {
                     int n = is.read(buf);
                     
@@ -103,18 +102,18 @@ public class EchoProfile
                     message.getChannel().getSession().terminate(e.getMessage());
                     return;
                 }
+            }
 
+            try {
+                message.sendRPY(new ByteDataStream(data.toByteArray()));
+            } catch (BEEPException e) {
                 try {
-                    message.sendRPY(new ByteDataStream(data.toByteArray()));
-                } catch (BEEPException e) {
-                    try {
-                        message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                        "Error sending RPY");
-                    } catch (BEEPException x) {
-                        message.getChannel().getSession().terminate(x.getMessage());
-                    }
-                    return;
+                    message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                    "Error sending RPY");
+                } catch (BEEPException x) {
+                    message.getChannel().getSession().terminate(x.getMessage());
                 }
+                return;
             }
         }
     }
