@@ -1,6 +1,6 @@
 
 /*
- * StringDataStream.java            $Revision: 1.3 $ $Date: 2001/04/17 22:44:00 $
+ * StringDataStream.java            $Revision: 1.4 $ $Date: 2001/04/26 17:42:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -40,9 +40,14 @@ import java.io.IOException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/17 22:44:00 $
+ * @version $Revision: 1.4 $, $Date: 2001/04/26 17:42:53 $
  */
 public class StringDataStream extends ByteDataStream {
+    /**
+     * The default <code>StringDataStream</code> String encoding
+     * ("UTF-8").
+     */
+    private static final String DEFAULT_STRING_ENCODING = "UTF-8";
 
     private String enc;
 
@@ -59,12 +64,15 @@ public class StringDataStream extends ByteDataStream {
               DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
 
         try {
-            setData(data.getBytes("UTF-8"));
+            setData(data.getBytes(DEFAULT_STRING_ENCODING));
 
-            this.enc = "UTF-8";
+            this.enc = DEFAULT_STRING_ENCODING;
         } catch (UnsupportedEncodingException e) {
-            throw new MissingResourceException("Encoding UTF-8 not supported",
-                                               "StringDataStream", "UTF-8");
+            throw new MissingResourceException("Encoding " +
+					       DEFAULT_STRING_ENCODING +
+					       " not supported",
+                                               "StringDataStream", 
+					       DEFAULT_STRING_ENCODING);
         }
     }
 
@@ -78,15 +86,17 @@ public class StringDataStream extends ByteDataStream {
      */
     public StringDataStream(String contentType, String data)
     {
-        super(BEEP_XML_CONTENT_TYPE,
-              DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
+        super(contentType, DataStream.DEFAULT_CONTENT_TRANSFER_ENCODING);
         try {
-            setData(data.getBytes("UTF-8"));
+            setData(data.getBytes(DEFAULT_STRING_ENCODING));
 
-            this.enc = "UTF-8";
+            this.enc = DEFAULT_STRING_ENCODING;
         } catch (UnsupportedEncodingException e) {
-            throw new MissingResourceException("Encoding UTF-8 not supported",
-                                               "StringDataStream", "UTF-8");
+            throw new MissingResourceException("Encoding " +
+					       DEFAULT_STRING_ENCODING +
+					       " not supported",
+                                               "StringDataStream", 
+					       DEFAULT_STRING_ENCODING);
         }
     }
 
@@ -105,12 +115,15 @@ public class StringDataStream extends ByteDataStream {
     {
         super(contentType, transferEncoding);
         try {
-            setData(data.getBytes("UTF-8"));
+            setData(data.getBytes(DEFAULT_STRING_ENCODING));
 
-            this.enc = "UTF-8";
+            this.enc = DEFAULT_STRING_ENCODING;
         } catch (UnsupportedEncodingException e) {
-            throw new MissingResourceException("Encoding UTF-8 not supported",
-                                               "StringDataStream", "UTF-8");
+            throw new MissingResourceException("Encoding " +
+					       DEFAULT_STRING_ENCODING +
+					       " not supported",
+                                               "StringDataStream", 
+					       DEFAULT_STRING_ENCODING);
         }
     }
 
@@ -130,12 +143,13 @@ public class StringDataStream extends ByteDataStream {
     {
         super(contentType, transferEncoding);
         try {
-            setData(data.getBytes("UTF-8"));
+            setData(data.getBytes(enc));
 
-            this.enc = "UTF-8";
+            this.enc = enc;
         } catch (UnsupportedEncodingException e) {
-            throw new MissingResourceException("Encoding UTF-8 not supported",
-                                               "StringDataStream", "UTF-8");
+            throw new MissingResourceException("Encoding " + enc + 
+					       "not supported",
+                                               "StringDataStream", enc);
         }
     }
 
