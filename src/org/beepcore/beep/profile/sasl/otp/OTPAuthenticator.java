@@ -1,5 +1,5 @@
 /*
- * OTPAuthenticator.java  $Revision: 1.13 $ $Date: 2003/04/23 15:23:03 $
+ * OTPAuthenticator.java  $Revision: 1.14 $ $Date: 2003/06/10 18:59:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -40,10 +40,10 @@ import org.beepcore.beep.profile.sasl.otp.database.UserDatabase;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2003/04/23 15:23:03 $
+ * @version $Revision: 1.14 $, $Date: 2003/06/10 18:59:22 $
  *
  */
-class OTPAuthenticator implements MessageListener, ReplyListener {
+class OTPAuthenticator implements RequestHandler, ReplyListener {
 
     // Constants
     // Authentication States
@@ -139,7 +139,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
         }
         state = STATE_STARTED;
         channel = ch;
-        channel.setMessageListener(this);
+        channel.setRequestHandler(this);
     }
 
     /**
@@ -686,7 +686,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
      * @throws BEEPError if an ERR message is generated
      * that's relative to the BEEP protocol is encountered.
      */
-    public void receiveMSG(Message message) throws BEEPError
+    public void receiveMSG(MessageMSG message)
     {
         try
         {
@@ -750,7 +750,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
                 try
                 {
                     message.sendRPY(new StringOutputDataStream(new Blob(Blob.STATUS_COMPLETE).toString()));
-                    channel.setMessageListener(null);
+                    channel.setRequestHandler(null);
                 }
                 catch(BEEPException x)
                 {

@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.10 $ $Date: 2003/04/23 15:23:02 $
+ * SharedChannel.java            $Revision: 1.11 $ $Date: 2003/06/10 18:59:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002, 2003 Huston Franklin.  All rights reserved.
@@ -22,6 +22,7 @@ import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
 import org.beepcore.beep.core.MessageListener;
 import org.beepcore.beep.core.MessageStatus;
+import org.beepcore.beep.core.RequestHandler;
 import org.beepcore.beep.core.OutputDataStream;
 import org.beepcore.beep.core.ReplyListener;
 import org.beepcore.beep.core.Session;
@@ -41,7 +42,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2003/04/23 15:23:02 $
+ * @version $Revision: 1.11 $, $Date: 2003/06/10 18:59:22 $
  */
 public class SharedChannel implements Channel {
 
@@ -117,6 +118,22 @@ public class SharedChannel implements Channel {
     public MessageListener getMessageListener()
     {
         return channel.getMessageListener();
+    }
+
+    public RequestHandler getRequestHandler()
+    {
+        return channel.getRequestHandler();
+    }
+    
+    public RequestHandler setRequestHandler(RequestHandler handler)
+    {
+        return channel.setRequestHandler(handler);
+    }
+    
+    public RequestHandler setRequestHandler(RequestHandler handler,
+                                        boolean tuningReset)
+    {
+        return channel.setRequestHandler(handler, tuningReset);
     }
 
     public int getNumber()

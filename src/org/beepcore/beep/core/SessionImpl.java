@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.7 $ $Date: 2003/06/03 16:38:35 $
+ * SessionImpl.java  $Revision: 1.8 $ $Date: 2003/06/10 18:59:19 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -62,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2003/06/03 16:38:35 $
+ * @version $Revision: 1.8 $, $Date: 2003/06/10 18:59:19 $
  *
  * @see Channel
  */
@@ -172,8 +172,8 @@ public abstract class SessionImpl implements Session {
 
         GreetingListener greetingListener = new GreetingListener();
 
-        zero = new ChannelImpl(this, CHANNEL_ZERO, greetingListener);
-        zero.setMessageListener(new ChannelZeroListener(), false);
+        zero = ChannelImpl.createChannelZero(this, greetingListener,
+                                             new ChannelImpl.MessageListenerAdapter(new ChannelZeroListener()));
 
         channels.put(CHANNEL_ZERO, zero);
 
@@ -223,8 +223,8 @@ public abstract class SessionImpl implements Session {
 
         GreetingListener greetingListener = new GreetingListener();
 
-        zero = new ChannelImpl(this, CHANNEL_ZERO, greetingListener);
-        zero.setMessageListener(new ChannelZeroListener(), false);
+        zero = ChannelImpl.createChannelZero(this, greetingListener,
+                                             new ChannelImpl.MessageListenerAdapter(new ChannelZeroListener()));
         channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
@@ -419,38 +419,12 @@ public abstract class SessionImpl implements Session {
             (SessionListener[]) sessionListenerList.toArray(sessionListeners);
     }
 
-    /**
-     * Sends a start channel request using the specified profile.
-     *
-     * @param profile The uri of the profile for the channel you wish to start.
-     *
-     * @return A <code>Channel</code> for the specified profile.
-     *
-     * @throws BEEPError Thrown if an error occurs in the under lying transport.
-     * @throws BEEPException Thrown if any of the parameters are invalid,
-     * or if the profile is unavailable on this <code>Session</code>.
-     */
     public Channel startChannel(String profile)
             throws BEEPException, BEEPError
     {
-        return startChannel(profile, null);
+        return startChannel(profile, (RequestHandler)null);
     }
 
-    /**
-     * Sends a start channel request using the specified profile.
-     *
-     * @param profile The uri of the profile for the channel you wish to start.
-     * @param listener An implementation of <code>MessageListener</code> that
-     * is to receive message callbacks for this channel.  It can be null, but
-     * don't expect to be called back.
-     *
-     * @return A <code>Channel</code> for the specified profile.
-     *
-     * @throws BEEPError Thrown if an error occurs in the under lying transport.
-     * @throws BEEPException Thrown if any of the parameters are invalid,
-     * or if the profile is unavailable on this <code>Session</code>.
-     * @see MessageListener
-     */
     public Channel startChannel(String profile, MessageListener listener)
             throws BEEPException, BEEPError
     {
@@ -462,33 +436,26 @@ public abstract class SessionImpl implements Session {
         return startChannelRequest(l, listener, false);
     }
 
+    public Channel startChannel(String profile, RequestHandler handler)
+            throws BEEPException, BEEPError
+    {
+        StartChannelProfile p = new StartChannelProfile(profile);
+        LinkedList l = new LinkedList();
+
+        l.add(p);
+
+        return startChannelRequest(l, handler, false);
+    }
+
     public Channel startChannel(String profile, boolean base64Encoding,
                                 String data)
             throws BEEPException, BEEPError
     {
-        return startChannel(profile, base64Encoding, data, null);
+        StartChannelProfile p = new StartChannelProfile(profile,
+                                                        base64Encoding, data);
+        return startChannel(p, null);
     }
     
-    /**
-     * Sends a start channel request using the specified profile.
-     *
-     * @param profile The uri of the profile for the channel you wish to start.
-     * @param base64Encoding Indicates whether or not the data is base64
-     * encoded.
-     * @param data The associated data or initial element for the profile of
-     * the channel you wish to start.
-     * @param listener An implementation of <code>MessageListener</code> that
-     * is to receive message callbacks for this channel.  It can be null, but
-     * don't expect to be called back.
-     *
-     * @return A <code>Channel<code> for the specified profile.
-     *
-     * @throws BEEPError Thrown if an error occurs in the under lying
-     *         transport.
-     * @throws BEEPException Thrown if any of the parameters are invalid,
-     * or if the profile is unavailable on this <code>Session</code>.
-     * @see MessageListener
-     */
     public Channel startChannel(String profile, boolean base64Encoding,
                                 String data, MessageListener listener)
             throws BEEPException, BEEPError
@@ -501,40 +468,43 @@ public abstract class SessionImpl implements Session {
 
         return startChannelRequest(l, listener, false);
     }
+    
+    public Channel startChannel(StartChannelProfile profile, RequestHandler handler)
+            throws BEEPException, BEEPError
+    {
+        LinkedList l = new LinkedList();
 
-    /**
-     * Sends a start channel request using the given list of profiles.
-     *
-     * @param profiles A collection of <code>StartChannelProfile</code>(s).
-     * @param listener An implementation of <code>MessageListener</code>
-     * that is to receive message callbacks for this channel.
-     * It can be null, but don't expect to be called back.
-     *
-     * @return a started channel for the profile selected by the listener
-     *
-     * @throws BEEPError Thrown if an error occurs in the under lying
-     *         transport.
-     * @throws BEEPException Thrown if any of the parameters are invalid,
-     * or if the profile is unavailable on this <code>Session</code>.
-     * @see StartChannelProfile
-     * @see MessageListener
-     */
+        l.add(profile);
+
+        return startChannelRequest(l, handler, false);
+    }
+
     public Channel startChannel(Collection profiles, MessageListener listener)
         throws BEEPException, BEEPError
     {
         return startChannelRequest(profiles, listener, false);
     }
 
-    /**
-     * You should not see this.
-     */
     Channel startChannelRequest(Collection profiles, MessageListener listener,
+                                boolean tuning)
+        throws BEEPException, BEEPError
+    {
+        return startChannelRequest(profiles,
+                                   listener == null ? null : new ChannelImpl.MessageListenerAdapter(listener),
+                                   tuning);
+    }
+
+    public Channel startChannel(Collection profiles, RequestHandler handler)
+        throws BEEPException, BEEPError
+    {
+        return startChannelRequest(profiles, handler, false);
+    }
+
+    Channel startChannelRequest(Collection profiles, RequestHandler handler,
                                 boolean tuning)
             throws BEEPException, BEEPError
     {
 
-        // Block here if there's an exclusive lock, which
-        // would change our channel #...
         String channelNumber = getNextFreeChannelNumber();
 
         // create the message in a buffer and send it
@@ -575,7 +545,8 @@ public abstract class SessionImpl implements Session {
 
         // @todo handle the data element
         // Create a channel
-        ChannelImpl ch = new ChannelImpl(null, channelNumber, listener, true, this);
+        ChannelImpl ch = new ChannelImpl(null, channelNumber, handler, false,
+                                         this);
 
         // Make a message
         OutputDataStream ds =
@@ -990,7 +961,7 @@ public abstract class SessionImpl implements Session {
         // Store the Channel
         ch.setState(ChannelImpl.STATE_ACTIVE);
         channels.put(ch.getNumberAsString(), ch);
-        ((Message)zero.getAppData()).sendRPY(ds);
+        ((MessageMSG)zero.getAppData()).sendRPY(ds);
     }
 
     private void fireChannelClosed(Channel c)
@@ -1088,6 +1059,8 @@ public abstract class SessionImpl implements Session {
             return;
         }
 
+        enableIO();
+                
         ChannelImpl channel = (ChannelImpl) channels.get(channelNumber);
 
         if (channel == null) {
@@ -1114,7 +1087,7 @@ public abstract class SessionImpl implements Session {
                                      OK_ELEMENT);
 
         try {
-            ((Message)zero.getAppData()).sendRPY(sds);
+            ((MessageMSG)zero.getAppData()).sendRPY(sds);
         } catch (BEEPException x) {
             terminate("Error sending RPY for <close>");
 
@@ -1166,6 +1139,7 @@ public abstract class SessionImpl implements Session {
                 try {
                     changeState(SESSION_STATE_ACTIVE);
 
+                    enableIO();
                     throw e;
                 } catch (BEEPException x) {
                     terminate("Error changing Session state from closing " +
@@ -1181,14 +1155,12 @@ public abstract class SessionImpl implements Session {
                                      OK_ELEMENT);
 
         try {
-            ((Message)zero.getAppData()).sendRPY(sds);
+            ((MessageMSG)zero.getAppData()).sendRPY(sds);
         } catch (BEEPException x) {
             terminate("Error sending RPY for <close> for channel 0");
 
             return;
         }
-
-        this.disableIO();
 
         try {
             this.changeState(SESSION_STATE_CLOSED);
@@ -1239,8 +1211,8 @@ public abstract class SessionImpl implements Session {
      *  Listener oriented Start Channel call, a call here means that
      *  we've received a start channel request over the wire.
      */
-    private boolean processStartChannel(String channelNumber,
-                                        Collection profiles)
+    private void processStartChannel(String channelNumber,
+                                     Collection profiles)
             throws BEEPError
     {
         StartChannelListener scl;
@@ -1269,15 +1241,15 @@ public abstract class SessionImpl implements Session {
 
                 fireChannelStarted(ch);
 
-                return true;
+                return;
             } catch (StartChannelException e) {
                 try {
-                    ((Message)zero.getAppData()).sendERR(e);
+                    ((MessageMSG)zero.getAppData()).sendERR(e);
                 } catch (BEEPException x) {
                     terminate("Error sending ERR response to start channel");
                 }
 
-                return false;
+                return;
             }
 
             try {
@@ -1285,21 +1257,23 @@ public abstract class SessionImpl implements Session {
             } catch (BEEPException e) {
                 terminate("Error sending profile. " + e.getMessage());
 
-                return false;
+                return;
             }
 
             fireChannelStarted(ch);
 
-            return true;
+            if (p.data == null || ch.getState() != ChannelImpl.STATE_TUNING) {
+                this.enableIO();
+            }
+
+            return;
         }
 
         try {
-            ((Message)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, "all requested profiles are unsupported");
+            ((MessageMSG)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, "all requested profiles are unsupported");
         } catch (Exception x) {
             terminate("Error sending error. " + x.getMessage());
         }
-
-        return false;
     }
 
     private Element processMessage(Message message) throws BEEPException
@@ -1440,39 +1414,44 @@ public abstract class SessionImpl implements Session {
             // is this MSG a <close>
             else if (elementName.equals("close")) {
                 log.debug("Received a channel close request");
+                
+                try {
+                    String channelNumber = topElement.getAttribute("number");
 
-                String channelNumber = topElement.getAttribute("number");
-
-                if (channelNumber == null) {
-                    throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                        "Malformed <close>: no channel number");
-                }
-
-                String code = topElement.getAttribute("code");
-
-                if (code == null) {
-                    throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                        "Malformed <close>: no code attribute");
-                }
-
-                // this attribute is implied
-                String xmlLang = topElement.getAttribute("xml:lang");
-                String data = null;
-                Node dataNode = topElement.getFirstChild();
-
-                if (dataNode != null) {
-                    data = dataNode.getNodeValue();
-
-                    if (data.length() > MAX_PCDATA_SIZE) {
+                    if (channelNumber == null) {
                         throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                            "Element's PCDATA exceeds " +
-                                            "the maximum size");
+                                            "Malformed <close>: no channel number");
                     }
+
+                    String code = topElement.getAttribute("code");
+
+                    if (code == null) {
+                        throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
+                                            "Malformed <close>: no code attribute");
+                    }
+
+                    // this attribute is implied
+                    String xmlLang = topElement.getAttribute("xml:lang");
+                    String data = null;
+                    Node dataNode = topElement.getFirstChild();
+
+                    if (dataNode != null) {
+                        data = dataNode.getNodeValue();
+
+                        if (data.length() > MAX_PCDATA_SIZE) {
+                            throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
+                                                "Element's PCDATA exceeds " +
+                                                "the maximum size");
+                        }
+                    }
+                    SessionImpl.this.zero.setAppData(message);
+                    SessionImpl.this.receiveCloseChannel(channelNumber, code,
+                                                         xmlLang, data);
+                } catch (BEEPError e) {
+                    enableIO();
+                    throw e;
                 }
 
-                SessionImpl.this.zero.setAppData(message);
-                SessionImpl.this.receiveCloseChannel(channelNumber, code,
-                                                 xmlLang, data);
             } else {
                 throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
                                     ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
@@ -1937,7 +1916,8 @@ public abstract class SessionImpl implements Session {
 
     static class CLOSED_SessionOperations implements SessionOperations {
         public void changeState(SessionImpl s, int newState) throws BEEPException {
-            throw new BEEPException("Illegal session state transition");
+            throw new BEEPException("Illegal session state transition (" +
+                                    newState + ")");
         }
 
         public boolean postFrame(SessionImpl s, Frame f) throws BEEPException {
