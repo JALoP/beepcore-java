@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.9 $ $Date: 2001/11/10 21:33:28 $
+ * Bing.java  $Revision: 1.10 $ $Date: 2001/11/25 08:00:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -24,7 +24,6 @@ import org.beepcore.beep.core.BEEPError;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.BEEPInterruptedException;
 import org.beepcore.beep.core.Channel;
-import org.beepcore.beep.core.InputDataStream;
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.StringOutputDataStream;
@@ -46,7 +45,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2001/11/10 21:33:28 $
+ * @version $Revision: 1.10 $, $Date: 2001/11/25 08:00:28 $
  */
 public class Bing {
 
@@ -124,12 +123,11 @@ public class Bing {
 
                 try {
                     // Get the reply to the request
-                    InputDataStream ds = reply.getNextReply().getDataStream();
-                    InputStream is = ds.getInputStream();
+                    InputStream is =
+                        reply.getNextReply().getDataStream().getInputStream();
 
                     // Read the data in the reply
-                    while (ds.isComplete() == false || is.available() > 0) {
-                        is.read();
+                    while (is.read() != -1) {
                         ++replyLength;
                     }
                 } catch (BEEPInterruptedException e) {
