@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.10 $ $Date: 2001/06/28 15:42:49 $
+ * TCPSession.java  $Revision: 1.11 $ $Date: 2001/07/29 03:52:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -50,7 +50,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.10 $, $Date: 2001/06/28 15:42:49 $
+ * @version $Revision: 1.11 $, $Date: 2001/07/29 03:52:57 $
  */
 public class TCPSession extends Session {
 
@@ -390,7 +390,8 @@ public class TCPSession extends Session {
      *
      * @throws BEEPException
      */
-    private void processNextFrame() throws BEEPException, IOException
+    private void processNextFrame()
+        throws BEEPException, IOException, SessionAbortedException
     {
         if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
             Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
@@ -406,7 +407,7 @@ public class TCPSession extends Session {
             int b = is.read();
 
             if (b == -1) {
-                throw new BEEPException("Malformed BEEP header, EOS");
+                throw new SessionAbortedException();
             }
 
             headerBuffer[length] = (byte) b;
@@ -439,7 +440,11 @@ public class TCPSession extends Session {
             byte[] payload = new byte[f.getSize()];
 
             for (int count = 0; count < payload.length; ) {
-                count += is.read(payload, count, payload.length - count);
+		int n = is.read(payload, count, payload.length - count);
+                if (n == -1) {
+                    throw new SessionAbortedException();
+                }
+                count += n;
             }
 
             if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
@@ -451,8 +456,7 @@ public class TCPSession extends Session {
                 int b = is.read();
 
                 if (b == -1) {
-                    throw new BEEPException("Malformed BEEP frame, "
-                                            + "trailer not found");
+                    throw new SessionAbortedException();
                 }
 
                 if (((byte) b) != ((byte) Frame.TRAILER.charAt(i))) {
@@ -519,6 +523,8 @@ public class TCPSession extends Session {
                 socket = null;
 
                 terminate(e.getMessage());
+            } catch (SessionAbortedException e) {
+                terminate("Session aborted by remote peer.");
             } catch (Throwable e) {
                 Log.logEntry(Log.SEV_ERROR, TCP_MAPPING, e);
                 terminate(e.getMessage());
@@ -528,5 +534,8 @@ public class TCPSession extends Session {
                          "Session listener thread exiting.  State = "
                          + TCPSession.this.getState());
         }
+    }
+
+    private static class SessionAbortedException extends Exception {
     }
 }
