@@ -1,6 +1,6 @@
 /*
  * TestStringOutputDataStream.java
- *    $Revision: 1.1 $ $Date: 2001/11/10 21:33:29 $
+ *    $Revision: 1.2 $ $Date: 2003/06/03 02:53:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) Huston Franklin.  All rights reserved.
@@ -18,8 +18,6 @@
  */
 package org.beepcore.beep.core;
 
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.Hashtable;

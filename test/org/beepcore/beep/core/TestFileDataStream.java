@@ -1,5 +1,5 @@
 /*
- * TestFileDataStream.java  $Revision: 1.3 $ $Date: 2001/11/10 21:33:29 $
+ * TestFileDataStream.java  $Revision: 1.4 $ $Date: 2003/06/03 02:53:28 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -16,6 +16,7 @@
  */
 package org.beepcore.beep.core;
 
+/*
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStream;
@@ -24,6 +25,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 
 import junit.framework.*;
+*/
 
 public class TestFileDataStream /*extends TestDataStream*/ {
 /*

@@ -1,5 +1,5 @@
 /*
- * TLSProfilePureTLS.java  $Revision: 1.6 $ $Date: 2002/10/05 15:45:56 $
+ * TLSProfilePureTLS.java  $Revision: 1.7 $ $Date: 2003/06/03 02:50:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -28,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.beepcore.beep.core.*;
-import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.tls.TLSProfile;
 import org.beepcore.beep.transport.tcp.*;
 
@@ -36,8 +35,6 @@ import COM.claymoresystems.ptls.*;
 import COM.claymoresystems.sslg.*;
 import COM.claymoresystems.cert.*;
 
-import java.io.FileInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 
@@ -458,7 +455,7 @@ public class TLSProfilePureTLS extends TuningProfile
 
             ht.put(SessionCredential.AUTHENTICATOR, URI);
             ht.put(SessionCredential.ALGORITHM,
-                   policy.getCipherSuiteName(cs));
+                   SSLPolicyInt.getCipherSuiteName(cs));
             ht.put(SessionCredential.AUTHENTICATOR_TYPE, "TLS");
 
             if (cc != null) {
@@ -630,7 +627,7 @@ public class TLSProfilePureTLS extends TuningProfile
 
             ht.put(SessionCredential.AUTHENTICATOR, URI);
             ht.put(SessionCredential.ALGORITHM,
-                   policy.getCipherSuiteName(cs));
+                   SSLPolicyInt.getCipherSuiteName(cs));
             ht.put(SessionCredential.AUTHENTICATOR_TYPE, "TLS");
 
             if (cc != null) {

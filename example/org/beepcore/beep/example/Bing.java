@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.11 $ $Date: 2002/10/05 15:33:22 $
+ * Bing.java  $Revision: 1.12 $ $Date: 2003/06/03 02:52:14 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -24,7 +24,6 @@ import org.beepcore.beep.core.BEEPError;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.BEEPInterruptedException;
 import org.beepcore.beep.core.Channel;
-import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.StringOutputDataStream;
 import org.beepcore.beep.lib.Reply;
@@ -43,7 +42,7 @@ import org.beepcore.beep.transport.tcp.TCPSession;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2002/10/05 15:33:22 $
+ * @version $Revision: 1.12 $, $Date: 2003/06/03 02:52:14 $
  */
 public class Bing {
 
