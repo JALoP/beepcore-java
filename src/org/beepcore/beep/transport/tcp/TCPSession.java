@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.11 $ $Date: 2001/07/29 03:52:57 $
+ * TCPSession.java  $Revision: 1.12 $ $Date: 2001/07/30 13:09:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -50,7 +50,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2001/07/29 03:52:57 $
+ * @version $Revision: 1.12 $, $Date: 2001/07/30 13:09:00 $
  */
 public class TCPSession extends Session {
 
@@ -404,13 +404,23 @@ public class TCPSession extends Session {
         headerBuffer[SEQ_LENGTH] = 0;
 
         while (true) {
-            int b = is.read();
+            try {
+                int b = is.read();
 
-            if (b == -1) {
-                throw new SessionAbortedException();
+                if (b == -1) {
+                    throw new SessionAbortedException();
+                }
+
+                headerBuffer[length] = (byte) b;
+
+            } catch (java.net.SocketException e) {
+                if (getState() == SESSION_STATE_ACTIVE) {
+                    throw e;
+                }
+
+                // socket closed intentionally (session closing) so just return
+                return;
             }
-
-            headerBuffer[length] = (byte) b;
 
             if (headerBuffer[length] == '\n') {
                 if ((length == 0) || (headerBuffer[length - 1] != '\r')) {
