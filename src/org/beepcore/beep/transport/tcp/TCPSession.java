@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.8 $ $Date: 2001/05/17 18:53:13 $
+ * TCPSession.java  $Revision: 1.9 $ $Date: 2001/05/23 13:51:53 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2001/05/17 18:53:13 $
+ * @version $Revision: 1.9 $, $Date: 2001/05/23 13:51:53 $
  */
 public class TCPSession extends Session {
 
@@ -483,14 +483,6 @@ public class TCPSession extends Session {
 
         // update the channel with the new receive window size
         this.updatePeerReceiveBufferSize(channelNum, ackNum, window);
-
-        // We need to recurse from method end to prevent
-        // SEQs from being treated as legit frames
-        // in Session.run()...yes, we exit above if it's
-        // a normal message with super.process.. and return
-        if (getState() == SESSION_STATE_ACTIVE) {
-            processNextFrame();
-        }
     }
 
     private class SessionThread implements Runnable {
