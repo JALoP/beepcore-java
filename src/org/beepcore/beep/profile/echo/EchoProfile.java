@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.9 $ $Date: 2001/10/31 00:32:37 $
+ * EchoProfile.java    $Revision: 1.10 $ $Date: 2001/11/08 04:00:11 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.beepcore.beep.core.*;
-import org.beepcore.beep.lib.MessageQueue;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.util.*;
 
@@ -34,7 +33,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2001/10/31 00:32:37 $
+ * @version $Revision: 1.10 $, $Date: 2001/11/08 04:00:11 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener
@@ -42,8 +41,6 @@ public class EchoProfile
 
     public static final String ECHO_URI =
         "http://xml.resource.org/profiles/NULL/ECHO";
-
-    private MessageQueue messages = new MessageQueue();
 
     public StartChannelListener init(String uri, ProfileConfiguration config)
         throws BEEPException
