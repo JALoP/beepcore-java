@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.7 $ $Date: 2001/11/08 05:51:34 $
+ * SASLOTPProfile.java  $Revision: 1.8 $ $Date: 2002/08/22 17:51:31 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,11 +43,11 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.7 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.8 $, $Date: 2002/08/22 17:51:31 $
  *
  */
 public class SASLOTPProfile
-    extends SASLProfile implements StartChannelListener
+    extends SASLProfile implements StartChannelListener, Profile
 {
 
     // Constants
