@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.13 $ $Date: 2003/12/31 17:46:28 $
+ * Message.java            $Revision: 1.14 $ $Date: 2004/01/01 16:40:38 $
  *
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
@@ -22,7 +22,7 @@ package org.beepcore.beep.core;
  * messages.
  *
  * @author Huston Franklin
- * @version $Revision: 1.13 $, $Date: 2003/12/31 17:46:28 $
+ * @version $Revision: 1.14 $, $Date: 2004/01/01 16:40:38 $
  */
 public interface Message {
 
@@ -87,36 +87,4 @@ public interface Message {
      * Returns the message type of this <code>Message</code>.
      */
     public int getMessageType();
-
-    /**
-     * @deprecated use method on MessageMSG instead.
-     */
-    public MessageStatus sendANS(OutputDataStream stream) throws BEEPException;
-
-    /**
-     * @deprecated use method on MessageMSG instead.
-     */
-    public MessageStatus sendERR(BEEPError error) throws BEEPException;
-
-    /**
-     * @deprecated use method on MessageMSG instead.
-     */
-    public MessageStatus sendERR(int code, String diagnostic)
-        throws BEEPException;
-
-    /**
-     * @deprecated use method on MessageMSG instead.
-     */
-    public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
-        throws BEEPException;
-
-    /**
-     * @deprecated use method on MessageMSG instead.
-     */
-    public MessageStatus sendNUL() throws BEEPException;
-
-    /**
-     * @deprecated use method on MessageMSG instead.
-     */
-    public MessageStatus sendRPY(OutputDataStream stream) throws BEEPException;
 }

@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.1 $ $Date: 2003/06/03 16:38:35 $
+ * Message.java            $Revision: 1.2 $ $Date: 2004/01/01 16:40:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2003 Huston Franklin.  All rights reserved.
@@ -25,7 +25,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2003/06/03 16:38:35 $
+ * @version $Revision: 1.2 $, $Date: 2004/01/01 16:40:38 $
  */
 public class MessageImpl implements Message {
 
@@ -174,117 +174,6 @@ public class MessageImpl implements Message {
     public int getMessageType()
     {
         return this.messageType;
-    }
-
-    /**
-     * Sends a message of type ANS.
-     *
-     * @param stream Data to send in the form of <code>OutputDataStream</code>.
-     *
-     * @see OutputDataStream
-     * @see MessageStatus
-     * @see #sendNUL
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered or if messageType is
-     *         not MESSAGE_TYPE_MSG.
-     */
-    public MessageStatus sendANS(OutputDataStream stream) throws BEEPException
-    {
-        throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param error Error to send in the form of <code>BEEPError</code>.
-     *
-     * @see BEEPError
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered or if messageType is
-     *         not MESSAGE_TYPE_MSG.
-     */
-    public MessageStatus sendERR(BEEPError error) throws BEEPException
-    {
-        throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered or if messageType is
-     *         not MESSAGE_TYPE_MSG.
-     */
-    public MessageStatus sendERR(int code, String diagnostic)
-        throws BEEPException
-    {
-        throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     * @param xmlLang <code>xml:lang</code> attibute in <code>error</code>
-     *                element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered or if messageType is
-     *         not MESSAGE_TYPE_MSG.
-     */
-    public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
-        throws BEEPException
-    {
-        throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
-    }
-
-    /**
-     * Sends a message of type NUL.
-     *
-     * @see MessageStatus
-     * @see #sendANS
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered or if messageType is
-     *         not MESSAGE_TYPE_MSG.
-     */
-    public MessageStatus sendNUL() throws BEEPException
-    {
-        throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
-    }
-
-    /**
-     * Sends a message of type RPY.
-     *
-     * @param stream Data to send in the form of <code>OutputDataStream</code>.
-     *
-     * @see OutputDataStream
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered or if messageType is
-     *         not MESSAGE_TYPE_MSG.
-     */
-    public MessageStatus sendRPY(OutputDataStream stream) throws BEEPException
-    {
-        throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
     }
 
     boolean isNotified()
