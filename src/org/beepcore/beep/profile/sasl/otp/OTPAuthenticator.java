@@ -1,5 +1,5 @@
 /*
- * OTPAuthenticator.java  $Revision: 1.3 $ $Date: 2001/04/13 19:57:11 $
+ * OTPAuthenticator.java  $Revision: 1.4 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -42,7 +42,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/13 19:57:11 $
+ * @version $Revision: 1.4 $, $Date: 2001/05/07 19:21:57 $
  *
  */
 class OTPAuthenticator implements MessageListener, ReplyListener {
@@ -672,7 +672,7 @@ class OTPAuthenticator implements MessageListener, ReplyListener {
      * @throws BEEPError if an ERR message is generated
      * that's relative to the BEEP protocol is encountered.
      */
-    public void receiveMSG(Message message) throws BEEPError
+    public void receiveMSG(MessageMSG message) throws BEEPError
     {
         try
         {

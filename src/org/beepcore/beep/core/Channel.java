@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.6 $ $Date: 2001/04/25 03:47:27 $
+ * Channel.java            $Revision: 1.7 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/04/25 03:47:27 $
+ * @version $Revision: 1.7 $, $Date: 2001/05/07 19:21:57 $
  *
  */
 public class Channel {
@@ -347,14 +347,15 @@ public class Channel {
 
     private void receiveFrame(Frame frame) throws BEEPException
     {
-        Message m = null;
 
         // if this is an incoming message rather than a reply to a
         // previously sent message
         if (frame.getMessageType() == Message.MESSAGE_TYPE_MSG) {
+            MessageMSG m = null;
+
             synchronized (recvMSGQueue) {
                 if (recvMSGQueue.size() != 0) {
-                    m = (Message) recvMSGQueue.getLast();
+                    m = (MessageMSG) recvMSGQueue.getLast();
 
                     if (m.getMsgno() != frame.getMsgno()) {
                         m = null;
@@ -362,9 +363,8 @@ public class Channel {
                 }
 
                 if (m == null) {
-                    m = new Message(this, frame.getMsgno(),
-                                    new FrameDataStream(true),
-                                    frame.getMessageType());
+                    m = new MessageMSG(this, frame.getMsgno(),
+                                       new FrameDataStream(true));
 
                     recvMSGQueue.addLast(m);
                 }
@@ -406,6 +406,8 @@ public class Channel {
 
             return;
         }
+
+        Message m = null;
 
         // This frame must be for a reply (RPY, ERR, ANS, NUL)
         MessageStatus mstatus;
@@ -770,6 +772,7 @@ public class Channel {
      * @return MessageStatus
      *
      * @throws BEEPException if an error is encoutered.
+     * @deprecated
      */
     public MessageStatus sendANS(DataStream stream) throws BEEPException
     {
@@ -937,6 +940,7 @@ public class Channel {
      * @return MessageStatus
      *
      * @throws BEEPException if an error is encoutered.
+     * @deprecated
      */
     public MessageStatus sendNUL() throws BEEPException
     {
@@ -1000,6 +1004,7 @@ public class Channel {
      * @return MessageStatus
      *
      * @throws BEEPException if an error is encoutered.
+     * @deprecated
      */
     public MessageStatus sendRPY(DataStream stream) throws BEEPException
     {
@@ -1042,6 +1047,7 @@ public class Channel {
      * @return MessageStatus
      *
      * @throws BEEPException if an error is encoutered.
+     * @deprecated
      */
     public MessageStatus sendERR(DataStream stream) throws BEEPException
     {
@@ -1097,7 +1103,7 @@ public class Channel {
             Log.logEntry(Log.SEV_DEBUG, "Sending NUL or size 0 frame");
             frame = new Frame(message.getMessageType(),
                               message.getChannel(), message.getMsgno(), true,
-                              sentSequence, 0, ansno);
+                              sentSequence, 0, message.getAnsno());
             try {
                 session.sendFrame(frame);
             } catch (BEEPException e) {
@@ -1167,7 +1173,7 @@ public class Channel {
                         new Frame(message.getMessageType(),
                                   message.getChannel(), message.getMsgno(),
                                   done ? true : false,
-                                  sentSequence, ansno,
+                                  sentSequence, message.getAnsno(),
                                   new Frame.BufferSegment(payload, 0,
                                                           amountToSend));
 

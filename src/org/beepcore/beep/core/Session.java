@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.8 $ $Date: 2001/04/26 18:34:06 $
+ * Session.java            $Revision: 1.9 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2001/04/26 18:34:06 $
+ * @version $Revision: 1.9 $, $Date: 2001/05/07 19:21:57 $
  *
  * @see Channel
  */
@@ -1341,7 +1341,7 @@ public abstract class Session {
 
     private class ChannelZeroListener implements MessageListener {
 
-        public void receiveMSG(Message message)
+        public void receiveMSG(MessageMSG message)
             throws BEEPError, AbortChannelException
         {
             Element topElement;

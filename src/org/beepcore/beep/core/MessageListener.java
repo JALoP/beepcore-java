@@ -1,5 +1,5 @@
 /*
- * MessageListener.java $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * MessageListener.java $Revision: 1.2 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -27,7 +27,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/05/07 19:21:57 $
  */
 public interface MessageListener extends DataListener {
 
@@ -40,6 +40,6 @@ public interface MessageListener extends DataListener {
      * @throws BEEPError
      * @see <code>org.beepcore.beep.core.Message</code>
      */
-    public void receiveMSG(Message message)
+    public void receiveMSG(MessageMSG message)
         throws BEEPError, AbortChannelException;
 }

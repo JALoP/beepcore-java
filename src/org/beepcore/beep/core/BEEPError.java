@@ -1,6 +1,6 @@
 
 /*
- * BEEPError.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * BEEPError.java            $Revision: 1.2 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/05/07 19:21:57 $
  */
 public class BEEPError extends BEEPException {
 
@@ -145,13 +145,38 @@ public class BEEPError extends BEEPException {
      */
     public String createErrorMessage()
     {
-        StringBuffer sb = new StringBuffer(1024);
+        return createErrorMessage(this.code, this.getMessage(), this.xmlLang);
+    }
+
+    /**
+     * Creates a <code>String</code> for an error element that can be sent
+     * in a BEEP ERR message.
+     *
+     * @param code Error code.
+     * @param diagnostic Error diagnostic.
+     * @param xmlLang Language of the diagnostic message.
+     */
+    public static String createErrorMessage(int code, String diagnostic)
+    {
+        return createErrorMessage(code, diagnostic, null);
+    }
+
+    /**
+     * Creates a <code>String</code> for an error element that can be sent
+     * in a BEEP ERR message.
+     *
+     * @param code Error code.
+     * @param diagnostic Error diagnostic.
+     * @param xmlLang Language of the diagnostic message.
+     */
+    public static String createErrorMessage(int code, String diagnostic,
+                                     String xmlLang)
+    {
+        StringBuffer sb = new StringBuffer(128);
 
         sb.append(Constants.FRAGMENT_ERROR_PREFIX);
         sb.append(Constants.FRAGMENT_CODE_PREFIX);
-        sb.append(this.getCode());
-
-        String xmlLang = this.getXMLLang();
+        sb.append(code);
 
         if (xmlLang != null) {
             sb.append(Constants.FRAGMENT_QUOTE_SUFFIX);
@@ -159,12 +184,10 @@ public class BEEPError extends BEEPException {
             sb.append(xmlLang);
         }
 
-        String diag = this.getMessage();
-
-        if (diag != null) {
+        if (diagnostic != null) {
             sb.append(Constants.FRAGMENT_QUOTE_SUFFIX);
             sb.append(Constants.FRAGMENT_ANGLE_SUFFIX);
-            sb.append(diag);
+            sb.append(diagnostic);
             sb.append(Constants.FRAGMENT_ERROR_SUFFIX);
         } else {
             sb.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);

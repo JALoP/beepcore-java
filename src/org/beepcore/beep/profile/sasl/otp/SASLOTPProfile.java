@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.3 $ $Date: 2001/05/03 21:56:49 $
+ * SASLOTPProfile.java  $Revision: 1.4 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/05/03 21:56:49 $
+ * @version $Revision: 1.4 $, $Date: 2001/05/07 19:21:57 $
  *
  */
 public class SASLOTPProfile
@@ -51,7 +51,7 @@ public class SASLOTPProfile
 {
 
     // Constants
-    public static final String uri = "http://iana.org/beep/SASL/OTP";
+    public static final String URI = "http://iana.org/beep/SASL/OTP";
 
     // Message Constants
     public static final String EXT = "ext";
@@ -169,10 +169,10 @@ public class SASLOTPProfile
             }
             channel.setDataListener(temp);
             if(blob != null)
-                sendProfile(channel.getSession(), uri, blob.toString(),
+                sendProfile(channel.getSession(), URI, blob.toString(),
                             channel);
             else
-                sendProfile(channel.getSession(), uri, null, channel);
+                sendProfile(channel.getSession(), URI, null, channel);
 
             // If we processed piggybacked data then blob will be non-null
             // otherwise, we need to 'start' the OTPAuthenticator so that
@@ -323,7 +323,7 @@ public class SASLOTPProfile
         String startData = null;
         try
         {
-            ch = session.startChannel(SASLOTPProfile.uri, false, null,
+            ch = session.startChannel(SASLOTPProfile.URI, false, null,
                                               auth);
             startData = ch.getStartData();
         }
@@ -422,7 +422,7 @@ public class SASLOTPProfile
         String startData = null;
         try
         {
-            ch = session.startChannel(SASLOTPProfile.uri, false, null,
+            ch = session.startChannel(SASLOTPProfile.URI, false, null,
                                               auth);
             startData = ch.getStartData();
         }
@@ -539,7 +539,7 @@ public class SASLOTPProfile
         String startData = null;
         try
         {
-            ch = session.startChannel(SASLOTPProfile.uri, false, null,
+            ch = session.startChannel(SASLOTPProfile.URI, false, null,
                                               auth);
             startData = ch.getStartData();
         }

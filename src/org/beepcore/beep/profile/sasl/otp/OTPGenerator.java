@@ -1,6 +1,6 @@
 
 /*
- * OTPGenerator.java            $Revision: 1.2 $ $Date: 2001/04/09 13:26:22 $
+ * OTPGenerator.java            $Revision: 1.3 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.otp.database.UserDatabasePool;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/09 13:26:22 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/07 19:21:57 $
  *
  */
 public class OTPGenerator {
@@ -264,7 +264,7 @@ public class OTPGenerator {
         SASLOTPProfile sop = new SASLOTPProfile();
 
         try {
-            sop.init(new ProfileConfiguration());
+            sop.init(SASLOTPProfile.URI, new ProfileConfiguration());
         } catch (BEEPException x) {}
 
         Properties p = new Properties();

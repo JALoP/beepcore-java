@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.2 $ $Date: 2001/04/13 19:57:10 $
+ * AnonymousAuthenticator.java  $Revision: 1.3 $ $Date: 2001/05/07 19:21:57 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/13 19:57:10 $
+ * @version $Revision: 1.3 $, $Date: 2001/05/07 19:21:57 $
  *
  */
 class AnonymousAuthenticator
@@ -278,7 +278,7 @@ class AnonymousAuthenticator
      * 
      * @throws BEEPError if an ERR message is generated
      */
-    public void receiveMSG(Message message) throws BEEPError
+    public void receiveMSG(MessageMSG message) throws BEEPError
     {        
         try
         {
