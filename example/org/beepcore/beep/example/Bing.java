@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.2 $ $Date: 2001/07/11 02:46:19 $
+ * Bing.java  $Revision: 1.3 $ $Date: 2001/07/29 03:57:39 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -41,7 +41,7 @@ import org.beepcore.beep.transport.tcp.TCPSession;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/07/11 02:46:19 $
+ * @version $Revision: 1.3 $, $Date: 2001/07/29 03:57:39 $
  */
 public class Bing {
 
@@ -68,94 +68,97 @@ public class Bing {
             return;
         }
 
-        // Start TLS if requested
-        if (privacy != PRIVACY_NONE) {
-            try {
-                session =
-                    TLSProfile.getDefaultInstance().startTLS((TCPSession) session);
-            } catch (BEEPException e) {
-                System.err.println("bing: Error unable to start TLS.\n\t" +
-                                   e.getMessage());
-                if (privacy == PRIVACY_REQUIRED)
-                    return;
-            }
-        }
-
-        // Start a channel for the echo profile
-        Channel channel;
         try {
-            channel = session.startChannel(EchoProfile.ECHO_URI);
-        } catch (BEEPError e) {
-            if (e.getCode() == 550) {
-                System.err.println("bing: Error host does not support echo " +
-                                   "profile");
-            } else {
-                System.err.println("bing: Error starting channel (" +
-                                   e.getCode() + ": " + e.getMessage() + ")");
-            }
-            return;
-        } catch (BEEPException e) {
-            System.err.println("bing: Error starting channel (" +
-                               e.getMessage() + ")");
-            return;
-        }
-
-        String request = createRequest(size);
-
-        try {
-            for (int i=0; i<count; ++i) {
-                long time;
-                int replyLength = 0;
-                Reply reply = new Reply();
-
-                time = System.currentTimeMillis();
-
-                // Send the request
-                channel.sendMSG(new StringDataStream(request), reply);
-
-                // Get the reply to the request
-                DataStream ds = reply.getNextReply().getDataStream();
-                InputStream is = ds.getInputStream();
-
-                // Read the data in the reply
-                while (ds.isComplete() == false || is.available() > 0) {
-                    is.read();
-                    ++replyLength;
+            // Start TLS if requested
+            if (privacy != PRIVACY_NONE) {
+                try {
+                    session =
+                        TLSProfile.getDefaultInstance().startTLS((TCPSession) session);
+                } catch (BEEPException e) {
+                    System.err.println("bing: Error unable to start TLS.\n\t" +
+                                       e.getMessage());
+                    if (privacy == PRIVACY_REQUIRED)
+                        return;
                 }
-
-                System.out.println("Reply from " + host + ": bytes=" +
-                                   replyLength + " time=" +
-                                   (System.currentTimeMillis() - time) +
-                                   "ms");
             }
-        } catch (BEEPError e) {
-            System.err.println("bing: Error sending request (" + e.getCode() +
-                               ": " + e.getMessage() + ")");
-            return;
-        } catch (Exception e) {
-            System.err.println("bing: Error sending request (" +
-                               e.getMessage() + ")");
-            return;
-        }
 
-        // Cleanup
+            // Start a channel for the echo profile
+            Channel channel;
+            try {
+                channel = session.startChannel(EchoProfile.ECHO_URI);
+            } catch (BEEPError e) {
+                if (e.getCode() == 550) {
+                    System.err.println("bing: Error host does not support echo " +
+                                       "profile");
+                } else {
+                    System.err.println("bing: Error starting channel (" +
+                                       e.getCode() + ": " + e.getMessage() + ")");
+                }
+                return;
+            } catch (BEEPException e) {
+                System.err.println("bing: Error starting channel (" +
+                                   e.getMessage() + ")");
+                return;
+            }
 
-        // Close the Channel
-        try {
-            channel.close();
-        } catch (BEEPException e) {
-            System.err.println("bing: Error closing channel (" +
-                               e.getMessage() + ")");
-            return;
-        }
+            String request = createRequest(size);
 
-        // Close the Session
-        try {
-            session.close();
-        } catch (BEEPException e) {
-            System.err.print("bing: Error closing session (" +
-                             e.getMessage() + ")");
-            return;
+            try {
+                for (int i=0; i<count; ++i) {
+                    long time;
+                    int replyLength = 0;
+                    Reply reply = new Reply();
+
+                    time = System.currentTimeMillis();
+
+                    // Send the request
+                    channel.sendMSG(new StringDataStream(request), reply);
+
+                    // Get the reply to the request
+                    DataStream ds = reply.getNextReply().getDataStream();
+                    InputStream is = ds.getInputStream();
+
+                    // Read the data in the reply
+                    while (ds.isComplete() == false || is.available() > 0) {
+                        is.read();
+                        ++replyLength;
+                    }
+
+                    System.out.println("Reply from " + host + ": bytes=" +
+                                       replyLength + " time=" +
+                                       (System.currentTimeMillis() - time) +
+                                       "ms");
+                }
+            } catch (BEEPError e) {
+                System.err.println("bing: Error sending request (" + e.getCode() +
+                                   ": " + e.getMessage() + ")");
+                return;
+            } catch (Exception e) {
+                System.err.println("bing: Error sending request (" +
+                                   e.getMessage() + ")");
+                return;
+            }
+
+            // Cleanup
+
+            // Close the Channel
+            try {
+                channel.close();
+            } catch (BEEPException e) {
+                System.err.println("bing: Error closing channel (" +
+                                   e.getMessage() + ")");
+                return;
+            }
+
+        } finally {
+            // Close the Session
+            try {
+                session.close();
+            } catch (BEEPException e) {
+                System.err.print("bing: Error closing session (" +
+                                 e.getMessage() + ")");
+                return;
+            }
         }
     }
 
