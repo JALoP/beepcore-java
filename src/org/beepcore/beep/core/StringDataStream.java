@@ -1,6 +1,6 @@
 
 /*
- * StringDataStream.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * StringDataStream.java            $Revision: 1.2 $ $Date: 2001/04/15 04:47:54 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -39,7 +39,7 @@ import java.io.UnsupportedEncodingException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/15 04:47:54 $
  */
 public class StringDataStream extends ByteDataStream {
 
@@ -74,7 +74,7 @@ public class StringDataStream extends ByteDataStream {
      */
     public StringDataStream(String contentType, String data)
     {
-        super(BEEP_XML_CONTENT_TYPE);
+        super(contentType);
 
         try {
             setData(data.getBytes("UTF-8"));
