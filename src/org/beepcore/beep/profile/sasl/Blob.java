@@ -1,7 +1,8 @@
 /*
- * Blob.java            $Revision: 1.5 $ $Date: 2001/11/29 04:00:00 $
+ * Blob.java            $Revision: 1.6 $ $Date: 2002/05/04 22:42:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -41,7 +42,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/11/29 04:00:00 $
+ * @version $Revision: 1.6 $, $Date: 2002/05/04 22:42:41 $
  *
  */
 public class Blob
@@ -70,7 +71,6 @@ public class Blob
     private static String statusMappings[];
     private static BASE64Decoder decoder;
     private static BASE64Encoder encoder;
-    private static DocumentBuilder builder;    // generic XML parser
     private static boolean initialized = false;
     
     // Data
@@ -78,6 +78,7 @@ public class Blob
     private String blobData;
     private String stringified;
     private byte[] decodedData;
+    private DocumentBuilder builder;    // generic XML parser
 
     /**
      * This is the Constructor for those that want to create and send a blob.
@@ -94,6 +95,13 @@ public class Blob
         Log.logEntry(Log.SEV_DEBUG, "Created blob=>"+status);
         if (!initialized) {
             init();
+        }
+
+        try {
+            builder =
+                DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new SASLException(ERR_XML_PARSE_FAILURE);
         }
 
         // Validate status
@@ -139,6 +147,13 @@ public class Blob
         Log.logEntry(Log.SEV_DEBUG, "Created blob=>" + status + "," + data);
         if (!initialized) {
             init();
+        }
+
+        try {
+            builder =
+                DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new SASLException(ERR_XML_PARSE_FAILURE);
         }
 
         // Validate status
@@ -195,6 +210,13 @@ public class Blob
             init();
         }
 
+        try {
+            builder =
+                DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new SASLException(ERR_XML_PARSE_FAILURE);
+        }
+
         // Validate status
         if (!validateStatus(status)) {
             throw new SASLException(ERR_INVALID_STATUS_VALUE);
@@ -240,6 +262,13 @@ public class Blob
         Log.logEntry(Log.SEV_DEBUG, "Receiving blob of=>"+blob);
         if (!initialized) {
             init();
+        }
+
+        try {
+            builder =
+                DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new SASLException(ERR_XML_PARSE_FAILURE);
         }
         
         stringified = blob;
@@ -293,14 +322,6 @@ public class Blob
             encoder = new BASE64Encoder();
         }
 
-        if (builder == null) {
-            try {
-                builder =
-                    DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            } catch (ParserConfigurationException e) {
-                throw new SASLException(ERR_XML_PARSE_FAILURE);
-            }
-        }
         if(statusMappings == null) {
             statusMappings = new String[STATUS_LIMIT];
             statusMappings[STATUS_NONE]     = NONE;
@@ -362,7 +383,7 @@ public class Blob
      *
      * @throws SASLException
      */
-    private static Element processMessage(String blob) 
+    private Element processMessage(String blob) 
         throws SASLException
     {
 
@@ -403,7 +424,7 @@ public class Blob
      * or the input is invalid in some other way.
      *
      */
-    private static String extractStatusFromBlob(String blob)
+    private String extractStatusFromBlob(String blob)
             throws SASLException
     {
         if ((blob == null) || (blob.indexOf("<blob ") == -1)) {
@@ -429,7 +450,7 @@ public class Blob
      * or the input is invalid in some other way.
      *
      */
-    private static String extractDataFromBlob(String blob) throws SASLException
+    private String extractDataFromBlob(String blob) throws SASLException
     {
         if (blob == null) {
             return null;
