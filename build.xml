@@ -4,6 +4,10 @@
     <property name="version" value="0.9.06" />
     <property name="release.name" value="${name}-${version}" />
 
+    <property name="debug"             value="on"/>
+    <property name="optimize"          value="on"/>
+    <property name="deprecation"       value="on"/>
+
     <property name="beepcore.home" value="."/>
     <property name="build.dir" value="build" />
     <property name="release.dir" value="${build.dir}/${release.name}" />
@@ -52,7 +56,11 @@
 
     <target name="core" depends="init">
         <mkdir dir="${core.build.dir}"/>
-	<javac srcdir="${core.src.dir}/" destdir="${core.build.dir}" >
+	<javac srcdir="${core.src.dir}/"
+	       destdir="${core.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
             <include name="**/core/*.java"/>
             <include name="**/lib/*.java"/>
             <include name="**/profile/*.java"/>
@@ -125,7 +133,11 @@
 
     <target name="example-compile" depends="core-jar,sasl">
         <mkdir dir="${example.build.dir}"/>
-	<javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
+	<javac srcdir="${example.src.dir}/"
+	       destdir="${example.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
             <exclude name="**/util/Log4JLog.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -155,7 +167,11 @@
 
     <target name="test" depends="example">
         <mkdir dir="${test.build.dir}"/>
-	<javac srcdir="${test.src.dir}/" destdir="${test.build.dir}" deprecation="on" >
+	<javac srcdir="${test.src.dir}/"
+	       destdir="${test.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
             <include name="**/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -168,7 +184,11 @@
 
     <target name="sasl-compile" depends="core">
         <mkdir dir="${sasl.build.dir}"/>
-        <javac srcdir="${sasl.src.dir}/" destdir="${sasl.build.dir}" deprecation="on" >
+        <javac srcdir="${sasl.src.dir}/"
+	       destdir="${sasl.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
             <include name="**/sasl/**/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -203,7 +223,11 @@
 
     <target name="tls-jsse-compile" depends="core-jar">
         <mkdir dir="${tls-jsse.build.dir}"/>
-        <javac srcdir="${tls.src.dir}/" destdir="${tls-jsse.build.dir}" >
+        <javac srcdir="${tls.src.dir}/"
+	       destdir="${tls-jsse.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
             <include name="**/jsse/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -249,7 +273,11 @@
 
     <target name="tls-ptls-compile" depends="core-jar">
         <mkdir dir="${tls-ptls.build.dir}"/>
-        <javac srcdir="${tls.src.dir}/" destdir="${tls-ptls.build.dir}" >
+        <javac srcdir="${tls.src.dir}/"
+	       destdir="${tls-ptls.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
             <include name="**/ptls/*.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
@@ -320,7 +348,11 @@
 
     <target name="log4jlog" depends="init,log4jCheck" if="log4j-present">
         <mkdir dir="${example.build.dir}"/>
-        <javac srcdir="${example.src.dir}/" destdir="${example.build.dir}" >
+        <javac srcdir="${example.src.dir}/"
+	       destdir="${example.build.dir}"
+               debug="${debug}"
+               optimize="${optimize}"
+               deprecation="${deprecation}">
             <include name="**/util/Log4JLog.java"/>
 	    <classpath>
 		 <pathelement path="${java.class.path}"/>
