@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.9 $ $Date: 2003/09/15 15:23:32 $
+ * TLSProfileJSSE.java  $Revision: 1.10 $ $Date: 2003/10/30 14:30:45 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -25,6 +25,8 @@ import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.tls.TLSProfile;
 import org.beepcore.beep.transport.tcp.*;
+
+import com.sun.net.ssl.*;
 
 import javax.net.ssl.*;
 
