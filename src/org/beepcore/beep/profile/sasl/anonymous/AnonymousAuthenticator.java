@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.8 $ $Date: 2001/07/30 13:07:11 $
+ * AnonymousAuthenticator.java  $Revision: 1.9 $ $Date: 2001/07/30 13:48:15 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2001/07/30 13:07:11 $
+ * @version $Revision: 1.9 $, $Date: 2001/07/30 13:48:15 $
  *
  */
 class AnonymousAuthenticator
@@ -374,15 +374,13 @@ class AnonymousAuthenticator
                 abort(x.getMessage());
             }
 
-            if (blob.getData() != null) {
-                Log.logEntry(Log.SEV_DEBUG,
-                             "Anonymous Authenticator receiveRPY=>"
-                             + blob.getData());
-            }
             String status = blob.getStatus();
 
             if ((status != null)
                     && status.equals(SASLProfile.SASL_STATUS_ABORT)) {
+                Log.logEntry(Log.SEV_DEBUG,
+                             "Anonymous Authenticator receiveRPY=>"
+                             + blob.getData());
                 sendAbort = false;
                 abort(ERR_PEER_ABORTED);
             }
