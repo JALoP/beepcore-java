@@ -1,5 +1,5 @@
 /*
- * UserDatabasePool.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:35 $
+ * UserDatabasePool.java            $Revision: 1.3 $ $Date: 2002/10/05 15:11:40 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,7 +24,6 @@ import java.util.Properties;
 
 import org.beepcore.beep.core.TuningProfile;
 import org.beepcore.beep.profile.sasl.SASLException;
-import org.beepcore.beep.util.Log;
 
 
 /**
