@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.1 $ $Date: 2001/04/02 08:45:29 $
+ * EchoProfile.java    $Revision: 1.2 $ $Date: 2001/04/02 21:39:00 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -31,13 +31,13 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:45:29 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/02 21:39:00 $
  */
 public class EchoProfile
     extends ProfileImpl implements StartChannelListener, MessageListener
 {
 
-    private static final String ECHO_URI =
+    public static final String ECHO_URI =
         "http://xml.resource.org/profiles/NULL/ECHO";
 
     public StartChannelListener getStartChannelListener()
