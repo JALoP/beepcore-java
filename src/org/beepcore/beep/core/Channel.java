@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.12 $ $Date: 2001/07/09 13:53:40 $
+ * Channel.java            $Revision: 1.13 $ $Date: 2001/07/09 17:17:27 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2001/07/09 13:53:40 $
+ * @version $Revision: 1.13 $, $Date: 2001/07/09 17:17:27 $
  *
  */
 public class Channel {
@@ -403,7 +403,7 @@ public class Channel {
      */
     public MessageStatus sendANS(DataStream stream) throws BEEPException
     {
-        Message m = (Message)this.sentMSGQueue.get(0);
+        Message m = (Message)this.recvMSGQueue.get(0);
 
         return m.sendANS(stream);
     }
@@ -535,7 +535,7 @@ public class Channel {
      */
     public MessageStatus sendNUL() throws BEEPException
     {
-        Message m = (Message)this.sentMSGQueue.get(0);
+        Message m = (Message)this.recvMSGQueue.get(0);
 
         return m.sendNUL();
     }
@@ -555,7 +555,7 @@ public class Channel {
      */
     public MessageStatus sendRPY(DataStream stream) throws BEEPException
     {
-        Message m = (Message)this.sentMSGQueue.get(0);
+        Message m = (Message)this.recvMSGQueue.get(0);
 
         return m.sendRPY(stream);
     }
@@ -575,7 +575,7 @@ public class Channel {
      */
     public MessageStatus sendERR(BEEPError error) throws BEEPException
     {
-        Message m = (Message)this.sentMSGQueue.get(0);
+        Message m = (Message)this.recvMSGQueue.get(0);
 
         return m.sendERR(error);
     }
@@ -596,7 +596,7 @@ public class Channel {
     public MessageStatus sendERR(int code, String diagnostic)
         throws BEEPException
     {
-        Message m = (Message)this.sentMSGQueue.get(0);
+        Message m = (Message)this.recvMSGQueue.get(0);
 
         return m.sendERR(code, diagnostic);
     }
@@ -619,7 +619,7 @@ public class Channel {
     public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
         throws BEEPException
     {
-        Message m = (Message)this.sentMSGQueue.get(0);
+        Message m = (Message)this.recvMSGQueue.get(0);
 
         return m.sendERR(code, diagnostic, xmlLang);
     }
