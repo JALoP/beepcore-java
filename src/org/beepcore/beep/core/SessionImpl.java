@@ -1,5 +1,5 @@
 /*
- * SessionImpl.java  $Revision: 1.13 $ $Date: 2003/11/18 14:03:08 $
+ * SessionImpl.java  $Revision: 1.14 $ $Date: 2003/11/19 17:30:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -65,7 +65,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2003/11/18 14:03:08 $
+ * @version $Revision: 1.14 $, $Date: 2003/11/19 17:30:06 $
  *
  * @see Channel
  */
@@ -1979,7 +1979,9 @@ public abstract class SessionImpl implements Session {
     static class CLOSED_SessionOperations implements SessionOperations {
         public void changeState(SessionImpl s, int newState) throws BEEPException {
             if (newState == Session.SESSION_STATE_ABORTED) {
-                log.equals("Error aborting, session already in a closed state.");
+                log.info("Error aborting, session already in a closed state.");
+            } else if (newState == Session.SESSION_STATE_CLOSE_PENDING) {
+                log.info("Error changing state to close pending, session already in a closed state.");
             } else {
                 throw new BEEPException("Illegal session state transition (" +
                                         newState + ")");
