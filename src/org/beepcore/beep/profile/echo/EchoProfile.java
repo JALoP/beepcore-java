@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.8 $ $Date: 2001/07/20 23:26:13 $
+ * EchoProfile.java    $Revision: 1.9 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -34,7 +34,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.8 $, $Date: 2001/07/20 23:26:13 $
+ * @version $Revision: 1.9 $, $Date: 2001/10/31 00:32:37 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener
@@ -55,13 +55,13 @@ public class EchoProfile
             throws StartChannelException
     {
         Log.logEntry(Log.SEV_DEBUG, "EchoCCL StartChannel Callback");
-        channel.setDataListener(this);
+        channel.setMessageListener(this);
     }
 
     public void closeChannel(Channel channel) throws CloseChannelException
     {
         Log.logEntry(Log.SEV_DEBUG, "EchoCCL CloseChannel Callback");
-        channel.setDataListener(null);
+        channel.setMessageListener(null);
         channel.setAppData(null);
     }
 
@@ -83,29 +83,22 @@ public class EchoProfile
         }
 
         public void run() {
-            byte[] buf = new byte[4096];
-            ByteArrayOutputStream data = new ByteArrayOutputStream();
+            OutputDataStream data = new OutputDataStream();
+            InputDataStream ds = message.getDataStream();
 
-            DataStream ds = message.getDataStream();
-            InputStream is = ds.getInputStream();
-
-            while (true) {
+            while (ds.isComplete() == false || ds.availableSegment()) {
                 try {
-                    int n = is.read(buf);
-                    
-                    if (n == -1) {
-                        break;
-                    }
-
-                    data.write(buf, 0, n);
-                } catch (IOException e) {
+                    data.add(ds.waitForNextSegment());
+                } catch (InterruptedException e) {
                     message.getChannel().getSession().terminate(e.getMessage());
                     return;
                 }
             }
 
+            data.setComplete();
+
             try {
-                message.sendRPY(new ByteDataStream(data.toByteArray()));
+                message.sendRPY(data);
             } catch (BEEPException e) {
                 try {
                     message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,

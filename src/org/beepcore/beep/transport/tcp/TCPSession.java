@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.12 $ $Date: 2001/07/30 13:09:00 $
+ * TCPSession.java  $Revision: 1.13 $ $Date: 2001/10/31 00:32:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -36,6 +36,7 @@ import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.SessionCredential;
 import org.beepcore.beep.core.SessionTuningProperties;
+import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.Log;
 
 
@@ -50,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2001/07/30 13:09:00 $
+ * @version $Revision: 1.13 $, $Date: 2001/10/31 00:32:38 $
  */
 public class TCPSession extends Session {
 
@@ -126,7 +127,7 @@ public class TCPSession extends Session {
         try {
             socket.setReceiveBufferSize(MAX_RECEIVE_BUFFER_SIZE);
         } catch (Exception x) {
-            Log.logEntry(Log.SEV_ERROR,
+            Log.logEntry(Log.SEV_DEBUG,
                          "Socket doesn't support setting receive buffer size");
         }
     }
@@ -233,13 +234,14 @@ public class TCPSession extends Session {
                 Iterator i = f.getBytes();
 
                 while (i.hasNext()) {
-                    Frame.BufferSegment b = (Frame.BufferSegment) i.next();
+                    BufferSegment b = (BufferSegment) i.next();
 
-                    os.write(b.data, b.offset, b.length);
+                    os.write(b.getData(), b.getOffset(), b.getLength());
 
                     if (Log.isLogged(Log.SEV_DEBUG_VERBOSE)) {
                         Log.logEntry(Log.SEV_DEBUG_VERBOSE, TCP_MAPPING,
-                                     new String(b.data, b.offset, b.length));
+                                     new String(b.getData(), b.getOffset(),
+                                                b.getLength()));
                     }
                 }
 
@@ -336,12 +338,14 @@ public class TCPSession extends Session {
         }
 
         // @todo update the java-doc to correctly identify the params
+        /*
         if (currentSeq > 0) {    // don't send it the first time
             if (((currentSeq - previouslySeq) < (bufferSize / 2))
                     || (currentlyUsed > (bufferSize / 2))) {
                 return false;
             }
         }
+        */
 
         StringBuffer sb = new StringBuffer(Frame.MAX_HEADER_SIZE);
 
@@ -475,7 +479,7 @@ public class TCPSession extends Session {
                 }
             }
 
-            f.addPayload(new Frame.BufferSegment(payload));
+            f.addPayload(new BufferSegment(payload));
             super.postFrame(f);
 
             return;

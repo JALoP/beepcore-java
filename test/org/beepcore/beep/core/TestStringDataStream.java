@@ -1,5 +1,5 @@
 /*
- * TestStringDataStream.java  $Revision: 1.1 $ $Date: 2001/05/16 19:42:41 $
+ * TestStringDataStream.java  $Revision: 1.2 $ $Date: 2001/10/31 00:32:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -20,17 +20,30 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
+import java.util.Hashtable;
+
+import org.beepcore.beep.util.BufferSegment;
 
 import junit.framework.*;
 
-public class TestStringDataStream extends TestDataStream {
+public class TestStringDataStream extends TestCase {
+    protected StringDataStream data;
+    protected byte[] message;
+    protected int dataOffset = 0;
+    protected Hashtable headers = new Hashtable();
 
     public TestStringDataStream(String name) {
         super(name);
     }
 
-    public static void main (String[] args) {
-        junit.textui.TestRunner.run (suite());
+    public void testGetNextSegment() {
+        int i=0;
+        while (data.isComplete() == false || data.availableSegment()) {
+            BufferSegment b = data.getNextSegment();
+            for (int j=b.getOffset(); j < b.getOffset() + b.getLength(); ++j) {
+                assertEquals((char)message[i++], (char)(b.getData()[j]));
+            }
+        }
     }
 
     protected void setUp() throws UnsupportedEncodingException, BEEPException {
@@ -44,19 +57,20 @@ public class TestStringDataStream extends TestDataStream {
 
         data = new StringDataStream(s);
 
-        data.setHeader( EH1, h1 );
-        data.setHeader( EH2, h2 );
-        data.setTransferEncoding( te );
+        data.setHeader(EH1, h1);
+        data.setHeader(EH2, h2);
+        data.setTransferEncoding(te);
+        data.setContentType(MimeHeaders.BEEP_XML_CONTENT_TYPE);
 
-        headers.put( DataStream.CONTENT_TYPE,
-                     DataStream.BEEP_XML_CONTENT_TYPE );
-        headers.put( DataStream.CONTENT_TRANSFER_ENCODING, te );
-        headers.put( EH1, h1 );
-        headers.put( EH2, h2 );
+        headers.put(MimeHeaders.CONTENT_TYPE,
+                    MimeHeaders.BEEP_XML_CONTENT_TYPE);
+        headers.put(MimeHeaders.CONTENT_TRANSFER_ENCODING, te);
+        headers.put(EH1, h1);
+        headers.put(EH2, h2);
 
         StringBuffer messageBuffer = new StringBuffer();
 
-        messageBuffer.append(serializeHeaders());
+        messageBuffer.append(serializeHeaders(data.getHeaderNames(), headers));
 
         dataOffset = messageBuffer.length();
 
@@ -64,8 +78,44 @@ public class TestStringDataStream extends TestDataStream {
         message = messageBuffer.toString().getBytes("UTF8");
     }
 
+    private String serializeHeaders(Enumeration names, Hashtable headers)
+        throws BEEPException
+    {
+        StringBuffer buf = new StringBuffer();
+        //        Enumeration names = data.getHeaderNames();
+
+        while (names.hasMoreElements()) {
+            String name = (String) names.nextElement();
+            String value = (String) headers.get(name);
+
+            if ((name.equals(MimeHeaders.CONTENT_TYPE) &&
+                 value.equals(MimeHeaders.DEFAULT_CONTENT_TYPE)) ||
+                (name.equals(MimeHeaders.CONTENT_TRANSFER_ENCODING) &&
+                 value.equals(MimeHeaders.DEFAULT_CONTENT_TRANSFER_ENCODING)))
+            {
+
+                // these are default values that don't need to be added
+                // to the payload
+                continue;
+            }
+
+
+            buf.append(name);
+            buf.append(": ");
+            buf.append(value);
+            buf.append("\r\n");
+        }
+
+        buf.append("\r\n");
+
+        return buf.toString();
+    }
+
     public static Test suite() {
         return new TestSuite(TestStringDataStream.class);
     }
 
+    public static void main (String[] args) {
+        junit.textui.TestRunner.run (suite());
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.5 $ $Date: 2001/06/28 15:42:49 $
+ * SASLOTPProfile.java  $Revision: 1.6 $ $Date: 2001/10/31 00:32:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/06/28 15:42:49 $
+ * @version $Revision: 1.6 $, $Date: 2001/10/31 00:32:38 $
  *
  */
 public class SASLOTPProfile
@@ -165,7 +165,7 @@ public class SASLOTPProfile
                 Log.logEntry(Log.SEV_DEBUG, SASL_OTP,
                              "Blobbed64 Challenge is=>" + data);
             }
-            channel.setDataListener(temp);
+            channel.setMessageListener(temp);
             if(blob != null)
                 sendProfile(channel.getSession(), URI, blob.toString(),
                             channel);

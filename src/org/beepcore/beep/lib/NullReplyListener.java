@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.2 $ $Date: 2001/04/16 20:02:16 $
+ * EchoProfile.java    $Revision: 1.3 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -28,7 +28,7 @@ import org.beepcore.beep.core.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/16 20:02:16 $
+ * @version $Revision: 1.3 $, $Date: 2001/10/31 00:32:37 $
  */
 public class NullReplyListener implements ReplyListener
 {
@@ -45,15 +45,15 @@ public class NullReplyListener implements ReplyListener
 
   public void receiveRPY(Message message)
   {
-    ((FrameDataStream)message.getDataStream()).close();
+    message.getDataStream().close();
   }
   public void receiveERR(Message message)
   {
-    ((FrameDataStream)message.getDataStream()).close();
+    message.getDataStream().close();
   }
   public void receiveANS(Message message)
   {
-    ((FrameDataStream)message.getDataStream()).close();
+    message.getDataStream().close();
   }
   public void receiveNUL(Message message)
   {

@@ -1,8 +1,7 @@
-
 /*
- * ByteDataStream.java            $Revision: 1.3 $ $Date: 2001/04/24 22:52:02 $
+ * ByteDataStream.java            $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
  *
- * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -18,10 +17,9 @@
 package org.beepcore.beep.core;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.util.Enumeration;
+
+import org.beepcore.beep.util.BufferSegment;
 
 
 /**
@@ -35,29 +33,22 @@ import java.io.UnsupportedEncodingException;
  *
  * @see org.beepcore.beep.core.DataStream
  *
- * @author Eric Dixon
  * @author Huston Franklin
- * @author Jay Kint
- * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/24 22:52:02 $
+ * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
  */
-public class ByteDataStream extends InputStreamDataStream {
-
-    ByteDataStream(String contentType, String transferEncoding)
-    {
-      super( contentType, transferEncoding, null );
-    }
+public class ByteDataStream extends OutputDataStream {
 
     /**
-     * Creates a <code>ByteDataStream</code> from a <code>byte[]</code> with a
-     * content type of <code>DEFAULT_CONTENT_TYPE</code> and a transfer encoding
-     * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
+     * Creates a <code>ByteDataStream</code> from a
+     * <code>byte[]</code> with a content type of
+     * <code>DEFAULT_CONTENT_TYPE</code> and a transfer encoding of
+     * <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  A <code>byte[]</code> representing a message's payload.
      */
     public ByteDataStream(byte[] data)
     {
-        super(new ByteArrayInputStream(data));
+        this(data, 0, data.length);
     }
 
     /**
@@ -70,7 +61,7 @@ public class ByteDataStream extends InputStreamDataStream {
      */
     public ByteDataStream(String contentType, byte[] data)
     {
-        super(contentType, new ByteArrayInputStream(data));
+        this(contentType, data, 0, data.length);
     }
 
     /**
@@ -85,7 +76,7 @@ public class ByteDataStream extends InputStreamDataStream {
     public ByteDataStream(String contentType, String transferEncoding,
                           byte[] data)
     {
-        super(contentType, transferEncoding, new ByteArrayInputStream(data));
+        this(contentType, transferEncoding, data, 0, data.length);
     }
 
     /**
@@ -101,7 +92,8 @@ public class ByteDataStream extends InputStreamDataStream {
      */
     public ByteDataStream(byte[] data, int offset, int length)
     {
-        super(new ByteArrayInputStream(data, offset, length));
+        super(new MimeHeaders(),
+              new BufferSegment(data, offset, length));
     }
 
     /**
@@ -118,7 +110,8 @@ public class ByteDataStream extends InputStreamDataStream {
     public ByteDataStream(String contentType, byte[] data, int offset,
                           int length)
     {
-        super(contentType, new ByteArrayInputStream(data, offset, length));
+        super(new MimeHeaders(contentType),
+              new BufferSegment(data, offset, length));
     }
 
     /**
@@ -137,21 +130,8 @@ public class ByteDataStream extends InputStreamDataStream {
     public ByteDataStream(String contentType, String transferEncoding,
                           byte[] data, int offset, int length)
     {
-        super(contentType, transferEncoding,
-              new ByteArrayInputStream(data, offset, length));
-    }
-
-    void setData( byte[] data )
-    {
-        this.data = new ByteArrayInputStream(data);
-    }
-
-    /**
-     * Returns this data stream as an <code>InputStream</code>
-     */
-    public InputStream getInputStream()
-    {
-        return this.data;
+        super(new MimeHeaders(contentType, transferEncoding),
+              new BufferSegment(data, offset, length));
     }
 
     /**
@@ -162,5 +142,96 @@ public class ByteDataStream extends InputStreamDataStream {
     public boolean isComplete()
     {
       return true;
+    }
+
+    /**
+     * @deprecated
+     */
+    public void setContentType(String contentType)
+    {
+        this.mimeHeaders.setContentType(contentType);
+    }
+
+    /**
+     * @deprecated
+     */
+    public String getContentType() throws BEEPException
+    {
+        return this.mimeHeaders.getContentType();
+    }
+
+    /**
+     * @deprecated
+     */
+    public void setTransferEncoding(String transferEncoding)
+    {
+        this.mimeHeaders.setTransferEncoding(transferEncoding);
+    }
+
+    /**
+     * @deprecated
+     */
+    public String getTransferEncoding() throws BEEPException
+    {
+        return this.mimeHeaders.getTransferEncoding();
+    }
+
+    /**
+     * Adds a MIME entity header to this data stream.
+     *
+     * @param name  Name of the MIME enitity header.
+     * @param value Value of the MIME entity header.
+     * @deprecated
+     */
+    public void setHeader(String name, String value)
+    {
+        this.mimeHeaders.setHeader(name, value);
+    }
+
+    /**
+     * Retrieves the correspoding <code>value</code> to a given a MIME entity
+     * header <code>name</code>.
+     *
+     * @param name Name of the MIME entity header.
+     * @return The <code>value</code> of the MIME entity header.
+     *
+     * @throws BEEPException
+     * @deprecated
+     */
+    public String getHeaderValue(String name) throws BEEPException
+    {
+        return this.mimeHeaders.getHeaderValue(name);
+    }
+
+    /**
+     * Returns an <code>Enumeration</code> of all the names of the MIME entity
+     * headers in this data stream.
+     * Use this call in conjunction with <code>getHeaderValue</code> to iterate
+     * through all the corresponding MIME entity header <code>value</code>(s)
+     * in this data stream.
+     *
+     * @return An <code>Enumeration</code> of all the MIME entity header
+     * names.
+     *
+     * @throws BEEPException
+     */
+    public Enumeration getHeaderNames() throws BEEPException
+    {
+        return this.mimeHeaders.getHeaderNames();
+    }
+
+    /**
+     * Removes the <code>name</code> and <code>value</code> of a MIME entity
+     * header from the data stream.  Returns <code>true</code> if the
+     * <code>name</code> was successfully removed.
+     *
+     * @param name Name of the header to be removed from the data stream.
+     *
+     * @return Returns </code>true<code> if header was removed.  Otherwise,
+     * returns <code>false</code>.
+     */
+    public boolean removeHeader(String name)
+    {
+        return this.mimeHeaders.removeHeader(name);
     }
 }

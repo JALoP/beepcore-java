@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.9 $ $Date: 2001/07/30 13:48:15 $
+ * AnonymousAuthenticator.java  $Revision: 1.10 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2001/07/30 13:48:15 $
+ * @version $Revision: 1.10 $, $Date: 2001/10/31 00:32:37 $
  *
  */
 class AnonymousAuthenticator
@@ -131,7 +131,7 @@ class AnonymousAuthenticator
             throw new SASLException(ERR_ANON_STATE);
         }
         state = STATE_STARTED;
-        ch.setDataListener(this);
+        ch.setMessageListener(this);
         channel = ch;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.15 $ $Date: 2001/07/30 12:59:03 $
+ * Channel.java            $Revision: 1.16 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,6 +21,7 @@ import java.io.*;
 
 import java.util.*;
 
+import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.Log;
 
 
@@ -32,7 +33,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.15 $, $Date: 2001/07/30 12:59:03 $
+ * @version $Revision: 1.16 $, $Date: 2001/10/31 00:32:37 $
  *
  */
 public class Channel {
@@ -59,6 +60,8 @@ public class Channel {
     private static final String ERR_REPLY_RECEIVED_FOR_NO_MESSAGE =
         "Reply received for a message never sent.";
     private static final int MAX_PAYLOAD_SIZE = 4096;
+    private static final BufferSegment zeroLengthSegment =
+        new BufferSegment(new byte[0]);
 
     /** @todo check this */
 
@@ -80,7 +83,7 @@ public class Channel {
     private String startData;
 
     /** receiver of messages (or partial messages) */
-    private DataListener listener;
+    private MessageListener listener;
 
     /** number of last message sent */
     private int lastMessageSent;
@@ -96,6 +99,9 @@ public class Channel {
 
     /** MSG we've received by awaiting proceesing of a former MSG */
     private LinkedList recvMSGQueue;
+
+    /** messages queued to be sent */
+    private LinkedList pendingSendMessages;
 
     /** size of the frames */
     private int frameSize;
@@ -127,9 +133,6 @@ public class Channel {
 
     private int waitTimeForPeer;
 
-    /** semaphore for waiting until all ANS have been */
-    private int msgsPending;
-
     private boolean notifyOnFirstFrame;
 
     private Object applicationData = null;
@@ -153,7 +156,7 @@ public class Channel {
      * @see org.beepcore.beep.core.Session
      * @see org.beepcore.beep.core.DataListener
      */
-    protected Channel(String profile, String number, DataListener listener,
+    protected Channel(String profile, String number, MessageListener listener,
                       Session session)
     {
         this.profile = profile;
@@ -166,6 +169,7 @@ public class Channel {
         recvSequence = 0;
         lastMessageSent = 1;
 
+        pendingSendMessages = new LinkedList();
         sentMSGQueue = Collections.synchronizedList(new LinkedList());
         recvMSGQueue = new LinkedList();
         recvReplyQueue = new LinkedList();
@@ -174,7 +178,6 @@ public class Channel {
         recvWindowSize = DEFAULT_WINDOW_SIZE;
         prevAckno = 0;
         prevWindowUsed = 0;
-        msgsPending = 0;
         peerWindowSize = DEFAULT_WINDOW_SIZE;
         waitTimeForPeer = 0;
         this.notifyOnFirstFrame = false;
@@ -193,8 +196,8 @@ public class Channel {
 
         // Add a MSG to the SentMSGQueue to fake channel into accepting the
         // greeting which comes in an unsolicited RPY.
-        Message m = new Message(this, 0, null, Message.MESSAGE_TYPE_MSG);
-        sentMSGQueue.add(new MessageStatus(m, rl));
+        sentMSGQueue.add(new MessageStatus(this, Message.MESSAGE_TYPE_MSG, 0,
+                                           null, rl));
 
         state = STATE_OK;
     }
@@ -346,24 +349,22 @@ public class Channel {
     }
 
     /**
-     * Sets the <code>DataListener</code> for this channel.
+     * Sets the <code>MessageListener</code> for this channel.
      *
      * @param ml
+     * @returns The previous MessageListener or null if none was set.
      */
-    public void setDataListener(DataListener ml)
+    public MessageListener setMessageListener(MessageListener ml)
     {
-
-        // @todo can this be called consecutively with different listeners?
-        // if so, should it return the old listener?
-        // if not, should we prevent it?
+        MessageListener tmp = this.listener;
         this.listener = ml;
+        return tmp;
     }
 
     /**
      * Returns the message listener for this channel.
-     *
      */
-    public DataListener getDataListener()
+    public MessageListener getMessageListener()
     {
         return this.listener;
     }
@@ -375,25 +376,6 @@ public class Channel {
     public Session getSession()
     {
         return this.session;
-    }
-
-    /**
-     * Sends a message of type ANS.
-     *
-     * @param stream Data to send in the form of <code>DataStream</code>.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     * @see #sendNUL
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendANS(DataStream stream) throws BEEPException
-    {
-        return this.currentMSG.sendANS(stream);
     }
 
     /**
@@ -410,7 +392,7 @@ public class Channel {
      *
      * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendMSG(DataStream stream,
+    public MessageStatus sendMSG(OutputDataStream stream,
                                  ReplyListener replyListener)
             throws BEEPException
     {
@@ -430,10 +412,8 @@ public class Channel {
         synchronized (this) {
 
             // create a new request
-            status =
-                new MessageStatus(new Message(this, lastMessageSent, stream,
-                                              Message.MESSAGE_TYPE_MSG),
-                                  replyListener);
+            status = new MessageStatus(this, Message.MESSAGE_TYPE_MSG,
+                                       lastMessageSent, stream, replyListener);
 
             // message 0 was the greeting, it was already sent, inc the counter
             ++lastMessageSent;
@@ -451,170 +431,6 @@ public class Channel {
         sendToPeer(status);
 
         return status;
-    }
-
-    /**
-     * Sends a message of type MSG.
-     *
-     * @param stream Data to send in the form of <code>DataStream</code>.
-     * @param frameListener A "one-shot" listener that will handle replies
-     * to this sendMSG listener.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     */
-    MessageStatus sendMSG(DataStream stream,
-                                 FrameListener frameListener)
-            throws BEEPException
-    {
-        MessageStatus status;
-
-        if (state != STATE_OK) {
-            switch (state) {
-            case STATE_ERROR :
-                throw new BEEPException(ERR_CHANNEL_ERROR_STATE);
-            case STATE_UNINITIALISED :
-                throw new BEEPException(ERR_CHANNEL_UNINITIALISED_STATE);
-            default :
-                throw new BEEPException(ERR_CHANNEL_UNKNOWN_STATE);
-            }
-        }
-
-        synchronized (this) {
-
-            // create a new request
-            status =
-                new MessageStatus(new Message(this, lastMessageSent, stream,
-                                              Message.MESSAGE_TYPE_MSG),
-                                  frameListener);
-
-            // message 0 was the greeting, it was already sent, inc the counter
-            ++lastMessageSent;
-        }
-
-        // put this in the list of messages waiting
-        // may want to put an expiration or something in here so they
-        // don't just stay around taking up space.
-        // @todo it's a synchronized list, you don't have to sync
-        synchronized (sentMSGQueue) {
-            sentMSGQueue.add(status);
-        }
-
-        // send it on the session
-        sendToPeer(status);
-
-        return status;
-    }
-
-    /**
-     * Sends a message of type NUL.
-     *
-     * @see MessageStatus
-     * @see #sendANS
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendNUL() throws BEEPException
-    {
-        Message m = this.currentMSG;
-        this.currentMSG = null;
-
-        return m.sendNUL();
-    }
-
-    /**
-     * Sends a message of type RPY.
-     *
-     * @param stream Data to send in the form of <code>DataStream</code>.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendRPY(DataStream stream) throws BEEPException
-    {
-        Message m = this.currentMSG;
-        this.currentMSG = null;
-
-        return m.sendRPY(stream);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param error Error to send in the form of <code>BEEPError</code>.
-     *
-     * @see BEEPError
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(BEEPError error) throws BEEPException
-    {
-        Message m = this.currentMSG;
-        this.currentMSG = null;
-
-        return m.sendERR(error);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(int code, String diagnostic)
-        throws BEEPException
-    {
-        Message m = this.currentMSG;
-        this.currentMSG = null;
-
-        return m.sendERR(code, diagnostic);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     * @param xmlLang <code>xml:lang</code> attibute in <code>error</code>
-     *                element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
-        throws BEEPException
-    {
-        Message m = this.currentMSG;
-        this.currentMSG = null;
-
-        return m.sendERR(code, diagnostic, xmlLang);
     }
 
     /**
@@ -658,13 +474,20 @@ public class Channel {
 
                 if (m == null) {
                     m = new MessageMSG(this, frame.getMsgno(),
-                                       new FrameDataStream(true));
+                                       new InputDataStream(this));
 
                     recvMSGQueue.addLast(m);
                 }
             }
 
-            ((FrameDataStream) m.getDataStream()).add(frame);
+            Iterator i = frame.getPayload();
+            while (i.hasNext()) {
+                m.getDataStream().add((BufferSegment)i.next());
+            }
+
+            if (frame.isLast()) {
+                m.getDataStream().setComplete();
+            }
 
             // The MessageListener interface only allows one message
             // up to be processed at a time so if this is not the
@@ -717,9 +540,8 @@ public class Channel {
             }
 
             mstatus = (MessageStatus) sentMSGQueue.get(0);
-            sentMSG = mstatus.getMessage();
 
-            if (sentMSG.getMsgno() != frame.getMsgno()) {
+            if (mstatus.getMsgno() != frame.getMsgno()) {
 
                 // @todo shutdown session (we think)
             }
@@ -788,7 +610,7 @@ public class Channel {
                 // add it to the queue
                 if (m == null) {
                     m = new Message(this, frame.getMsgno(), frame.getAnsno(),
-                                    new FrameDataStream(true));
+                                    new InputDataStream(this));
 
                     if (!frame.isLast()) {
                         recvReplyQueue.add(m);
@@ -803,7 +625,7 @@ public class Channel {
             synchronized (recvReplyQueue) {
                 if (recvReplyQueue.size() == 0) {
                     m = new Message(this, frame.getMsgno(),
-                                    new FrameDataStream(true),
+                                    new InputDataStream(this),
                                     frame.getMessageType());
 
                     if (frame.isLast() == false) {
@@ -830,7 +652,14 @@ public class Channel {
             }
         }
 
-        ((FrameDataStream) m.getDataStream()).add(frame);
+        Iterator i = frame.getPayload();
+        while (i.hasNext()) {
+            m.getDataStream().add((BufferSegment)i.next());
+        }
+
+        if (frame.isLast()) {
+            m.getDataStream().setComplete();
+        }
 
         // notify message listener if this message has not been
         // notified before and notifyOnFirstFrame is set, the
@@ -880,8 +709,6 @@ public class Channel {
         boolean createAndPostMessage = false;
         Message currentMessage = null;
         int msgno = frame.getMsgno();
-        ReplyListener replyListener = null;
-        FrameListener frameListener = null;
 
         if (state != STATE_OK) {
             throw new BEEPException("State is " + state);
@@ -920,23 +747,21 @@ public class Channel {
                     }
                 }
             } else {
-                int expectedMsgno;
+                MessageStatus mstatus;
 
                 synchronized (sentMSGQueue) {
                     if (sentMSGQueue.size() == 0) {
                         throw new BEEPException("Received unsolicited reply");
                     }
 
-                    MessageStatus mstatus =
-                        (MessageStatus) sentMSGQueue.get(0);
-                    expectedMsgno = mstatus.getMessage().getMsgno();
+                    mstatus = (MessageStatus) sentMSGQueue.get(0);
                 }
 
-                if (frame.getMsgno() != expectedMsgno) {
+                if (frame.getMsgno() != mstatus.getMsgno()) {
                     throw new BEEPException(ERR_CHANNEL_MESSAGE_NUMBER_PREFIX
                                             + frame.getMsgno()
                                             + ERR_CHANNEL_MIDDLE
-                                            + expectedMsgno);
+                                            + mstatus.getMsgno());
                 }
             }
 
@@ -969,10 +794,6 @@ public class Channel {
             throw new BEEPException("Channel window overflow");
         }
 
-        if (listener instanceof FrameListener) {
-            frameListener = (FrameListener) this.listener;
-        }
-
         if (frame.getMessageType() != Message.MESSAGE_TYPE_MSG) {
             MessageStatus mstatus;
 
@@ -983,53 +804,17 @@ public class Channel {
 
                 mstatus = (MessageStatus) sentMSGQueue.get(0);
 
-                if (mstatus.getMessage().getMsgno() != frame.getMsgno()) {
+                if (mstatus.getMsgno() != frame.getMsgno()) {
                     throw new BEEPException("Received reply out of order");
-                }
-
-                FrameListener l = mstatus.getFrameListener();
-
-                if (l != null) {
-                    frameListener = l;
-
-                    // if this is the last frame and on a reply type (NUL,
-                    // RPY, or ERR)
-                    if ((frame.isLast() == true)
-                            && (frame.getMessageType()
-                                != Message.MESSAGE_TYPE_ANS)) {
-                        sentMSGQueue.remove(0);
-                    }
                 }
             }
         }
 
-        if (frameListener != null) {
-
-            // call the frame listener and then subtract that from the used
-            try {
-                frameListener.receiveFrame(frame);
-
-                recvWindowUsed -= frame.getSize();
-
-                if (session.updateMyReceiveBufferSize(this, prevAckno,
-                                                      recvSequence,
-                                                      prevWindowUsed,
-                                                      recvWindowUsed,
-                                                      recvWindowSize)) {
-                    prevAckno = recvSequence;
-                    prevWindowUsed = recvWindowUsed;
-                }
-            } catch (BEEPException e) {
-                // @todo change this to do the right thing
-                throw new BEEPException(e.getMessage());
-            }
-        } else {
-            try {
-                receiveFrame(frame);
-            } catch (BEEPException e) {
-                // @todo change this to do the right thing
-                throw new BEEPException(e.getMessage());
-            }
+        try {
+            receiveFrame(frame);
+        } catch (BEEPException e) {
+            // @todo change this to do the right thing
+            throw new BEEPException(e.getMessage());
         }
 
         // is this the last frame in the message?
@@ -1045,7 +830,7 @@ public class Channel {
         }
     }
 
-    MessageStatus sendMessage(Message m) throws BEEPException
+    void sendMessage(MessageStatus m) throws BEEPException
     {
         if (state != STATE_OK) {
             switch (state) {
@@ -1058,21 +843,132 @@ public class Channel {
             }
         }
 
-        // create a new request
-        MessageStatus status = new MessageStatus(m);
-
         // send it on the session
-        sendToPeer(status);
-
-        return status;
+        sendToPeer(m);
     }
 
+    void sendToPeer(MessageStatus status) throws BEEPException
+    {
+        synchronized (pendingSendMessages) {
+            pendingSendMessages.add(status);
+        }
+        sendQueuedMessages();
+    }
+
+    private synchronized void sendQueuedMessages() throws BEEPException
+    {
+        while (true) {
+            MessageStatus status;
+
+            synchronized (pendingSendMessages) {
+                if (pendingSendMessages.isEmpty()) {
+                    return;
+                }
+                status = (MessageStatus) pendingSendMessages.removeFirst();
+            }
+
+            sendFrames(status);
+
+            if (status.getMessageStatus() !=
+                MessageStatus.MESSAGE_STATUS_SENT)
+            {
+                synchronized (pendingSendMessages) {
+                    pendingSendMessages.addFirst(status);
+                }
+                return;
+            }
+        }
+    }
+
+    private void sendFrames(MessageStatus status)
+        throws BEEPException
+    {
+        int sessionBufferSize = session.getMaxFrameSize();
+        OutputDataStream ds = status.getMessageData();
+
+        do {
+            synchronized (this) {
+                Frame frame;
+                // create a frame
+                frame = new Frame(status.getMessageType(),
+                                  status.getChannel(), status.getMsgno(),
+                                  false,
+                                  sentSequence, 0, status.getAnsno());
+
+                // make sure the other peer can accept something
+                if (peerWindowSize == 0) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException("caught InterruptedException");
+                    }
+
+                    // wait until there is something to send up to
+                    // our timeout
+                    if (peerWindowSize == 0) {
+                        throw new BEEPException("Time expired waiting " +
+                                                "for peer.");
+                    }
+                }
+
+                int maxToSend =
+                    Math.min(sessionBufferSize, peerWindowSize);
+
+                int size = 0;
+                while (size < maxToSend) {
+                    if (ds.availableSegment() == false) {
+                        if (size == 0) {
+                            if (ds.isComplete() == false) {
+                                // More BufferSegments are expected...
+                                return;
+                            }
+
+                            frame.addPayload(zeroLengthSegment);
+                        }
+
+                        // Send what we have
+                        break;
+                    }
+
+                    BufferSegment b = ds.getNextSegment(maxToSend - size);
+
+                    frame.addPayload(b);
+
+                    size += b.getLength();
+                }
+
+                if (ds.isComplete() && ds.availableSegment() == false) {
+                    frame.setLast();
+                }
+
+                try {
+                    session.sendFrame(frame);
+                } catch (BEEPException e) {
+                    /*
+                     * @todo we should do something more than just log
+                     * the error (e.g. close the channel or session).
+                     */
+                    Log.logEntry(Log.SEV_ERROR, e);
+                    status.setMessageStatus(MessageStatus.MESSAGE_STATUS_NOT_SENT);
+
+                    throw e;
+                }
+
+                // update the sequence and peer window size
+                sentSequence += size;
+                peerWindowSize -= size;
+            }
+        } while (ds.availableSegment() == true || ds.isComplete() == false);
+
+        status.setMessageStatus(MessageStatus.MESSAGE_STATUS_SENT);
+    }
+
+    /*
     synchronized void sendToPeer(MessageStatus status) throws BEEPException
     {
-        Message message = status.getMessage();
         Frame frame = null;
         int available = 0;
-        DataStream stream;
+        OutputDataStream stream;
         byte[] payload;
         int sessionBufferSize;
 
@@ -1082,15 +978,15 @@ public class Channel {
         payload = new byte[sessionBufferSize];
 
         // get the message data
-        stream = message.getDataStream();
+        stream = status.getMessageData();
 
-        if (stream == null || (stream.availableHeadersAndData() == 0 &&
-                               stream.isComplete()))
+        if (stream == null ||
+            (stream.availableSegment() == false && stream.isComplete()))
         {
             Log.logEntry(Log.SEV_DEBUG, "Sending NUL or size 0 frame");
-            frame = new Frame(message.getMessageType(),
-                              message.getChannel(), message.getMsgno(), true,
-                              sentSequence, 0, message.getAnsno());
+            frame = new Frame(status.getMessageType(),
+                              status.getChannel(), status.getMsgno(), true,
+                              sentSequence, 0, status.getAnsno());
             try {
                 session.sendFrame(frame);
             } catch (BEEPException e) {
@@ -1158,12 +1054,12 @@ public class Channel {
 
                     // create a frame
                     frame =
-                        new Frame(message.getMessageType(),
-                                  message.getChannel(), message.getMsgno(),
+                        new Frame(status.getMessageType(),
+                                  status.getChannel(), status.getMsgno(),
                                   done ? true : false,
-                                  sentSequence, message.getAnsno(),
-                                  new Frame.BufferSegment(payload, 0,
-                                                          amountToSend));
+                                  sentSequence, status.getAnsno(),
+                                  new BufferSegment(payload, 0,
+                                                    amountToSend));
 
                     // update the sequence and peer window size
                     sentSequence += amountToSend;    // update the sequence
@@ -1216,6 +1112,7 @@ public class Channel {
             }
         }
     }
+*/
 
     // used by session to control the frame size of the channel
     void setFrameSize(int frameSize)

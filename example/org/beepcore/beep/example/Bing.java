@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.3 $ $Date: 2001/07/29 03:57:39 $
+ * Bing.java  $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,7 +21,7 @@ import java.io.InputStream;
 import org.beepcore.beep.core.BEEPError;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
-import org.beepcore.beep.core.DataStream;
+import org.beepcore.beep.core.InputDataStream;
 import org.beepcore.beep.core.ProfileRegistry;
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.StringDataStream;
@@ -30,6 +30,8 @@ import org.beepcore.beep.profile.echo.EchoProfile;
 import org.beepcore.beep.profile.tls.TLSProfile;
 import org.beepcore.beep.transport.tcp.AutomatedTCPSessionCreator;
 import org.beepcore.beep.transport.tcp.TCPSession;
+import org.beepcore.beep.util.ConsoleLog;
+import org.beepcore.beep.util.Log;
 
 /**
  * Sample client application analogous to ping. The application uses the
@@ -41,7 +43,7 @@ import org.beepcore.beep.transport.tcp.TCPSession;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/07/29 03:57:39 $
+ * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
  */
 public class Bing {
 
@@ -115,7 +117,7 @@ public class Bing {
                     channel.sendMSG(new StringDataStream(request), reply);
 
                     // Get the reply to the request
-                    DataStream ds = reply.getNextReply().getDataStream();
+                    InputDataStream ds = reply.getNextReply().getDataStream();
                     InputStream is = ds.getInputStream();
 
                     // Read the data in the reply

@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.15 $ $Date: 2001/07/30 13:01:33 $
+ * Session.java  $Revision: 1.16 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.15 $, $Date: 2001/07/30 13:01:33 $
+ * @version $Revision: 1.16 $, $Date: 2001/10/31 00:32:37 $
  *
  * @see Channel
  */
@@ -81,8 +81,6 @@ public abstract class Session {
 
     private static final String CHANNEL_ZERO = "0";
 
-    private static final String ERR_BEEP_START_CHANNEL_TIMEOUT =
-        "Channel start timed out.";
     private static final String ERR_GREETING_FAILED =
         "Greeting exchange failed";
     private static final String ERR_ILLEGAL_SHUTDOWN =
@@ -152,6 +150,8 @@ public abstract class Session {
     private boolean allowChannelWindowUpdates;
     private DocumentBuilder builder;    // generic XML parser
 
+    private static final String DEFAULT_STRING_ENCODING = "UTF-8";
+
     /**
      * Default Session Constructor.  A relationship between peers - a session -
      * consists of a set of profiles they share in common, and an ordinality
@@ -209,7 +209,7 @@ public abstract class Session {
         zero = new Channel(this, CHANNEL_ZERO, greetingListener);
         zeroListener = new ChannelZeroListener();
 
-        zero.setDataListener(zeroListener);
+        zero.setMessageListener(zeroListener);
         channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
@@ -261,7 +261,7 @@ public abstract class Session {
         zeroListener = new ChannelZeroListener();
         zero = new Channel(this, CHANNEL_ZERO, greetingListener);
 
-        zero.setDataListener(zeroListener);
+        zero.setMessageListener(zeroListener);
         channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
@@ -439,9 +439,9 @@ public abstract class Session {
      * @throws BEEPError Thrown if an error occurs in the under lying transport.
      * @throws BEEPException Thrown if any of the parameters are invalid,
      * or if the profile is unavailable on this <code>Session</code>.
-     * @see DataListener
+     * @see MessageListener
      */
-    public Channel startChannel(String profile, DataListener listener)
+    public Channel startChannel(String profile, MessageListener listener)
             throws BEEPException, BEEPError
     {
         StartChannelProfile p = new StartChannelProfile(profile);
@@ -449,7 +449,7 @@ public abstract class Session {
 
         l.add(p);
 
-        return startChannel(l, listener, false);
+        return startChannelRequest(l, listener, false);
     }
 
     /**
@@ -470,10 +470,10 @@ public abstract class Session {
      *         transport.
      * @throws BEEPException Thrown if any of the parameters are invalid,
      * or if the profile is unavailable on this <code>Session</code>.
-     * @see DataListener
+     * @see MessageListener
      */
     public Channel startChannel(String profile, boolean base64Encoding,
-                                String data, DataListener listener)
+                                String data, MessageListener listener)
             throws BEEPException, BEEPError
     {
         StartChannelProfile p = new StartChannelProfile(profile,
@@ -482,7 +482,7 @@ public abstract class Session {
 
         l.add(p);
 
-        return startChannel(l, listener, false);
+        return startChannelRequest(l, listener, false);
     }
 
     /**
@@ -500,19 +500,19 @@ public abstract class Session {
      * @throws BEEPException Thrown if any of the parameters are invalid,
      * or if the profile is unavailable on this <code>Session</code>.
      * @see StartChannelProfile
-     * @see DataListener
+     * @see MessageListener
      */
-    public Channel startChannel(Collection profiles, DataListener listener)
+    public Channel startChannel(Collection profiles, MessageListener listener)
         throws BEEPException, BEEPError
     {
-        return startChannel(profiles, listener, false);
+        return startChannelRequest(profiles, listener, false);
     }
 
     /**
      * You should not see this.
      */
-    Channel startChannel(Collection profiles, DataListener listener,
-                         boolean disableIO)
+    Channel startChannelRequest(Collection profiles, MessageListener listener,
+                                boolean disableIO)
             throws BEEPException, BEEPError
     {
 
@@ -520,7 +520,7 @@ public abstract class Session {
         // would change our channel #...
         String channelNumber = getNextFreeChannelNumber();
 
-        // create the message in a buffer and send it (via a StringDataStream)
+        // create the message in a buffer and send it
         StringBuffer startBuffer = new StringBuffer();
 
         startBuffer.append(FRAGMENT_START_PREFIX);
@@ -561,14 +561,35 @@ public abstract class Session {
         Channel ch = new Channel(null, channelNumber, listener, this);
 
         // Make a message
-        DataStream ds = null;
-
-        ds = new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
-                                  startBuffer.toString());
+        OutputDataStream ds =
+            new StringDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
+                                 startBuffer.toString());
 
         // Tell Channel Zero to start us up
-        this.zero.sendMSG(ds, new StartReplyListener(ch, disableIO));
-        waitForResult(ch, Channel.STATE_UNINITIALISED);
+        StartReplyListener reply = new StartReplyListener(ch, disableIO);
+        synchronized (reply) {
+            this.zero.sendMSG(ds, reply);
+            try {
+                reply.wait();
+            } catch (InterruptedException e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                throw new BEEPException("Interrupted waiting for reply");
+            }
+        }
+
+        // check the channel state and return the appropriate exception
+        if (ch.getState() == Channel.STATE_ERROR) {
+            BEEPError e = ch.getErrorMessage();
+
+            e.fillInStackTrace();
+
+            throw e;
+        }
+
+        if (ch.getState() != Channel.STATE_OK) {
+            throw new BEEPException("Error channel state (" +
+                                    ch.getState() + ")");
+        }
 
         return ch;
     }
@@ -956,15 +977,38 @@ public abstract class Session {
 
         closeBuffer.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
 
-        // Make a message
-        DataStream ds = new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
-                                             closeBuffer.toString());
-
         // Lock necessary because we have to know the msgNo
         // before we send the message, in order to be able
         // to associate the reply with this start request
-        this.zero.sendMSG(ds, new CloseReplyListener(channel));
-        waitForResult(channel, Channel.STATE_OK);
+        CloseReplyListener reply = new CloseReplyListener(channel);
+        synchronized (reply) {
+            OutputDataStream ds =
+                new StringDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
+                                     closeBuffer.toString());
+
+            this.zero.sendMSG(ds,
+                              reply);
+            try {
+                reply.wait();
+            } catch (InterruptedException e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+                throw new BEEPException("Interrupted waiting for reply");
+            }
+        }
+
+        // check the channel state and return the appropriate exception
+        if (channel.getState() == Channel.STATE_ERROR) {
+            BEEPError e = channel.getErrorMessage();
+
+            e.fillInStackTrace();
+
+            throw e;
+        }
+
+        if (channel.getState() != Channel.STATE_CLOSED) {
+            throw new BEEPException("Error channel state (" +
+                                    channel.getState() + ")");
+        }
     }
 
     Channel getValidChannel(int number) throws BEEPException
@@ -1000,7 +1044,7 @@ public abstract class Session {
         }
 
         StringDataStream sds =
-            new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
+            new StringDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
                                  sb.toString());
 
         // Store the Channel
@@ -1054,7 +1098,7 @@ public abstract class Session {
 
         // Send an ok
         StringDataStream sds =
-            new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
+            new StringDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
                                  FRAGMENT_OK);
 
         try {
@@ -1132,7 +1176,7 @@ public abstract class Session {
         }
 
         StringDataStream sds =
-            new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
+            new StringDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
                                  FRAGMENT_OK);
 
         try {
@@ -1152,67 +1196,6 @@ public abstract class Session {
         }
 
         fireEvent(SessionEvent.SESSION_CLOSED_EVENT_CODE, this);
-    }
-
-    private void receiveStartChannelResultOk(Channel channel, String data)
-            throws BEEPException
-    {
-
-        // set the state
-        channel.setState(Channel.STATE_OK);
-        channels.put(channel.getNumberAsString(), channel);
-
-        // release the block waiting for the channel to start or close
-
-        /**
-         * @todo something with data
-         */
-        synchronized (channel) {
-            channel.notify();
-        }
-
-        if (TuningProfile.isTuningProfile(channel.getProfile())) {
-            Log.logEntry(Log.SEV_DEBUG, CORE, "Disabling this I/O thread");
-            disableIO();
-        }
-    }
-
-    /**
-     * received an OK element for the channel close element
-     *
-     *
-     * @param channel
-     *
-     * @throws BEEPException
-     *
-     */
-    private void receiveCloseChannelResultOk(Channel channel)
-        throws BEEPException
-    {
-
-        /**
-         * @todo CCL
-         */
-
-        /*
-        StartChannelListener scl =
-            profileRegistry.getStartChannelListener(channel.getProfile());
-
-        if (scl != null) {
-            scl.closeChannel(channel);
-        }
-        */
-
-        // @todo we should fire an event instead.
-        // set the state
-        channel.setState(Channel.STATE_CLOSING);
-        channels.remove(channel.getNumberAsString());
-        channel.setState(Channel.STATE_CLOSED);
-
-        // release the block waiting for the channel to start or close
-        synchronized (channel) {
-            channel.notify();
-        }
     }
 
     /**
@@ -1327,53 +1310,11 @@ public abstract class Session {
         fireEvent(SessionEvent.SESSION_TERMINATED_EVENT_CODE, this);
     }
 
-    private void waitForResult(Channel ch, int expectedState)
-            throws BEEPException, BEEPError
-    {
-        int waitCount = 0;
-
-        while ((ch.getState() == expectedState)
-                && (waitCount < MAX_START_CHANNEL_WAIT)) {
-            try {
-                synchronized (ch) {
-                    ch.wait(MAX_START_CHANNEL_INTERVAL);
-
-                    waitCount += MAX_START_CHANNEL_INTERVAL;
-                }
-            } catch (InterruptedException e) {
-                waitCount += MAX_START_CHANNEL_INTERVAL;
-            }
-        }
-
-        if (waitCount == MAX_START_CHANNEL_WAIT) {
-            Log.logEntry(Log.SEV_DEBUG, CORE, "Wait for result timed out");
-        }
-
-        // check the channel state and return the appropriate exception
-        if (ch.getState() == Channel.STATE_OK) {
-            return;
-        }
-
-        if (ch.getState() == Channel.STATE_ERROR) {
-            BEEPError e = ch.getErrorMessage();
-
-            e.fillInStackTrace();
-
-            throw e;
-        }
-
-        if (ch.getState() == Channel.STATE_UNINITIALISED) {
-            throw new BEEPException(ERR_BEEP_START_CHANNEL_TIMEOUT);
-        }
-
-        // @todo what exception should we throw here?
-    }
-
     private Element processMessage(Message message) throws BEEPException
     {
 
         // check the message content type
-        if (!message.getDataStream().getContentType().equals(DataStream.BEEP_XML_CONTENT_TYPE)) {
+        if (!message.getDataStream().getInputStream().getContentType().equals(MimeHeaders.BEEP_XML_CONTENT_TYPE)) {
             throw new BEEPException("Invalid content type for this message");
         }
 
@@ -1408,7 +1349,7 @@ public abstract class Session {
         // get the greeting from the session
         byte[] greeting = Session.this.getProfileRegistry().getGreeting(this);
         ByteDataStream f =
-            new ByteDataStream(DataStream.BEEP_XML_CONTENT_TYPE, greeting);
+            new ByteDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE, greeting);
 
         Message m = new MessageMSG(this.zero, 0, null);
 
@@ -1690,8 +1631,27 @@ public abstract class Session {
                         channel.setProfile(uri);
                         channel.setStartData(data);
                         channel.setErrorMessage(null);
-                        Session.this.receiveStartChannelResultOk(channel,
-                                                                 data);
+
+                        // set the state
+                        channel.setState(Channel.STATE_OK);
+                        channels.put(channel.getNumberAsString(), channel);
+
+                        /**
+                         * @todo something with data
+                         */
+
+                        // release the block waiting for the channel
+                        // to start or close
+                        synchronized (this) {
+                            this.notify();
+                        }
+
+                        // I'm not sure why this is being done.
+                        if (TuningProfile.isTuningProfile(uri)) {
+                            Log.logEntry(Log.SEV_DEBUG, CORE,
+                                         "Disabling this I/O thread");
+                            Session.this.disableIO();
+                        }
                     } catch (Exception x) {
                         throw new BEEPException(x.getMessage());
                     }
@@ -1728,8 +1688,8 @@ public abstract class Session {
             channels.remove(channel.getNumberAsString());
 
             // release the block waiting for the channel to start or close
-            synchronized (channel) {
-                channel.notify();
+            synchronized (this) {
+                this.notify();
             }
         }
 
@@ -1768,7 +1728,18 @@ public abstract class Session {
                     Log.logEntry(Log.SEV_DEBUG, CORE,
                                  "Received an OK for channel close");
                     channel.setErrorMessage(null);
-                    Session.this.receiveCloseChannelResultOk(channel);
+
+                    // @todo we should fire an event instead.
+                    // set the state
+                    channel.setState(Channel.STATE_CLOSING);
+                    channels.remove(channel.getNumberAsString());
+                    channel.setState(Channel.STATE_CLOSED);
+
+                    // release the block waiting for the channel to
+                    // start or close
+                    synchronized (this) {
+                        this.notify();
+                    }
                 } else {
                     throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
                 }
@@ -1802,8 +1773,8 @@ public abstract class Session {
             channels.remove(channel.getNumberAsString());
 
             // release the block waiting for the channel to start or close
-            synchronized (channel) {
-                channel.notify();
+            synchronized (this) {
+                this.notify();
             }
         }
 

@@ -1,13 +1,12 @@
-
 /*
- * SharedChannel.java            $Revision: 1.3 $ $Date: 2001/07/03 20:51:28 $
+ * SharedChannel.java            $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
  *
- * You may obtain a copy of the License at http://www.invisible.net/
+ * You may obtain a copy of the License at http://www.beepcore.org/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License
@@ -21,10 +20,10 @@ package org.beepcore.beep.lib;
 import org.beepcore.beep.core.BEEPError;
 import org.beepcore.beep.core.BEEPException;
 import org.beepcore.beep.core.Channel;
-import org.beepcore.beep.core.DataListener;
-import org.beepcore.beep.core.DataStream;
 import org.beepcore.beep.core.Message;
+import org.beepcore.beep.core.MessageListener;
 import org.beepcore.beep.core.MessageStatus;
+import org.beepcore.beep.core.OutputDataStream;
 import org.beepcore.beep.core.ReplyListener;
 import org.beepcore.beep.core.Session;
 
@@ -44,7 +43,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/07/03 20:51:28 $
+ * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
  */
 public class SharedChannel extends Channel {
 
@@ -64,7 +63,7 @@ public class SharedChannel extends Channel {
     SharedChannel(Channel channel, ChannelPool pool)
     {
         super(channel.getProfile(), String.valueOf(channel.getNumber()),
-              channel.getDataListener(), channel.getSession());
+              channel.getMessageListener(), channel.getSession());
 
         this.channel = channel;
         this.pool = pool;
@@ -88,29 +87,6 @@ public class SharedChannel extends Channel {
     }
 
     /**
-     * Send a message of type ANS. Sends <code>stream</code> as message's
-     * payload.
-     * An ANS type message is one of many to be sent in response and must be
-     * terminated with a NUL.
-     *
-     * @param stream <code>DataStream</code> to send.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     * @see #sendNUL
-     *
-     * @return MessageStutas Can be queried to get status information about the
-     * message.
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-    public MessageStatus sendANS(DataStream stream) throws BEEPException
-    {
-        return channel.sendANS(stream);
-    }
-
-    /**
      * Send a message of type MSG. Sends <code>stream</code> as message's
      * payload.
      * Note: If the stream is not complete, then the send will block
@@ -127,108 +103,11 @@ public class SharedChannel extends Channel {
      * @throws BEEPException
      * @deprecated
      */
-    public MessageStatus sendMSG(DataStream stream, ReplyListener replyListener)
+    public MessageStatus sendMSG(OutputDataStream stream,
+                                 ReplyListener replyListener)
             throws BEEPException
     {
         return channel.sendMSG(stream, replyListener);
-    }
-
-    /**
-     * Send a NUL message type to terminate a sequence of ANSs.
-     * Note: If the stream is not complete, then the send will block
-     * until it is finished.
-     *
-     * @return MessageStutas Can be queried to get status information about the
-     * message.
-     *
-     * @see MessageStatus
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-    public MessageStatus sendNUL() throws BEEPException
-    {
-        return channel.sendNUL();
-    }
-
-    /**
-     * Send a message of type RPY. Sends <code>stream</code> as message's
-     * payload.
-     * Note: If the stream is not complete, then the send will block
-     * until it is finished (a <code>read</code> returns a -1).
-     *
-     * @param stream <code>DataStream</code> that is read to send data.
-     *
-     * @return MessageStutas Can be queried to get status information about the
-     * message.
-     *
-     * @see DataStream
-     * @see MessageStatus
-     *
-     * @throws BEEPException
-     * @deprecated
-     */
-    public MessageStatus sendRPY(DataStream stream) throws BEEPException
-    {
-        return channel.sendRPY(stream);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param error Error to send in the form of <code>BEEPError</code>.
-     *
-     * @see BEEPError
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(BEEPError error) throws BEEPException
-    {
-        return channel.sendERR(error);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(int code, String diagnostic)
-        throws BEEPException
-    {
-        return channel.sendERR(code, diagnostic);
-    }
-
-    /**
-     * Sends a message of type ERR.
-     *
-     * @param code <code>code</code> attibute in <code>error</code> element.
-     * @param diagnostic Message for <code>error</code> element.
-     * @param xmlLang <code>xml:lang</code> attibute in <code>error</code>
-     *                element.
-     *
-     * @see MessageStatus
-     *
-     * @return MessageStatus
-     *
-     * @throws BEEPException if an error is encoutered.
-     * @deprecated
-     */
-    public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
-        throws BEEPException
-    {
-        return channel.sendERR(code, diagnostic, xmlLang);
     }
 
     /**
@@ -238,9 +117,9 @@ public class SharedChannel extends Channel {
      * @param ml A listener of type <code>DataListener</code>
      *
      */
-    public void setDataListener(DataListener dl)
+    public MessageListener setMessageListener(MessageListener dl)
     {
-        channel.setDataListener(dl);
+        return channel.setMessageListener(dl);
     }
 
     public void setReceiveBufferSize( int size ) throws BEEPException
@@ -258,9 +137,9 @@ public class SharedChannel extends Channel {
         return channel.getBufferUsed();
     }
 
-    public DataListener getDataListener()
+    public MessageListener getMessageListener()
     {
-        return channel.getDataListener();
+        return channel.getMessageListener();
     }
 
     public boolean getNotifyMessageListenerOnFirstFrame()
@@ -313,7 +192,7 @@ public class SharedChannel extends Channel {
      * @throws BEEPException
      *
      */
-    public Reply sendRequest(DataStream ds) throws BEEPException
+    public Reply sendRequest(OutputDataStream ds) throws BEEPException
     {
         Reply r = new Reply();
         channel.sendMSG(ds, r);

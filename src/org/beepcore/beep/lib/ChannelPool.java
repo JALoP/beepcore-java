@@ -1,6 +1,6 @@
 
 /*
- * ChannelPool.java            $Revision: 1.3 $ $Date: 2001/07/18 21:03:41 $
+ * ChannelPool.java            $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -19,7 +19,7 @@ package org.beepcore.beep.lib;
 
 
 import org.beepcore.beep.core.BEEPException;
-import org.beepcore.beep.core.DataListener;
+import org.beepcore.beep.core.MessageListener;
 import org.beepcore.beep.core.Session;
 
 import java.util.LinkedList;
@@ -41,7 +41,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/07/18 21:03:41 $
+ * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
  */
 public class ChannelPool {
 
@@ -154,7 +154,7 @@ public class ChannelPool {
      *
      * @throws BEEPException
      */
-    synchronized public SharedChannel getSharedChannel(String profile, DataListener listener)
+    synchronized public SharedChannel getSharedChannel(String profile, MessageListener listener)
             throws BEEPException
     {
         SharedChannel sharedCh = null;

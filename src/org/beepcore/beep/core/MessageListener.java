@@ -1,5 +1,5 @@
 /*
- * MessageListener.java $Revision: 1.3 $ $Date: 2001/05/10 04:43:52 $
+ * MessageListener.java $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -27,9 +27,9 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/05/10 04:43:52 $
+ * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
  */
-public interface MessageListener extends DataListener {
+public interface MessageListener {
 
     /**
      * Receives a BEEP message of type MSG.

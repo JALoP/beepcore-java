@@ -1,6 +1,5 @@
-
 /*
- * MessageStatus.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * MessageStatus.java            $Revision: 1.2 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,7 +23,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision, $Date: 2001/10/31 00:32:37 $
  */
 public class MessageStatus {
 
@@ -45,28 +44,62 @@ public class MessageStatus {
 
     /** Status of message. */
     private int messageStatus = MESSAGE_STATUS_UNK;
-    private Message message;
-    private FrameListener frameListener;
+    private Channel channel;
+    private int messageType;
+    private int msgno;
+    private int ansno;
+    private OutputDataStream data;
     private ReplyListener replyListener;
 
-    MessageStatus(Message message)
+    MessageStatus(Channel channel, int messageType, int msgno,
+                  OutputDataStream data)
     {
-        this.messageStatus = MESSAGE_STATUS_UNK;
-        this.message = message;
+        this(channel, messageType, msgno, data, null);
     }
 
-    MessageStatus(Message message, ReplyListener replyListener)
+    MessageStatus(Channel channel, int messageType, int msgno,
+                  OutputDataStream data, ReplyListener replyListener)
+    {
+        this(channel, messageType, msgno, -1, data, replyListener);
+    }
+
+    MessageStatus(Channel channel, int messageType, int msgno, int ansno,
+                  OutputDataStream data, ReplyListener replyListener)
     {
         this.messageStatus = MESSAGE_STATUS_UNK;
-        this.message = message;
+        this.channel = channel;
+        this.messageType = messageType;
+        this.msgno = msgno;
+        this.ansno = ansno;
+        this.data = data;
         this.replyListener = replyListener;
     }
 
-    MessageStatus(Message message, FrameListener frameListener)
+    /**
+     * Returns the answer number.
+     *
+     */
+    public int getAnsno()
     {
-        this.messageStatus = MESSAGE_STATUS_UNK;
-        this.message = message;
-        this.frameListener = frameListener;
+        return this.ansno;
+    }
+
+    /**
+     * Returns the channel.
+     *
+     */
+    public Channel getChannel()
+    {
+        return this.channel;
+    }
+
+    /**
+     * Returns the message data.
+     *
+     */
+    public OutputDataStream getMessageData()
+    {
+        return this.data;
     }
 
     /**
@@ -79,12 +112,17 @@ public class MessageStatus {
     }
 
     /**
-     * Returns the message status.
+     * Returns the message number.
      *
      */
-    public Message getMessage()
+    public int getMsgno()
     {
-        return this.message;
+        return this.msgno;
+    }
+
+    int getMessageType()
+    {
+        return this.messageType;
     }
 
     /**
@@ -107,15 +145,5 @@ public class MessageStatus {
     ReplyListener getReplyListener()
     {
         return this.replyListener;
-    }
-
-    /**
-     * Method getFrameListener
-     *
-     *
-     */
-    FrameListener getFrameListener()
-    {
-        return this.frameListener;
     }
 }

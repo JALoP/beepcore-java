@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.9 $ $Date: 2001/07/27 06:11:54 $
+ * Frame.java            $Revision: 1.10 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 
+import org.beepcore.beep.util.BufferSegment;
 import org.beepcore.beep.util.Log;
 
 /**
@@ -36,7 +37,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2001/07/27 06:11:54 $
+ * @version $Revision: 1.10 $, $Date: 2001/10/31 00:32:37 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -99,7 +100,7 @@ public class Frame {
     /**
      * The payload of a BEEP message.
      */
-    private BufferSegment payload;
+    private LinkedList payload = new LinkedList();
 
     /**
      * Initializes a new <code>Frame</code> representing a BEEP ANS frame.
@@ -117,18 +118,18 @@ public class Frame {
      *
      * @see BufferSegment
      */
-    Frame(int messageType, Channel channel, int msgno, boolean last,
-          long seqno, int ansno, BufferSegment payload)
-    {
-        this.messageType = messageType;
-        this.channel = channel;
-        this.msgno = msgno;
-        this.seqno = seqno;
-        this.ansno = ansno;
-        this.payload = payload;
-        this.size = payload.length - payload.offset;
-        this.last = last;
-    }
+//     Frame(int messageType, Channel channel, int msgno, boolean last,
+//           long seqno, int ansno, BufferSegment payload)
+//     {
+//         this.messageType = messageType;
+//         this.channel = channel;
+//         this.msgno = msgno;
+//         this.seqno = seqno;
+//         this.ansno = ansno;
+//         this.payload.add(payload);
+//         this.size = payload.getLength() - payload.getOffset();
+//         this.last = last;
+//     }
 
     Frame(int messageType, Channel channel, int msgno, boolean last,
           long seqno, int size, int ansno)
@@ -140,7 +141,7 @@ public class Frame {
         this.seqno = seqno;
         this.size = size;
         this.ansno = ansno;
-        this.payload = null;
+        //        this.payload = null;
     }
 
     /**
@@ -149,7 +150,7 @@ public class Frame {
      */
     public void addPayload(BufferSegment buf)
     {
-        this.payload = buf;
+        this.payload.add(buf);
     }
 
     /**
@@ -159,13 +160,16 @@ public class Frame {
      */
     public Iterator getBytes()
     {
-        LinkedList l = new LinkedList();
-        l.add(new BufferSegment(buildHeader()));
-        if (this.payload != null) {
-            l.add(this.payload);
+        this.size = 0;
+
+        Iterator i = this.payload.iterator();
+        while (i.hasNext()) {
+            this.size += ((BufferSegment) i.next()).getLength();
         }
-        l.add(new BufferSegment(TRAILER.getBytes()));
-        return l.iterator();
+
+        this.payload.addFirst(new BufferSegment(buildHeader()));
+        this.payload.addLast(new BufferSegment(TRAILER.getBytes()));
+        return this.payload.iterator();
     }
 
     /**
@@ -174,9 +178,9 @@ public class Frame {
      *
      * @see BufferSegment
      */
-    public BufferSegment getPayload()
+    public Iterator getPayload()
     {
-        return this.payload;
+        return this.payload.iterator();
     }
 
     /**
@@ -245,6 +249,11 @@ public class Frame {
     public boolean isLast()
     {
         return this.last;
+    }
+
+    void setLast()
+    {
+        this.last = true;
     }
 
     /**
@@ -356,54 +365,6 @@ public class Frame {
 
         return new Frame(msgType, session.getValidChannel(channelNum), msgNum,
                          last, seqNum, size, ansNum);
-    }
-
-    /**
-     * A <code>BufferSegment</code> represents a BEEP Frame payload and holds
-     * the BEEP Frames's Header, Trailer and the message payload.
-     *
-     * It contains a byte array an offset into the array and the
-     * length from the offset.
-     *
-     * @author Eric Dixon
-     * @author Huston Franklin
-     * @author Jay Kint
-     * @author Scott Pead
-     * @version $Revision: 1.9 $, $Date: 2001/07/27 06:11:54 $
-     */
-    public static class BufferSegment {
-
-        public byte[] data;    // the byte array
-        public int offset;     // starting offset
-        public int length;     // number of bytes from offset
-
-        /**
-         * Constructor BufferSegment
-         *
-         * @param data A byte array containing a BEEP Frame payload.
-         */
-        public BufferSegment(byte[] data)
-        {
-            this.data = data;
-            this.offset = 0;
-            this.length = data.length;
-        }
-
-        /**
-         * Constructor BufferSegment
-         *
-         * @param data A byte array containing a BEEP Frame payload.
-         * @param offset Indicates the begining position of the BEEP Frame
-         * payload in the byte array <code>data</code>.
-         * @param length Number of valid bytes in the byte array starting from
-         * <code>offset</code>.
-         */
-        public BufferSegment(byte[] data, int offset, int length)
-        {
-            this.data = data;
-            this.offset = offset;
-            this.length = length;
-        }
     }
 
     private static class MessageType {

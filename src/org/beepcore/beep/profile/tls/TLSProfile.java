@@ -1,6 +1,6 @@
 
 /*
- * TLSProfile.java  $Revision: 1.11 $ $Date: 2001/07/12 07:09:10 $
+ * TLSProfile.java  $Revision: 1.12 $ $Date: 2001/10/31 00:32:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -94,8 +94,18 @@ public abstract class TLSProfile extends TuningProfile implements Profile {
      */
     public static TLSProfile getDefaultInstance() throws BEEPException
     {
-        return
+        try {
+            return
             getInstance("org.beepcore.beep.profile.tls.ptls.TLSProfilePureTLS");
+        } catch (NoClassDefFoundError e) {
+        }
+
+        try {
+            return
+            getInstance("org.beepcore.beep.profile.tls.jsse.TLSProfileJSSE");
+        } catch (NoClassDefFoundError e) {
+            throw new BEEPException("TLS not installed");
+        }
     }
 
     /**

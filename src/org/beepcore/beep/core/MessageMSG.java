@@ -1,5 +1,5 @@
 /*
- * MessageMSG.java  $Revision: 1.3 $ $Date: 2001/05/10 04:43:52 $
+ * MessageMSG.java  $Revision: 1.4 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,21 +24,21 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/05/10 04:43:52 $
+ * @version $Revision: 1.4 $, $Date: 2001/10/31 00:32:37 $
  *
  */
 class MessageMSG extends Message
 {
-    MessageMSG(Channel channel, int msgno, DataStream data) {
+    MessageMSG(Channel channel, int msgno, InputDataStream data) {
         super(channel, msgno, data, MESSAGE_TYPE_MSG);
     }
 
     /**
      * Sends a message of type ANS.
      *
-     * @param stream Data to send in the form of <code>DataStream</code>.
+     * @param stream Data to send in the form of <code>OutputDataStream</code>.
      *
-     * @see DataStream
+     * @see OutputDataStream
      * @see MessageStatus
      * @see #sendNUL
      *
@@ -46,19 +46,21 @@ class MessageMSG extends Message
      *
      * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendANS(DataStream stream) throws BEEPException
+    public MessageStatus sendANS(OutputDataStream stream) throws BEEPException
     {
-        Message m;
+        MessageStatus m;
 
         synchronized (this) {
             // reusing ansno (initialized to -1) from Message since
             // this is a MSG
             ++ansno;
 
-            m = new Message(this.channel, this.msgno, this.ansno, stream);
+            m = new MessageStatus(this.channel, this.msgno, this.ansno,
+                                  stream);
         }
 
-        return this.channel.sendMessage(m);
+        this.channel.sendMessage(m);
+        return m;
     }
 
     /**
@@ -75,10 +77,12 @@ class MessageMSG extends Message
      */
     public MessageStatus sendERR(BEEPError error) throws BEEPException
     {
-        DataStream stream = new StringDataStream(error.createErrorMessage());
-        Message m =
-            new Message(this.channel, this.msgno, stream, MESSAGE_TYPE_ERR);
-        return this.channel.sendMessage(m);
+        OutputDataStream stream =
+            new StringDataStream(error.createErrorMessage());
+        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
+                                            this.msgno, stream);
+        this.channel.sendMessage(m);
+        return m;
     }
 
     /**
@@ -97,9 +101,11 @@ class MessageMSG extends Message
         throws BEEPException
     {
         String error = BEEPError.createErrorMessage(code, diagnostic);
-        Message m = new Message(this.channel, this.msgno,
-                                new StringDataStream(error), MESSAGE_TYPE_ERR);
-        return this.channel.sendMessage(m);
+        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
+                                            this.msgno,
+                                            new StringDataStream(error));
+        this.channel.sendMessage(m);
+        return m;
     }
 
     /**
@@ -120,9 +126,11 @@ class MessageMSG extends Message
         throws BEEPException
     {
         String error = BEEPError.createErrorMessage(code, diagnostic, xmlLang);
-        Message m = new Message(this.channel, this.msgno,
-                                new StringDataStream(error), MESSAGE_TYPE_ERR);
-        return this.channel.sendMessage(m);
+        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_ERR,
+                                            this.msgno,
+                                            new StringDataStream(error));
+        this.channel.sendMessage(m);
+        return m;
     }
 
     /**
@@ -137,27 +145,29 @@ class MessageMSG extends Message
      */
     public MessageStatus sendNUL() throws BEEPException
     {
-        Message m =
-            new Message(this.channel, this.msgno, null, MESSAGE_TYPE_NUL);
-        return this.channel.sendMessage(m);
+        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_NUL,
+                                            this.msgno, null);
+        this.channel.sendMessage(m);
+        return m;
     }
 
     /**
      * Sends a message of type RPY.
      *
-     * @param stream Data to send in the form of <code>DataStream</code>.
+     * @param stream Data to send in the form of <code>OutputDataStream</code>.
      *
-     * @see DataStream
+     * @see OutputDataStream
      * @see MessageStatus
      *
      * @return MessageStatus
      *
      * @throws BEEPException if an error is encoutered.
      */
-    public MessageStatus sendRPY(DataStream stream) throws BEEPException
+    public MessageStatus sendRPY(OutputDataStream stream) throws BEEPException
     {
-        Message m =
-            new Message(this.channel, this.msgno, stream, MESSAGE_TYPE_RPY);
-        return this.channel.sendMessage(m);
+        MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_RPY,
+                                            this.msgno, stream);
+        this.channel.sendMessage(m);
+        return m;
     }
 }

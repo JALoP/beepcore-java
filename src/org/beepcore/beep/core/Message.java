@@ -1,5 +1,5 @@
 /*
- * Message.java            $Revision: 1.5 $ $Date: 2001/05/10 04:43:52 $
+ * Message.java            $Revision: 1.6 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import java.lang.IndexOutOfBoundsException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/05/10 04:43:52 $
+ * @version $Revision: 1.6 $, $Date: 2001/10/31 00:32:37 $
  */
 public class Message {
 
@@ -87,11 +87,12 @@ public class Message {
     private boolean notified = false;
 
     /**
-     * Payload of the <code>Message</code> stored as a <code>DataStream</code>
+     * Payload of the <code>Message</code> stored as a
+     * <code>InputDataStream</code>
      *
-     * @see org.beepcore.beep.core.DataStream
+     * @see org.beepcore.beep.core.InputDataStream
      */
-    private DataStream data;
+    private InputDataStream data;
 
     /**
      * Creates a new <code>Message</code>.
@@ -99,14 +100,14 @@ public class Message {
      * @param channel <code>Channel</code> to which this <code>Message</code>
      *    belongs.
      * @param msgno Message number of the BEEP message.
-     * @param data  <code>DataStream</code> containing the payload of the
+     * @param data  <code>InputDataStream</code> containing the payload of the
      *    message.
      * @param messageType Message type of the BEEP message.
      *
-     * @see DataStream
+     * @see InputDataStream
      * @see Channel
      */
-    Message(Channel channel, int msgno, DataStream data, int messageType)
+    Message(Channel channel, int msgno, InputDataStream data, int messageType)
     {
         this.channel = channel;
         this.msgno = msgno;
@@ -121,13 +122,13 @@ public class Message {
      * @param channel <code>Channel</code> to which the message belongs.
      * @param msgno Message number of the message.
      * @param ansno
-     * @param data  <code>DataStream</code> contains the payload of the
+     * @param data  <code>InputDataStream</code> contains the payload of the
      *    message.
      *
      * @see Channel
-     * @see DataStream
+     * @see InputDataStream
      */
-    Message(Channel channel, int msgno, int ansno, DataStream data)
+    Message(Channel channel, int msgno, int ansno, InputDataStream data)
     {
         this(channel, msgno, data, MESSAGE_TYPE_ANS);
 
@@ -135,11 +136,11 @@ public class Message {
     }
 
     /**
-     * Returns <code>DataStream</code> belonging to <code>Message</code>.
+     * Returns <code>InputDataStream</code> belonging to <code>Message</code>.
      *
-     * @see DataStream
+     * @see InputDataStream
      */
-    public DataStream getDataStream()
+    public InputDataStream getDataStream()
     {
         return this.data;
     }
@@ -182,9 +183,9 @@ public class Message {
     /**
      * Sends a message of type ANS.
      *
-     * @param stream Data to send in the form of <code>DataStream</code>.
+     * @param stream Data to send in the form of <code>OutputDataStream</code>.
      *
-     * @see DataStream
+     * @see OutputDataStream
      * @see MessageStatus
      * @see #sendNUL
      *
@@ -193,7 +194,7 @@ public class Message {
      * @throws BEEPException if an error is encoutered or if messageType is
      *         not MESSAGE_TYPE_MSG.
      */
-    public MessageStatus sendANS(DataStream stream) throws BEEPException
+    public MessageStatus sendANS(OutputDataStream stream) throws BEEPException
     {
         throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
     }
@@ -275,9 +276,9 @@ public class Message {
     /**
      * Sends a message of type RPY.
      *
-     * @param stream Data to send in the form of <code>DataStream</code>.
+     * @param stream Data to send in the form of <code>OutputDataStream</code>.
      *
-     * @see DataStream
+     * @see OutputDataStream
      * @see MessageStatus
      *
      * @return MessageStatus
@@ -285,7 +286,7 @@ public class Message {
      * @throws BEEPException if an error is encoutered or if messageType is
      *         not MESSAGE_TYPE_MSG.
      */
-    public MessageStatus sendRPY(DataStream stream) throws BEEPException
+    public MessageStatus sendRPY(OutputDataStream stream) throws BEEPException
     {
         throw new BEEPException(NOT_MESSAGE_TYPE_MSG);
     }

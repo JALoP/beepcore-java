@@ -1,5 +1,5 @@
 /*
- * ProfileRegistry.java  $Revision: 1.6 $ $Date: 2001/07/30 13:00:07 $
+ * ProfileRegistry.java  $Revision: 1.7 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/07/30 13:00:07 $
+ * @version $Revision, $Date: 2001/10/31 00:32:37 $
  */
 public class ProfileRegistry implements Cloneable {
 
@@ -162,7 +162,7 @@ public class ProfileRegistry implements Cloneable {
         return ((InternalProfile) profileListeners.get(uri)).listener;
     }
 
-    public SessionTuningProperties getSessionProperties(String uri)
+    SessionTuningProperties getSessionProperties(String uri)
     {
         return ((InternalProfile) profileListeners.get(uri)).tuning;
     }
@@ -239,7 +239,7 @@ public class ProfileRegistry implements Cloneable {
         return this.localize;
     }
 
-    public byte[] getGreeting(Session session)
+    byte[] getGreeting(Session session)
     {
         int bufferSize = FRAGMENT_GREETING_LENGTH;
         int profileCount = 0;

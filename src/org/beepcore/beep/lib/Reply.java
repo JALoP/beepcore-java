@@ -1,6 +1,6 @@
 
 /*
- * Reply.java            $Revision: 1.4 $ $Date: 2001/04/26 18:33:14 $
+ * Reply.java            $Revision: 1.5 $ $Date: 2001/10/31 00:32:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -46,7 +46,7 @@ import org.beepcore.beep.core.ReplyListener;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/26 18:33:14 $
+ * @version $Revision, $Date: 2001/10/31 00:32:37 $
  */
 public class Reply implements ReplyListener {
 
@@ -78,11 +78,11 @@ public class Reply implements ReplyListener {
      */
     synchronized public Message getNextReply() throws BEEPInterruptedException
     {
-        if (this.complete) {
-            throw new NoSuchElementException();
-        }
-
         if (this.replies.size() == 0) {
+            if (this.complete) {
+                throw new NoSuchElementException();
+            }
+
             try {
                 this.wait();
             } catch (InterruptedException x) {
