@@ -1,6 +1,6 @@
 
 /*
- * TLSProfile.java            $Revision: 1.2 $ $Date: 2001/04/09 13:36:56 $
+ * TLSProfile.java            $Revision: 1.3 $ $Date: 2001/04/10 14:42:55 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -61,7 +61,7 @@ public class TLSProfile extends TuningProfile
     public static final String PROCEED2 = "<proceed />";
     public static final String READY1 = "<ready/>";
     public static final String READY2 = "<ready />";
-    public static final String URI = "http://iana.org/beep/TLS";
+    public static final String URI = "http://xml.resource.org/profiles/TLS";
 
     // error messages thrown in exceptions
     static final String ERR_SERVER_MUST_HAVE_KEY =
@@ -553,7 +553,7 @@ public class TLSProfile extends TuningProfile
      * anonymous connection with a peer that doesn't support an
      * anonymous cipher suite).  
 	 */
-    public static Session authenticateTLS(TCPSession session)
+    public static Session startTLS(TCPSession session)
             throws BEEPException
     {
         /*
@@ -563,9 +563,9 @@ public class TLSProfile extends TuningProfile
         }
         */
 
-        Channel ch = session.startChannel(TLSProfile.URI, false, READY2,
-                                          null);
         TLSProfile tempProfile = new TLSProfile();
+        Channel ch = tempProfile.startChannel(session, TLSProfile.URI, false, READY2,
+                                          null);
 
         // See if we got start data back
         String data = ch.getStartData();
@@ -578,7 +578,7 @@ public class TLSProfile extends TuningProfile
             throw new BEEPException(ERR_EXPECTED_PROCEED);
         }
 
-        // get the socket and reset it to TLS
+        // Freeze IO and get the socket and reset it to TLS
         Socket oldSocket = session.getSocket();
         SSLSocket newSocket = null;
         TLSHandshake l = tempProfile.new TLSHandshake();
@@ -621,8 +621,7 @@ public class TLSProfile extends TuningProfile
         // swap it out for the new one with TLS enabled.
         if (tempProfile.abortSession) {
             session.close();
-
-            throw new BEEPException(ERR_TLS_NO_AUTHENTICATION);
+            throw new BEEPException( ERR_TLS_NO_AUTHENTICATION );
         } else {
             return reset(session, generateCredential(), l.cred,
                          session.getProfileRegistry(), newSocket);

@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * TuningProfile.java            $Revision: 1.2 $ $Date: 2001/04/10 14:42:55 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -282,5 +282,19 @@ public abstract class TuningProfile extends ProfileImpl
         }
 
         return false;
+    }
+
+    public Channel startChannel(Session session, String profile,
+                                boolean base64Encoding, String data,
+                                DataListener listener)
+            throws BEEPException, BEEPError
+    {
+        StartChannelProfile p = new StartChannelProfile(profile,
+                                                        base64Encoding, data);
+        LinkedList l = new LinkedList();
+
+        l.add(p);
+
+        return session.startChannel(l, listener, true);
     }
 }

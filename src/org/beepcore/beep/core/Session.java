@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.3 $ $Date: 2001/04/09 13:29:04 $
+ * Session.java            $Revision: 1.4 $ $Date: 2001/04/10 14:42:54 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -53,7 +53,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/09 13:29:04 $
+ * @version $Revision: 1.4 $, $Date: 2001/04/10 14:42:54 $
  *
  * @see Channel
  */
@@ -404,7 +404,7 @@ public abstract class Session {
 
         l.add(p);
 
-        return startChannel(l, listener);
+        return startChannel(l, listener, false);
     }
 
     /**
@@ -437,8 +437,9 @@ public abstract class Session {
 
         l.add(p);
 
-        return startChannel(l, listener);
+        return startChannel(l, listener, false);
     }
+
 
     /**
      * Sends a start channel request using the given list of profiles.
@@ -458,6 +459,16 @@ public abstract class Session {
      * @see DataListener
      */
     public Channel startChannel(Collection profiles, DataListener listener)
+        throws BEEPException, BEEPError
+    {
+        return startChannel(profiles, listener, false);
+    }
+
+    /**
+     * You should not see this.
+     */
+    Channel startChannel(Collection profiles, DataListener listener,
+                                boolean disableIO) 
             throws BEEPException, BEEPError
     {
 
@@ -512,9 +523,9 @@ public abstract class Session {
                                   startBuffer.toString());
 
         // Tell Channel Zero to start us up
-        this.zero.sendMSG(ds, new StartReplyListener(ch));
+        this.zero.sendMSG(ds, new StartReplyListener(ch, disableIO));
         waitForResult(ch, Channel.STATE_UNINITIALISED);
-
+        
         return ch;
     }
 
@@ -1577,16 +1588,22 @@ public abstract class Session {
     }
 
     private class StartReplyListener implements ReplyListener {
-        Channel channel;
 
-        StartReplyListener(Channel channel)
+        Channel channel;
+        boolean disableIO;
+
+        StartReplyListener(Channel channel, boolean disableIO)
         {
             this.channel = channel;
+            this.disableIO = disableIO;
         }
 
         public void receiveRPY(Message message)
         {
             try {
+                if (disableIO) {
+                    Session.this.disableIO();
+                }
                 Element topElement = processMessage(message);
 
                 // is this RPY a <greeting>
@@ -1628,6 +1645,7 @@ public abstract class Session {
                         channel.setErrorMessage(null);
                         Session.this.receiveStartChannelResultOk(channel,
                                                                  data);
+                        
                     } catch (Exception x) {
                         throw new BEEPException(x.getMessage());
                     }
