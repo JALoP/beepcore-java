@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.7 $ $Date: 2001/05/25 15:27:10 $
+ * Frame.java            $Revision: 1.8 $ $Date: 2001/05/25 15:28:30 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/05/25 15:27:10 $
+ * @version $Revision, $Date: 2001/05/25 15:28:30 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -347,7 +347,7 @@ public class Frame {
         }
 
         int ansNum = -1;
-        if (count == 8) {
+        if (count == 7) {
 
             // AnsNo
             ansNum = Integer.parseInt(st.nextToken());
@@ -368,7 +368,7 @@ public class Frame {
      * @author Huston Franklin
      * @author Jay Kint
      * @author Scott Pead
-     * @version $Revision: 1.7 $, $Date: 2001/05/25 15:27:10 $
+     * @version $Revision: 1.8 $, $Date: 2001/05/25 15:28:30 $
      */
     public static class BufferSegment {
 
