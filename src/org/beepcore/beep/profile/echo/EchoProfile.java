@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.12 $ $Date: 2001/11/25 08:38:42 $
+ * EchoProfile.java    $Revision: 1.13 $ $Date: 2002/01/15 16:14:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -33,7 +33,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.12 $, $Date: 2001/11/25 08:38:42 $
+ * @version $Revision: 1.13 $, $Date: 2002/01/15 16:14:38 $
  */
 public class EchoProfile
     implements Profile, StartChannelListener, MessageListener
@@ -68,42 +68,75 @@ public class EchoProfile
 
     public void receiveMSG(Message message) throws BEEPError
     {
-        new ReplyThread(message).start();
-    }
+        OutputDataStream data = new OutputDataStream();
+        InputDataStream ds = message.getDataStream();
 
-    private class ReplyThread extends Thread {
-        private Message message;
-
-        ReplyThread(Message message) {
-            this.message = message;
-        }
-
-        public void run() {
-            OutputDataStream data = new OutputDataStream();
-            InputDataStream ds = message.getDataStream();
-
-            while (ds.isComplete() == false || ds.availableSegment()) {
-                try {
-                    data.add(ds.waitForNextSegment());
-                } catch (InterruptedException e) {
-                    message.getChannel().getSession().terminate(e.getMessage());
-                    return;
-                }
-            }
-
-            data.setComplete();
-
+        while (true) {
             try {
-                message.sendRPY(data);
-            } catch (BEEPException e) {
-                try {
-                    message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                    "Error sending RPY");
-                } catch (BEEPException x) {
-                    message.getChannel().getSession().terminate(x.getMessage());
+                BufferSegment b = ds.waitForNextSegment();
+                if (b == null) {
+                    break;
                 }
-                return;
+                data.add(b);
+            } catch (InterruptedException e) {
+                throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                    "Error reading request");
             }
         }
+
+        data.setComplete();
+
+        try {
+            message.sendRPY(data);
+        } catch (BEEPException e) {
+            try {
+                throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+                                    "Error sending RPY");
+            } catch (BEEPException x) {
+                message.getChannel().getSession().terminate(x.getMessage());
+            }
+            return;
+        }
     }
+
+//      public void receiveMSG(Message message) throws BEEPError
+//      {
+//          new ReplyThread(message).start();
+//      }
+
+//      private class ReplyThread extends Thread {
+//          private Message message;
+
+//          ReplyThread(Message message) {
+//              this.message = message;
+//          }
+
+//          public void run() {
+//              OutputDataStream data = new OutputDataStream();
+//              InputDataStream ds = message.getDataStream();
+
+//              while (ds.isComplete() == false || ds.availableSegment()) {
+//                  try {
+//                      data.add(ds.waitForNextSegment());
+//                  } catch (InterruptedException e) {
+//                      message.getChannel().getSession().terminate(e.getMessage());
+//                      return;
+//                  }
+//              }
+
+//              data.setComplete();
+
+//              try {
+//                  message.sendRPY(data);
+//              } catch (BEEPException e) {
+//                  try {
+//                      message.sendERR(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
+//                                      "Error sending RPY");
+//                  } catch (BEEPException x) {
+//                      message.getChannel().getSession().terminate(x.getMessage());
+//                  }
+//                  return;
+//              }
+//          }
+//    }
 }
