@@ -1,5 +1,5 @@
 /*
- * SharedChannel.java            $Revision: 1.5 $ $Date: 2001/11/09 19:10:58 $
+ * SharedChannel.java            $Revision: 1.6 $ $Date: 2002/08/22 05:28:41 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import java.util.Date;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.5 $, $Date: 2001/11/09 19:10:58 $
+ * @version $Revision: 1.6 $, $Date: 2002/08/22 05:28:41 $
  */
 public class SharedChannel extends Channel {
 
@@ -63,7 +63,7 @@ public class SharedChannel extends Channel {
     SharedChannel(Channel channel, ChannelPool pool)
     {
         super(channel.getProfile(), String.valueOf(channel.getNumber()),
-              channel.getMessageListener(), channel.getSession());
+              channel.getMessageListener(), true, channel.getSession());
 
         this.channel = channel;
         this.pool = pool;
