@@ -1,5 +1,5 @@
 /*
- * AnonymousAuthenticator.java  $Revision: 1.6 $ $Date: 2001/05/23 16:39:36 $
+ * AnonymousAuthenticator.java  $Revision: 1.7 $ $Date: 2001/07/03 20:50:26 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -43,7 +43,7 @@ import org.beepcore.beep.profile.sasl.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/05/23 16:39:36 $
+ * @version $Revision: 1.7 $, $Date: 2001/07/03 20:50:26 $
  *
  */
 class AnonymousAuthenticator
@@ -329,9 +329,8 @@ class AnonymousAuthenticator
         {
             try
             {
-                profile.sendERR(new Blob(Blob.STATUS_ABORT,
-                                         s.getMessage()).toString(),
-                                channel);
+                profile.sendReply(new Blob(Blob.STATUS_ABORT, s.getMessage()),
+                                  channel);
             }
             catch(Exception t)
             {
