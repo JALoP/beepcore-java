@@ -1,5 +1,5 @@
 /*
- * Frame.java            $Revision: 1.8 $ $Date: 2001/05/25 15:28:30 $
+ * Frame.java            $Revision: 1.9 $ $Date: 2001/07/27 06:11:54 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,7 +26,8 @@ import java.util.StringTokenizer;
 import org.beepcore.beep.util.Log;
 
 /**
- * Frame encapsulates the MSG, RPY, ERR, ANS and NUL BEEP message types.
+ * Frame encapsulates a BEEP protocol frame for MSG, RPY, ERR, ANS and NUL
+ * BEEP message types.
  * Contains a the <code>Channel</code> this frame belongs to, the BEEP Frame
  * Payload which holds the BEEP Frames's Header, Trailer, and the message
  * payload.
@@ -35,7 +36,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/05/25 15:28:30 $
+ * @version $Revision: 1.9 $, $Date: 2001/07/27 06:11:54 $
  *
  * @see FrameDataStream
  * @see BufferSegment
@@ -368,7 +369,7 @@ public class Frame {
      * @author Huston Franklin
      * @author Jay Kint
      * @author Scott Pead
-     * @version $Revision: 1.8 $, $Date: 2001/05/25 15:28:30 $
+     * @version $Revision: 1.9 $, $Date: 2001/07/27 06:11:54 $
      */
     public static class BufferSegment {
 
