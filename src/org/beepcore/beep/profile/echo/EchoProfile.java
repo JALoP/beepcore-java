@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.3 $ $Date: 2001/04/13 04:16:42 $
+ * EchoProfile.java    $Revision: 1.4 $ $Date: 2001/04/26 16:31:25 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,9 +17,12 @@
 package org.beepcore.beep.profile.echo;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.beepcore.beep.core.*;
+import org.beepcore.beep.lib.MessageQueue;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.util.*;
 
@@ -31,14 +34,28 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/04/13 04:16:42 $
+ * @version $Revision: 1.4 $, $Date: 2001/04/26 16:31:25 $
  */
 public class EchoProfile
-    extends ProfileImpl implements StartChannelListener, MessageListener
+    implements Profile, StartChannelListener, FrameListener
 {
 
     public static final String ECHO_URI =
         "http://xml.resource.org/profiles/NULL/ECHO";
+
+    private ProfileConfiguration config;
+    private MessageQueue messages = new MessageQueue();
+
+    public void init(ProfileConfiguration config) throws BEEPException
+    {
+        this.config = config;
+    }
+
+    public ProfileConfiguration getConfiguration()
+    {
+        return this.config;
+    }
+
 
     public StartChannelListener getStartChannelListener()
     {
@@ -81,17 +98,58 @@ public class EchoProfile
     {
         Log.logEntry(Log.SEV_DEBUG, "EchoCCL CloseChannel Callback");
         channel.setDataListener(null);
+        channel.setAppData(null);
     }
 
-    public void receiveMSG(Message message) throws BEEPError
+    public void receiveFrame(Frame frame) throws BEEPException
     {
-        Log.logEntry(Log.SEV_DEBUG, "Received MSG Callback [ECHO]");
+        FrameDataStream ds =
+            (FrameDataStream) frame.getChannel().getAppData();
+
+        // The MessageType is guaranteed to be MSG since this
+        // peer won't be sending MSGs on a channel with this profile.
+
+        if (ds == null) {
+            ds = new FrameDataStream();
+            frame.getChannel().setAppData(ds);
+        }
+
+        ds.add(frame);
+
+        if (frame.isLast() == false) {
+            return;
+        }
+
+        frame.getChannel().setAppData(null);
 
         try {
-            message.getChannel().sendRPY(message.getDataStream());
-        } catch (BEEPException e) {
-            throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                "Error sending RPY");
+            InputStream is = ds.getInputStream();
+
+            byte buf[] = new byte[is.available()];
+
+            is.read(buf, 0, buf.length);
+
+            new ReplyThread(frame.getChannel(), new ByteDataStream(buf)).start();
+        } catch (IOException e) {
+            Log.logEntry(Log.SEV_ERROR, e);
+        }
+    }
+
+    private class ReplyThread extends Thread {
+        private Channel channel;
+        private DataStream reply;
+
+        ReplyThread(Channel channel, DataStream reply) {
+            this.channel = channel;
+            this.reply = reply;
+        }
+
+        public void run() {
+            try {
+                channel.sendRPY(reply);
+            } catch (BEEPException e) {
+                Log.logEntry(Log.SEV_ERROR, e);
+            }
         }
     }
 }
