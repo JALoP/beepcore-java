@@ -1,5 +1,5 @@
 /*
- * TCPSession.java  $Revision: 1.13 $ $Date: 2001/10/31 00:32:38 $
+ * TCPSession.java  $Revision: 1.14 $ $Date: 2001/11/08 03:59:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.13 $, $Date: 2001/10/31 00:32:38 $
+ * @version $Revision: 1.14 $, $Date: 2001/11/08 03:59:37 $
  */
 public class TCPSession extends Session {
 
@@ -68,6 +68,10 @@ public class TCPSession extends Session {
     private static final int SEQ_LENGTH = SEQ_PREFIX.length();
     private static final String TCP_MAPPING = "TCP Mapping";
     private static final String CRLF = "\r\n";
+
+    private static final int CHANNEL_START_ODD = 1;
+    private static final int CHANNEL_START_EVEN = 2;
+
 
     // Instance Data
     // @todo had these per stack, but have
@@ -108,9 +112,9 @@ public class TCPSession extends Session {
      *
      * @throws BEEPException
      */
-    TCPSession(Socket sock, ProfileRegistry registry, int firstChannel,
-               SessionCredential localCred, SessionCredential peerCred,
-               SessionTuningProperties tuning)
+    private TCPSession(Socket sock, ProfileRegistry registry, int firstChannel,
+                       SessionCredential localCred, SessionCredential peerCred,
+                       SessionTuningProperties tuning)
             throws BEEPException
     {
         super(registry, firstChannel, localCred, peerCred, tuning);
@@ -130,6 +134,42 @@ public class TCPSession extends Session {
             Log.logEntry(Log.SEV_DEBUG,
                          "Socket doesn't support setting receive buffer size");
         }
+    }
+
+    /**
+     * Method initiate
+     *
+     *
+     * @param sock
+     * @param registry
+     *
+     * @throws BEEPException
+     *
+     */
+    public static TCPSession createInitiator(Socket sock,
+                                             ProfileRegistry registry)
+            throws BEEPException
+    {
+        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
+                              CHANNEL_START_ODD, null, null, null);
+    }
+
+    /**
+     * Method listen
+     *
+     *
+     * @param sock
+     * @param registry
+     *
+     * @throws BEEPException
+     *
+     */
+    public static TCPSession createListener(Socket sock,
+                                            ProfileRegistry registry)
+            throws BEEPException
+    {
+        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
+                              CHANNEL_START_EVEN, null, null, null);
     }
 
     // Overrides method in Session
@@ -278,11 +318,11 @@ public class TCPSession extends Session {
         }
 
         if (isInitiator()) {
-            return TCPSessionCreator.initiate(s, reg, localCred, peerCred,
-                                              tuning);
+            return new TCPSession(s, reg, CHANNEL_START_ODD,
+                                  localCred, peerCred, tuning);
         } else {
-            return TCPSessionCreator.listen(s, reg, localCred, peerCred,
-                                            tuning);
+            return new TCPSession(s, reg, CHANNEL_START_EVEN,
+                                  localCred, peerCred, tuning);
         }
     }
 

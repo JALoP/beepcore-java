@@ -1,5 +1,5 @@
 /*
- * Bing.java  $Revision: 1.6 $ $Date: 2001/10/31 16:15:47 $
+ * Bing.java  $Revision: 1.7 $ $Date: 2001/11/08 03:59:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -45,7 +45,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/10/31 16:15:47 $
+ * @version $Revision: 1.7 $, $Date: 2001/11/08 03:59:37 $
  */
 public class Bing {
 
@@ -61,10 +61,7 @@ public class Bing {
         // Initiate a session with the server
         Session session;
         try {
-            // a empty ProfileRegistry is used since this application
-            // isn't intended to listen for start channel requests.
-            session = TCPSessionCreator.initiate(host, port,
-                                                 new ProfileRegistry());
+            session = TCPSessionCreator.initiate(host, port);
         } catch (BEEPException e) {
             System.err.println("bing: Error connecting to " + host + ":" +
                                port + "\n\t" + e.getMessage());

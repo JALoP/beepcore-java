@@ -1,5 +1,5 @@
 /*
- * TCPSessionCreator.java  $Revision: 1.3 $ $Date: 2001/10/31 02:03:41 $
+ * TCPSessionCreator.java  $Revision: 1.4 $ $Date: 2001/11/08 03:59:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -50,7 +50,7 @@ import org.beepcore.beep.core.SessionTuningProperties;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/10/31 02:03:41 $
+ * @version $Revision: 1.4 $, $Date: 2001/11/08 03:59:37 $
  */
 public class TCPSessionCreator {
 
@@ -66,24 +66,26 @@ public class TCPSessionCreator {
     // Data
     private static Hashtable listenerSockets = null;
 
-    private static final int CHANNEL_START_ODD = 1;
-    private static final int CHANNEL_START_EVEN = 2;
-
     /**
      * Method initiate
      *
      *
-     * @param sock
+     * @param host
+     * @param port
      * @param registry
      *
      * @throws BEEPException
      *
      */
-    public static TCPSession initiate(Socket sock, ProfileRegistry registry)
+    public static TCPSession initiate(InetAddress host, int port)
             throws BEEPException
     {
-        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_ODD, null, null, null);
+        try {
+            return TCPSession.createInitiator(new Socket(host, port),
+                                              new ProfileRegistry());
+        } catch (IOException x) {
+            throw new BEEPException(x.getMessage());
+        }
     }
 
     /**
@@ -101,22 +103,34 @@ public class TCPSessionCreator {
                                       ProfileRegistry registry)
             throws BEEPException
     {
-
-        // Connect and create TCPSession with the socket
-        Socket socket;
         try {
-            socket = new Socket(host, port);
+            return TCPSession.createInitiator(new Socket(host, port),
+                                              registry);
         } catch (IOException x) {
             throw new BEEPException(x.getMessage());
         }
+    }
 
-        if (socket == null) {
-            throw new BEEPException(ERR_TCP_SOCKET_FAILURE);
+    /**
+     * Method initiate
+     *
+     *
+     * @param host
+     * @param port
+     * @param profiles
+     * @param ccls
+     *
+     * @throws BEEPException
+     *
+     */
+    public static TCPSession initiate(String host, int port)
+        throws BEEPException
+    {
+        try {
+            return initiate(InetAddress.getByName(host), port);
+        } catch (UnknownHostException x) {
+            throw new BEEPException("Unable to connect, unkown host");
         }
-
-        TCPSession t = TCPSessionCreator.initiate(socket, registry);
-
-        return t;
     }
 
     /**
@@ -140,23 +154,6 @@ public class TCPSessionCreator {
         } catch (UnknownHostException x) {
             throw new BEEPException("Unable to connect, unkown host");
         }
-    }
-
-    /**
-     * Method listen
-     *
-     *
-     * @param sock
-     * @param registry
-     *
-     * @throws BEEPException
-     *
-     */
-    public static TCPSession listen(Socket sock, ProfileRegistry registry)
-            throws BEEPException
-    {
-        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_EVEN, null, null, null);
     }
 
     /**
@@ -223,7 +220,7 @@ public class TCPSessionCreator {
         try {
             peer = socket.accept();
 
-            return TCPSessionCreator.listen(peer, registry);
+            return TCPSession.createListener(peer, registry);
         } catch (Exception e) {
             throw new BEEPException(e.getMessage());
         }
@@ -245,45 +242,15 @@ public class TCPSessionCreator {
             throws BEEPException
     {
         try {
-            TCPSession temp = null;
             InetAddress addr = null;
 
             if (localInterface != null) {
                 addr = InetAddress.getByName(localInterface);
             }
 
-            temp = listen(addr, port, registry);
-
-            return temp;
+            return listen(addr, port, registry);
         } catch (UnknownHostException x) {
             throw new BEEPException(x.getMessage());
         }
-    }
-
-    /**
-     * Accessible only from TCPSession (kinda slick)
-     */
-    static TCPSession initiate(Socket sock, ProfileRegistry registry,
-                               SessionCredential localCred,
-                               SessionCredential peerCred,
-                               SessionTuningProperties tuning)
-            throws BEEPException
-    {
-        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_ODD, localCred, peerCred, tuning);
-    }
-
-    /**
-     * Accessible only from TCPSession (reset() specifically)
-     */
-    static TCPSession listen(Socket sock, ProfileRegistry registry,
-                             SessionCredential localCred,
-                             SessionCredential peerCred,
-                             SessionTuningProperties tuning)
-            throws BEEPException
-    {
-        return new TCPSession(sock, (ProfileRegistry) registry.clone(),
-                              CHANNEL_START_EVEN, localCred, peerCred,
-                              tuning);
     }
 }
