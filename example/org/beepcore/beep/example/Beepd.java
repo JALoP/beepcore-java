@@ -1,5 +1,5 @@
 /*
- * Beepd.java            $Revision: 1.1 $ $Date: 2001/04/18 07:11:20 $
+ * Beepd.java            $Revision: 1.2 $ $Date: 2001/05/07 23:17:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -46,7 +46,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/18 07:11:20 $
+ * @version $Revision: 1.2 $, $Date: 2001/05/07 23:17:10 $
  */
 public class Beepd extends Thread {
     private int port;
@@ -115,9 +115,7 @@ public class Beepd extends Thread {
             }
 
             // Initialize the profile and add it to the advertised profiles
-            p.init(profileConfig);
-            reg.addStartChannelListener(p.getURI(),
-                                        p.getStartChannelListener());
+            reg.addStartChannelListener(uri, p.init(uri, profileConfig));
         }
     }
 
