@@ -1,5 +1,5 @@
 /*
- * SASLSessionTable.java  $Revision: 1.4 $ $Date: 2001/11/08 05:51:34 $
+ * SASLSessionTable.java  $Revision: 1.5 $ $Date: 2001/11/22 15:25:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -21,8 +21,8 @@ import java.util.Hashtable;
 
 import org.beepcore.beep.core.Session;
 import org.beepcore.beep.core.SessionCredential;
-import org.beepcore.beep.core.SessionEvent;
-import org.beepcore.beep.core.SessionEventListener;
+import org.beepcore.beep.core.event.SessionEvent;
+import org.beepcore.beep.core.event.SessionListener;
 import org.beepcore.beep.profile.sasl.anonymous.SASLAnonymousProfile;
 import org.beepcore.beep.util.Log;
 
@@ -35,10 +35,10 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.4 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.5 $, $Date: 2001/11/22 15:25:29 $
  *
  */
-public class SASLSessionTable implements SessionEventListener
+public class SASLSessionTable implements SessionListener
 {
     private Hashtable nameToSession, sessionToName;
     private final static int DEFAULT_SIZE = 4;
@@ -121,8 +121,7 @@ public class SASLSessionTable implements SessionEventListener
         authenticator = session.getPeerCredential().getAuthenticator();
         if(authenticator == null)
             throw new SASLException(ERR_INVALID_PARAMETERS);
-        session.registerForEvent(this, 
-                                 SessionEvent.SESSION_TERMINATED_EVENT_CODE);
+        session.addSessionListener(this);
         if(sessionToName.contains(session))
             nameToSession.remove(authenticator);
         sessionToName.put(session, authenticator);
@@ -150,24 +149,25 @@ public class SASLSessionTable implements SessionEventListener
             nameToSession.remove(authenticator);
         }
         sessionToName.remove(session);
+        session.removeSessionListener(this);
         printContents();
     }
-    
+
+    public void greetingReceived(SessionEvent e) {}
+
     /**
      * Method receiveEvent is implemented here so the SASLSessionTable
      * can receive events when a session is terminated (so that it
      * can update its information about what sessions are actively
      * authenticated etc.
      * 
-     * @param SessionEvent event the SessionEvent used.
+     * @param event event the SessionEvent used.
      */
-    public void receiveEvent(SessionEvent event)
+    public void sessionClosed(SessionEvent event)
     {
-        if(event.getEvent() != SessionEvent.SESSION_TERMINATED_EVENT_CODE)
-            return;
         try
         {
-            Session s = (Session)event.getData();
+            Session s = (Session)event.getSource();
             removeEntry(s);
         }
         catch(ClassCastException x)
@@ -177,7 +177,7 @@ public class SASLSessionTable implements SessionEventListener
             Log.logEntry(Log.SEV_ERROR, x);
         }
     }
-    
+
     /**
      * Method printContents does a simple dump of the SASLSessionTable
      * for the purposes of monitoring or debugging.

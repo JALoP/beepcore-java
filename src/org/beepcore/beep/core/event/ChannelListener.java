@@ -1,8 +1,7 @@
-
 /*
- * SessionEventListener.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:34 $
+ * ChannelListener.java  $Revision: 1.1 $ $Date: 2001/11/22 15:25:29 $
  *
- * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -15,29 +14,27 @@
  * License.
  *
  */
-package org.beepcore.beep.core;
+package org.beepcore.beep.core.event;
 
+
+import java.util.EventListener;
 
 /**
  * This is an interface defining the methods that must be implemented
- * to listen for Session Events.
+ * to listen for Channel Events.
  *
- * @see org.beepcore.beep.core.SessionEvent
- *
- * @author Eric Dixon
  * @author Huston Franklin
- * @author Jay Kint
- * @author Scott Pead
- * @version $Revision, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.1 $, $Date: 2001/11/22 15:25:29 $
  */
-public interface SessionEventListener {
+public interface ChannelListener extends EventListener {
 
     /**
-     * Called when a session event is triggered in the underlying framework.
-     *
-     *
-     * @param event
-     *
+     * Invoked when the greeting has been received for a session.
      */
-    public void receiveEvent(SessionEvent event);
+    public void channelStarted(ChannelEvent e);
+
+    /**
+     * Invoked when the greeting has been received for a session.
+     */
+    public void channelClosed(ChannelEvent e);
 }

@@ -1,7 +1,8 @@
 /*
- * Session.java  $Revision: 1.19 $ $Date: 2001/11/10 21:33:29 $
+ * Session.java  $Revision: 1.20 $ $Date: 2001/11/22 15:25:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -25,6 +26,7 @@ import java.util.Iterator;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.xml.parsers.*;
 
@@ -32,6 +34,10 @@ import org.w3c.dom.*;
 
 import org.xml.sax.SAXException;
 
+import org.beepcore.beep.core.event.ChannelEvent;
+import org.beepcore.beep.core.event.ChannelListener;
+import org.beepcore.beep.core.event.SessionEvent;
+import org.beepcore.beep.core.event.SessionListener;
 import org.beepcore.beep.util.Log;
 
 
@@ -52,7 +58,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.19 $, $Date: 2001/11/10 21:33:29 $
+ * @version $Revision: 1.20 $, $Date: 2001/11/22 15:25:29 $
  *
  * @see Channel
  */
@@ -134,15 +140,21 @@ public abstract class Session {
     private static final String TAG_URI = "uri";
     private static final String TAG_XML_LANG = "xml:lang";
 
+    private static final String DEFAULT_STRING_ENCODING = "UTF-8";
+
     // Instance Data
     private int state;
     private long messageNumber;
     private long nextChannelNumber = 0;
     private Channel zero;
-    private ChannelZeroListener zeroListener;
     private Hashtable channels = null;
     private Hashtable properties = null;
-    private Hashtable eventTable = null;
+    private List sessionListenerList =
+        Collections.synchronizedList(new LinkedList());
+    private SessionListener[] sessionListeners = new SessionListener[0];
+    private List channelListenerList =
+        Collections.synchronizedList(new LinkedList());
+    private ChannelListener[] channelListeners = new ChannelListener[0];
     private ProfileRegistry profileRegistry = null;
     private SessionCredential localCredential, peerCredential;
     private SessionTuningProperties tuningProperties = null;
@@ -150,8 +162,6 @@ public abstract class Session {
     private boolean overflow;
     private boolean allowChannelWindowUpdates;
     private DocumentBuilder builder;    // generic XML parser
-
-    private static final String DEFAULT_STRING_ENCODING = "UTF-8";
 
     /**
      * Default Session Constructor.  A relationship between peers - a session -
@@ -179,7 +189,6 @@ public abstract class Session {
         overflow = false;
         profileRegistry = registry;
         channels = new Hashtable(DEFAULT_CHANNELS_SIZE);
-        eventTable = new Hashtable(DEFAULT_CHANNELS_SIZE);
         properties = new Hashtable(DEFAULT_PROPERTIES_SIZE);
         tuningProperties = tuning;
 
@@ -208,9 +217,8 @@ public abstract class Session {
         GreetingListener greetingListener = new GreetingListener();
 
         zero = new Channel(this, CHANNEL_ZERO, greetingListener);
-        zeroListener = new ChannelZeroListener();
+        zero.setMessageListener(new ChannelZeroListener());
 
-        zero.setMessageListener(zeroListener);
         channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
@@ -259,10 +267,8 @@ public abstract class Session {
 
         GreetingListener greetingListener = new GreetingListener();
 
-        zeroListener = new ChannelZeroListener();
         zero = new Channel(this, CHANNEL_ZERO, greetingListener);
-
-        zero.setMessageListener(zeroListener);
+        zero.setMessageListener(new ChannelZeroListener());
         channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
@@ -271,6 +277,32 @@ public abstract class Session {
 
         // start our listening thread we can now receive a greeting
         this.enableIO();
+    }
+
+    /**
+     * adds the listener from the list of listeners to be notified
+     * of future events.
+     *
+     * @see removeChannelListener
+     */
+    public void addChannelListener(ChannelListener l)
+    {
+        channelListenerList.add(l);
+        channelListeners =
+            (ChannelListener[]) channelListenerList.toArray(channelListeners);
+    }
+
+    /**
+     * adds the listener from the list of listeners to be notified
+     * of future events.
+     *
+     * @see removeSessionListener
+     */
+    public void addSessionListener(SessionListener l)
+    {
+        sessionListenerList.add(l);
+        sessionListeners =
+            (SessionListener[]) sessionListenerList.toArray(sessionListeners);
     }
 
     /**
@@ -382,32 +414,33 @@ public abstract class Session {
     }
 
     /**
-     * Registers a <code>SessionEventListener</code> for various
-     * <code>Session</code> events.
+     * Removes the listener from the list of listeners to be notified
+     * of future events. Note that the listener will be notified of
+     * events which have already happened and are in the process of
+     * being dispatched.
      *
-     * @param sel A reference to an implementation of a
-     * <code>SessionEventListener</code> that will be called back once
-     * an event is fired.
-     *
-     * @param event The type of event (i.e.
-     * <code>SessionEvent.CHANNEL_OPENED_EVENT_CODE</code>) for which the
-     * <code>SessionEventListener</code> is registered.
-     *
-     * @see SessionEvent
-     * @see SessionEventListener
-     * @see #fireEvent
+     * @see addChannelListener
      */
-    public void registerForEvent(SessionEventListener sel, int event)
+    public void removeChannelListener(ChannelListener l)
     {
-        Integer i = new Integer(event);
-        LinkedList l = (LinkedList) eventTable.get(i);
+        channelListenerList.remove(l);
+        channelListeners =
+            (ChannelListener[]) channelListenerList.toArray(channelListeners);
+    }
 
-        if (l == null) {
-            l = new LinkedList();
-        }
-
-        l.add(sel);
-        eventTable.put(i, l);
+    /**
+     * Removes the listener from the list of listeners to be notified
+     * of future events. Note that the listener will be notified of
+     * events which have already happened and are in the process of
+     * being dispatched.
+     *
+     * @see addSessionListener
+     */
+    public void removeSessionListener(SessionListener l)
+    {
+        sessionListenerList.remove(l);
+        sessionListeners =
+            (SessionListener[]) sessionListenerList.toArray(sessionListeners);
     }
 
     /**
@@ -592,6 +625,7 @@ public abstract class Session {
                                     ch.getState() + ")");
         }
 
+        fireChannelStarted(ch);
         return ch;
     }
 
@@ -702,36 +736,6 @@ public abstract class Session {
      *
      */
     protected abstract void enableIO();
-
-    /**
-     * Publish a session event to registered
-     * <code>SessionEventListener</code>s.
-     *
-     * @param event Event to be passed to <code>SessionEventListener</code>s.
-     * @param arg Data associated with event.
-     *
-     * @see #registerForEvent
-     * @see SessionEvent
-     * @see SessionEventListener
-     */
-    protected void fireEvent(int event, Object arg)
-    {
-        Integer k = new Integer(event);
-        LinkedList l = (LinkedList) eventTable.get(k);
-
-        if (l == null) {
-            return;
-        }
-
-        // @todo how do those who have registered to receive events call us
-        // back?
-        SessionEvent se = new SessionEvent(event, arg);
-        Iterator i = l.iterator();
-
-        while (i.hasNext()) {
-            ((SessionEventListener) i.next()).receiveEvent(se);
-        }
-    }
 
     /**
      * Returns the channel's available window size.
@@ -1010,6 +1014,8 @@ public abstract class Session {
             throw new BEEPException("Error channel state (" +
                                     channel.getState() + ")");
         }
+
+        fireChannelClosed(channel);
     }
 
     Channel getValidChannel(int number) throws BEEPException
@@ -1052,6 +1058,66 @@ public abstract class Session {
         ch.setState(Channel.STATE_OK);
         channels.put(ch.getNumberAsString(), ch);
         ((Message)zero.getAppData()).sendRPY(sds);
+    }
+
+    private void fireChannelClosed(Channel c)
+    {
+        ChannelListener[] l = this.channelListeners;
+        if (l.length == 0)
+            return;
+
+        ChannelEvent e = new ChannelEvent(c);
+        for (int i=0; i<l.length; ++i) {
+            l[i].channelClosed(e);
+        }
+    }
+
+    private void fireChannelStarted(Channel c)
+    {
+        ChannelListener[] l = this.channelListeners;
+        if (l.length == 0)
+            return;
+
+        ChannelEvent e = new ChannelEvent(c);
+        for (int i=0; i<l.length; ++i) {
+            l[i].channelStarted(e);
+        }
+    }
+
+    private void fireGreetingReceived()
+    {
+        SessionListener[] l = this.sessionListeners;
+        if (l.length == 0)
+            return;
+
+        SessionEvent e = new SessionEvent(this);
+        for (int i=0; i<l.length; ++i) {
+            l[i].greetingReceived(e);
+        }
+    }
+
+    private void fireSessionClosed()
+    {
+        SessionListener[] l = this.sessionListeners;
+        if (l.length == 0)
+            return;
+
+        SessionEvent e = new SessionEvent(this);
+        for (int i=0; i<l.length; ++i) {
+            l[i].sessionClosed(e);
+        }
+    }
+
+    private void fireSessionTerminated()
+    {
+        SessionListener[] l = this.sessionListeners;
+        if (l.length == 0)
+            return;
+
+        SessionEvent e = new SessionEvent(this);
+        for (int i=0; i<l.length; ++i) {
+            l[i].sessionClosed(e);
+        }
     }
 
     /**
@@ -1196,7 +1262,7 @@ public abstract class Session {
             Log.logEntry(Log.SEV_ERROR, e);
         }
 
-        fireEvent(SessionEvent.SESSION_CLOSED_EVENT_CODE, this);
+        fireSessionClosed();
     }
 
     /**
@@ -1304,11 +1370,10 @@ public abstract class Session {
         this.disableIO();
         channels.clear();
 
-        zeroListener = null;
         zero = null;
 
         this.changeState(SESSION_STATE_CLOSED);
-        fireEvent(SessionEvent.SESSION_TERMINATED_EVENT_CODE, this);
+        fireSessionTerminated();
     }
 
     private Element processMessage(Message message) throws BEEPException
@@ -1320,7 +1385,7 @@ public abstract class Session {
         }
 
         // parse the stream
-        Document doc = null;
+        Document doc;
 
         try {
             doc = builder.parse(message.getDataStream().getInputStream());
