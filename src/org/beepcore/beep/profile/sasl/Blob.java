@@ -1,5 +1,5 @@
 /*
- * Blob.java            $Revision: 1.2 $ $Date: 2001/05/23 16:38:37 $
+ * Blob.java            $Revision: 1.3 $ $Date: 2001/07/30 13:04:35 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -41,7 +41,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/05/23 16:38:37 $
+ * @version $Revision: 1.3 $, $Date: 2001/07/30 13:04:35 $
  *
  */
 public class Blob
@@ -316,8 +316,7 @@ public class Blob
                 throw new SASLException(ERR_XML_PARSE_FAILURE);
             }
         }
-        if(statusMappings == null)
-        {
+        if(statusMappings == null) {
             statusMappings = new String[STATUS_LIMIT];
             statusMappings[STATUS_NONE]     = NONE;
             statusMappings[STATUS_ABORT]    = ABORT;
@@ -328,10 +327,7 @@ public class Blob
     }
 
     /**
-     * Method getStatus
-     * 
-     * @return String the status used in the blob - can be 'none'.
-     *
+     * Returns the status used in the blob - can be 'none'.
      */
     public String getStatus()
     {
@@ -339,21 +335,18 @@ public class Blob
     }
     
     /**
-     * Method getData
-     * 
-     * @return String the data contained in the blob element
-     *
+     * Returns the blob data as a <code>String</code>.
      */
     public String getData()
     {
-        return new String( decodedData );
+        if (decodedData == null) {
+            return "";
+        }
+        return new String(decodedData);
     }
 
     /**
-     * Method getData
-     *
-     * @return String the data contained in the blob element
-     *
+     * Returns the blob data as bytes.
      */
     public byte[] getDataBytes()
     {
@@ -361,9 +354,7 @@ public class Blob
     }
     
     /**
-     * Method toString
-     * 
-     * @return String a representation of the Blob as it would be sent
+     * Returns a representation of the Blob as it would be sent
      * out on the wire (with the data encoded).
      *
      */
