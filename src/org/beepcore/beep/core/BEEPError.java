@@ -1,6 +1,6 @@
 
 /*
- * BEEPError.java            $Revision: 1.3 $ $Date: 2001/05/25 15:27:10 $
+ * BEEPError.java            $Revision: 1.4 $ $Date: 2001/05/27 23:49:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.3 $, $Date: 2001/05/25 15:27:10 $
+ * @version $Revision: 1.4 $, $Date: 2001/05/27 23:49:09 $
  */
 public class BEEPError extends BEEPException {
 
@@ -46,8 +46,13 @@ public class BEEPError extends BEEPException {
     private static final String ERR_PCDATA_TOO_BIG_MSG =
         "Element's PCDATA exceeds the maximum size";
 
+    private static final String FRAGMENT_ANGLE_SUFFIX = ">";
+    private static final String FRAGMENT_CODE_PREFIX = "code='";
     private static final String FRAGMENT_ERROR_PREFIX = "<error ";
     private static final String FRAGMENT_ERROR_SUFFIX = "</error>";
+    private static final String FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX = "' />";
+    private static final String FRAGMENT_QUOTE_SUFFIX = "' ";
+    private static final String FRAGMENT_XML_LANG_PREFIX = "xml:lang='";
 
     private static final String TAG_CODE = "code";
     private static final String TAG_ERROR = "error";
@@ -182,22 +187,22 @@ public class BEEPError extends BEEPException {
         StringBuffer sb = new StringBuffer(128);
 
         sb.append(FRAGMENT_ERROR_PREFIX);
-        sb.append(Constants.FRAGMENT_CODE_PREFIX);
+        sb.append(FRAGMENT_CODE_PREFIX);
         sb.append(code);
 
         if (xmlLang != null) {
-            sb.append(Constants.FRAGMENT_QUOTE_SUFFIX);
-            sb.append(Constants.FRAGMENT_XML_LANG_PREFIX);
+            sb.append(FRAGMENT_QUOTE_SUFFIX);
+            sb.append(FRAGMENT_XML_LANG_PREFIX);
             sb.append(xmlLang);
         }
 
         if (diagnostic != null) {
-            sb.append(Constants.FRAGMENT_QUOTE_SUFFIX);
-            sb.append(Constants.FRAGMENT_ANGLE_SUFFIX);
+            sb.append(FRAGMENT_QUOTE_SUFFIX);
+            sb.append(FRAGMENT_ANGLE_SUFFIX);
             sb.append(diagnostic);
             sb.append(FRAGMENT_ERROR_SUFFIX);
         } else {
-            sb.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+            sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
         }
 
         return sb.toString();

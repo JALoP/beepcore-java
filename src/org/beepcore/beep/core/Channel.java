@@ -1,5 +1,5 @@
 /*
- * Channel.java            $Revision: 1.9 $ $Date: 2001/05/25 15:27:10 $
+ * Channel.java            $Revision: 1.10 $ $Date: 2001/05/27 23:49:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2001/05/25 15:27:10 $
+ * @version $Revision: 1.10 $, $Date: 2001/05/27 23:49:09 $
  *
  */
 public class Channel {
@@ -220,9 +220,9 @@ public class Channel {
      * @param ReplyListener
      *
      */
-    Channel(Session session, ReplyListener rl)
+    Channel(Session session, String number, ReplyListener rl)
     {
-        this(null, Constants.CHANNEL_ZERO, null, session);
+        this(null, number, null, session);
 
         // Add a MSG to the SentMSGQueue to fake channel into accepting the
         // greeting which comes in an unsolicited RPY.

@@ -1,5 +1,5 @@
 /*
- * Session.java            $Revision: 1.11 $ $Date: 2001/05/25 15:27:10 $
+ * Session.java            $Revision: 1.12 $ $Date: 2001/05/27 23:49:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -51,7 +51,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2001/05/25 15:27:10 $
+ * @version $Revision: 1.12 $, $Date: 2001/05/27 23:49:09 $
  *
  * @see Channel
  */
@@ -79,6 +79,8 @@ public abstract class Session {
     private static final int MAX_START_CHANNEL_WAIT = 60000;
     private static final int MAX_START_CHANNEL_INTERVAL = 100;
 
+    private static final String CHANNEL_ZERO = "0";
+
     private static final String ERR_BEEP_START_CHANNEL_TIMEOUT =
         "Channel start timed out.";
     private static final String ERR_GREETING_FAILED =
@@ -99,14 +101,25 @@ public abstract class Session {
     private static final String ERR_MALFORMED_PROFILE_MSG =
         "Malformed profile";
 
+    private static final String FRAGMENT_ANGLE_SUFFIX = ">";
     private static final String FRAGMENT_CDATA_PREFIX = "<![CDATA[";
     private static final String FRAGMENT_CDATA_SUFFIX = "]]>";
     private static final String FRAGMENT_CLOSE_PREFIX = "<close ";
+    private static final String FRAGMENT_CODE_PREFIX = "code='";
+    private static final String FRAGMENT_ENCODING_PREFIX = "encoding='";
     private static final String FRAGMENT_NUMBER_PREFIX = "number='";
     private static final String FRAGMENT_OK = "<ok />";
+    private static final String FRAGMENT_PROFILE_PREFIX = "<profile ";
+    private static final String FRAGMENT_PROFILE_SUFFIX = "</profile>";
+    private static final String FRAGMENT_QUOTE_ANGLE_SUFFIX = "'>";
+    private static final String FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX = "' />";
+    private static final String FRAGMENT_QUOTE_SUFFIX = "' ";
     private static final String FRAGMENT_SERVERNAME_PREFIX = "serverName='";
+    private static final String FRAGMENT_SLASH_ANGLE_SUFFIX = " />";
     private static final String FRAGMENT_START_PREFIX = "<start ";
     private static final String FRAGMENT_START_SUFFIX = "</start>";
+    private static final String FRAGMENT_URI_PREFIX = "uri='";
+    private static final String FRAGMENT_XML_LANG_PREFIX = "xml:lang='";
 
     private static final String TAG_CLOSE = "close";
     private static final String TAG_CODE = "code";
@@ -191,11 +204,11 @@ public abstract class Session {
     {
         this.peerSupportedProfiles = null;
         GreetingListener greetingListener = new GreetingListener();
-        zero = new Channel(this, greetingListener);
+        zero = new Channel(this, CHANNEL_ZERO, greetingListener);
 
         zeroListener = new ChannelZeroListener();
         zero.setDataListener(zeroListener);
-        channels.put(Constants.CHANNEL_ZERO, zero);
+        channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
         sendGreeting();
@@ -242,10 +255,10 @@ public abstract class Session {
         this.peerSupportedProfiles = null;
         GreetingListener greetingListener = new GreetingListener();
         zeroListener = new ChannelZeroListener();
-        zero = new Channel(this, greetingListener);
+        zero = new Channel(this, CHANNEL_ZERO, greetingListener);
 
         zero.setDataListener(zeroListener);
-        channels.put(Constants.CHANNEL_ZERO, zero);
+        channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
         sendGreeting();
@@ -509,7 +522,7 @@ public abstract class Session {
         startBuffer.append(FRAGMENT_START_PREFIX);
         startBuffer.append(FRAGMENT_NUMBER_PREFIX);
         startBuffer.append(channelNumber);
-        startBuffer.append(Constants.FRAGMENT_QUOTE_ANGLE_SUFFIX);
+        startBuffer.append(FRAGMENT_QUOTE_ANGLE_SUFFIX);
 
         Iterator i = profiles.iterator();
 
@@ -517,23 +530,23 @@ public abstract class Session {
             StartChannelProfile p = (StartChannelProfile) i.next();
 
             // @todo maybe we should check these against peerSupportedProfiles
-            startBuffer.append(Constants.FRAGMENT_PROFILE_PREFIX);
-            startBuffer.append(Constants.FRAGMENT_URI_PREFIX);
+            startBuffer.append(FRAGMENT_PROFILE_PREFIX);
+            startBuffer.append(FRAGMENT_URI_PREFIX);
             startBuffer.append(p.uri);
-            startBuffer.append(Constants.FRAGMENT_QUOTE_SUFFIX);
+            startBuffer.append(FRAGMENT_QUOTE_SUFFIX);
 
             if (p.data == null) {
-                startBuffer.append(Constants.FRAGMENT_SLASH_ANGLE_SUFFIX);
+                startBuffer.append(FRAGMENT_SLASH_ANGLE_SUFFIX);
             } else {
                 if (p.base64Encoding) {
                     startBuffer.append("encoding='base64' ");
                 }
 
-                startBuffer.append(Constants.FRAGMENT_ANGLE_SUFFIX);
+                startBuffer.append(FRAGMENT_ANGLE_SUFFIX);
                 startBuffer.append(FRAGMENT_CDATA_PREFIX);
                 startBuffer.append(p.data);
                 startBuffer.append(FRAGMENT_CDATA_SUFFIX);
-                startBuffer.append(Constants.FRAGMENT_PROFILE_SUFFIX);
+                startBuffer.append(FRAGMENT_PROFILE_SUFFIX);
             }
         }
 
@@ -903,17 +916,17 @@ public abstract class Session {
         closeBuffer.append(FRAGMENT_CLOSE_PREFIX);
         closeBuffer.append(FRAGMENT_NUMBER_PREFIX);
         closeBuffer.append(channel.getNumberAsString());
-        closeBuffer.append(Constants.FRAGMENT_QUOTE_SUFFIX);
-        closeBuffer.append(Constants.FRAGMENT_CODE_PREFIX);
+        closeBuffer.append(FRAGMENT_QUOTE_SUFFIX);
+        closeBuffer.append(FRAGMENT_CODE_PREFIX);
         closeBuffer.append(code);
 
         if (xmlLang != null) {
-            closeBuffer.append(Constants.FRAGMENT_QUOTE_SUFFIX);
-            closeBuffer.append(Constants.FRAGMENT_XML_LANG_PREFIX);
+            closeBuffer.append(FRAGMENT_QUOTE_SUFFIX);
+            closeBuffer.append(FRAGMENT_XML_LANG_PREFIX);
             closeBuffer.append(xmlLang);
         }
 
-        closeBuffer.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+        closeBuffer.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
 
         // Make a message
         DataStream ds = new StringDataStream(DataStream.BEEP_XML_CONTENT_TYPE,
@@ -944,18 +957,18 @@ public abstract class Session {
         // Send the profile
         StringBuffer sb = new StringBuffer();
 
-        sb.append(Constants.FRAGMENT_PROFILE_PREFIX);
-        sb.append(Constants.FRAGMENT_URI_PREFIX);
+        sb.append(FRAGMENT_PROFILE_PREFIX);
+        sb.append(FRAGMENT_URI_PREFIX);
         sb.append(uri);
 
         if (datum != null) {
-            sb.append(Constants.FRAGMENT_QUOTE_ANGLE_SUFFIX);
+            sb.append(FRAGMENT_QUOTE_ANGLE_SUFFIX);
             sb.append(FRAGMENT_CDATA_PREFIX);
             sb.append(datum);
             sb.append(FRAGMENT_CDATA_SUFFIX);
-            sb.append(Constants.FRAGMENT_PROFILE_SUFFIX);
+            sb.append(FRAGMENT_PROFILE_SUFFIX);
         } else {
-            sb.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+            sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
         }
 
         StringDataStream sds =
@@ -985,7 +998,7 @@ public abstract class Session {
     {
 
         // @todo fix close channel
-        if (channelNumber.equals(Constants.CHANNEL_ZERO)) {
+        if (channelNumber.equals(CHANNEL_ZERO)) {
             receiveCloseChannelZero();
             return;
         }

@@ -1,6 +1,5 @@
-
 /*
- * ProfileRegistry.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * ProfileRegistry.java  $Revision: 1.2 $ $Date: 2001/05/27 23:49:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,11 +31,29 @@ import java.util.Hashtable;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision, $Date: 2001/05/27 23:49:09 $
  */
 public class ProfileRegistry implements Cloneable {
 
     private static final String SPACE = " ";
+
+    private static final String FRAGMENT_ANGLE_SUFFIX = ">";
+    private static final String FRAGMENT_FEATURES_PREFIX = "features='";
+    private static final String FRAGMENT_GREETING_PREFIX = "<greeting";
+    private static final String FRAGMENT_GREETING_SUFFIX = "</greeting>";
+    private static final String FRAGMENT_LOCALIZE_PREFIX = "localize='";
+    private static final String FRAGMENT_PROFILE_PREFIX = "<profile ";
+    private static final String FRAGMENT_QUOTE_ANGLE_SUFFIX = "'>";
+    private static final String FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX = "' />";
+    private static final String FRAGMENT_QUOTE_SUFFIX = "' ";
+    private static final String FRAGMENT_URI_PREFIX = "uri='";
+    private static final int FRAGMENT_GREETING_LENGTH =
+        FRAGMENT_GREETING_PREFIX.length()
+        + FRAGMENT_QUOTE_ANGLE_SUFFIX.length()
+        + FRAGMENT_GREETING_SUFFIX.length();
+    private static final int FRAGMENT_PROFILE_LENGTH =
+        FRAGMENT_PROFILE_PREFIX.length()
+        + FRAGMENT_QUOTE_ANGLE_SUFFIX.length();
 
     // Instance Data
     private Hashtable profileListeners;
@@ -175,7 +192,7 @@ public class ProfileRegistry implements Cloneable {
 
     private void changeGreeting()
     {
-        int bufferSize = Constants.FRAGMENT_GREETING_LENGTH;
+        int bufferSize = FRAGMENT_GREETING_LENGTH;
         int profileCount = 0;
 
         profileCount = profileListeners.size();
@@ -184,7 +201,7 @@ public class ProfileRegistry implements Cloneable {
 
         while (e.hasMoreElements()) {
             bufferSize += ((String) e.nextElement()).length()
-                          + Constants.FRAGMENT_PROFILE_LENGTH;
+                          + FRAGMENT_PROFILE_LENGTH;
         }
 
         bufferSize++;
@@ -195,32 +212,32 @@ public class ProfileRegistry implements Cloneable {
         // Wish I could reset these.
         Enumeration f = profileListeners.keys();
 
-        sb.append(Constants.FRAGMENT_GREETING_PREFIX);
+        sb.append(FRAGMENT_GREETING_PREFIX);
 
         if ((localize != null)
                 &&!localize.equals(Constants.LOCALIZE_DEFAULT)) {
             sb.append(this.SPACE);
-            sb.append(Constants.FRAGMENT_LOCALIZE_PREFIX);
+            sb.append(FRAGMENT_LOCALIZE_PREFIX);
             sb.append(localize);
-            sb.append(Constants.FRAGMENT_QUOTE_SUFFIX);
+            sb.append(FRAGMENT_QUOTE_SUFFIX);
         }
 
         if (features != null) {
-            sb.append(Constants.FRAGMENT_FEATURES_PREFIX);
+            sb.append(FRAGMENT_FEATURES_PREFIX);
             sb.append(features);
-            sb.append(Constants.FRAGMENT_QUOTE_SUFFIX);
+            sb.append(FRAGMENT_QUOTE_SUFFIX);
         }
 
-        sb.append(Constants.FRAGMENT_ANGLE_SUFFIX);
+        sb.append(FRAGMENT_ANGLE_SUFFIX);
 
         while (f.hasMoreElements()) {
-            sb.append(Constants.FRAGMENT_PROFILE_PREFIX);
-            sb.append(Constants.FRAGMENT_URI_PREFIX);
+            sb.append(FRAGMENT_PROFILE_PREFIX);
+            sb.append(FRAGMENT_URI_PREFIX);
             sb.append((String) f.nextElement());
-            sb.append(Constants.FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
+            sb.append(FRAGMENT_QUOTE_SLASH_ANGLE_SUFFIX);
         }
 
-        sb.append(Constants.FRAGMENT_GREETING_SUFFIX);
+        sb.append(FRAGMENT_GREETING_SUFFIX);
 
         greeting = sb.toString();
     }
