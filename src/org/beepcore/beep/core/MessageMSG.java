@@ -1,5 +1,5 @@
 /*
- * MessageMSG.java  $Revision: 1.6 $ $Date: 2001/11/10 21:33:29 $
+ * MessageMSG.java  $Revision: 1.7 $ $Date: 2002/04/30 04:06:22 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,7 +24,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/11/10 21:33:29 $
+ * @version $Revision: 1.7 $, $Date: 2002/04/30 04:06:22 $
  *
  */
 class MessageMSG extends Message
@@ -55,8 +55,8 @@ class MessageMSG extends Message
             // this is a MSG
             ++ansno;
 
-            m = new MessageStatus(this.channel, this.msgno, this.ansno,
-                                  stream);
+            m = new MessageStatus(this.channel, MESSAGE_TYPE_ANS, this.msgno,
+                                  this.ansno, stream);
         }
 
         this.channel.sendMessage(m);
@@ -145,8 +145,9 @@ class MessageMSG extends Message
      */
     public MessageStatus sendNUL() throws BEEPException
     {
+        OutputDataStream ds = new ByteOutputDataStream(new byte[0]);
         MessageStatus m = new MessageStatus(this.channel, MESSAGE_TYPE_NUL,
-                                            this.msgno, null);
+                                            this.msgno, ds);
         this.channel.sendMessage(m);
         return m;
     }
