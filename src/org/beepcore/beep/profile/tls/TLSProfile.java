@@ -1,6 +1,6 @@
 
 /*
- * TLSProfile.java  $Revision: 1.10 $ $Date: 2001/07/09 05:57:04 $
+ * TLSProfile.java  $Revision: 1.11 $ $Date: 2001/07/12 07:09:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -26,16 +26,9 @@ import org.beepcore.beep.util.*;
 
 /**
  * TLS provides encrypted and authenticated communication over
- * a session.  TLS is a tuning profile, a special set of profiles that affect
- * an entire session.  As a result, only one channel with the profile of TLS
- * may be open per session.  As with all tuning profiles, TLS may be configured
- * using properties passed into the init method.  You may wish considering
- * adding your own methods to your subclass that allows you to set the
- * parameters necessary rather than using the init method.  The init method
- * for configurations that can be set by a user/administrator.  Developers
- * would most likely want to use a set of set/get methods.  See
- * {@link TLSProfilePureTLS} and {@link TLSProfilePureTLSPemInit} for
- * differences between the two.
+ * a session. TLS is a tuning profile, a special set of profiles that affect
+ * an entire session. As a result, only one channel with the profile of TLS
+ * may be open per session.
  *
  * @see #init
  * @see org.beepcore.beep.profile.Profile
@@ -97,8 +90,7 @@ public abstract class TLSProfile extends TuningProfile implements Profile {
 
     /**
      * factory method that returns an instance the default
-     * implementation.  As of now, that is a {@link TLSProfilePureTLS}
-     * class.
+     * implementation.
      */
     public static TLSProfile getDefaultInstance() throws BEEPException
     {

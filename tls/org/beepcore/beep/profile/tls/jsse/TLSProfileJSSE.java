@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.1 $ $Date: 2001/07/09 05:57:05 $
+ * TLSProfileJSSE.java  $Revision: 1.2 $ $Date: 2001/07/12 07:09:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -52,7 +52,7 @@ import java.io.FileInputStream;
  * @see #init
  * @see org.beepcore.beep.profile.Profile
  * @see org.beepcore.beep.core.Channel
- * @see org.beepcore.beep.profile.tls.TLSProfileJSSEHandshakeCompletedListener
+ * @see org.beepcore.beep.profile.tls.jsse.TLSProfileJSSEHandshakeCompletedListener
  */
 public class TLSProfileJSSE extends TLSProfile
         implements Profile, StartChannelListener {

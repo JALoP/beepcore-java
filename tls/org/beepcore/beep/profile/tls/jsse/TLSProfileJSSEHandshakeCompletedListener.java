@@ -1,6 +1,6 @@
 
 /*
- * TLSProfileJSSEHandshakeCompletedListener.java  $Revision: 1.1 $ $Date: 2001/07/09 05:57:05 $
+ * TLSProfileJSSEHandshakeCompletedListener.java  $Revision: 1.2 $ $Date: 2001/07/12 07:09:10 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -28,7 +28,7 @@ import javax.net.ssl.HandshakeCompletedListener;
  * receives handshake completed events.  This allows the application to
  * examine the trust of the authentication and take appropriate action as
  * necessary, such as alter the profiles on the session, or simply close it.
- * @see TLSProfile
+ * @see org.beepcore.beep.profile.tls.TLSProfile
  * @see org.beepcore.beep.core.Session
  * @see javax.net.ssl.HandshakeCompletedListener
  */
