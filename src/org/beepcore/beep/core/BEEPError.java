@@ -1,8 +1,8 @@
-
 /*
- * BEEPError.java            $Revision: 1.6 $ $Date: 2001/11/29 04:00:00 $
+ * BEEPError.java  $Revision: 1.7 $ $Date: 2002/09/07 15:01:17 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.6 $, $Date: 2001/11/29 04:00:00 $
+ * @version $Revision: 1.7 $, $Date: 2002/09/07 15:01:17 $
  */
 public class BEEPError extends BEEPException {
 
@@ -311,6 +311,6 @@ public class BEEPError extends BEEPException {
     /** Parameter invalid */
     public static final int CODE_PARAMETER_INVALID = 553;
 
-    /** Transaction failed (e.g. policy violation) */
+    /** Transaction failed (e.g. policy violation). */
     public static final int CODE_TRANSACTION_FAILED = 554;
 }

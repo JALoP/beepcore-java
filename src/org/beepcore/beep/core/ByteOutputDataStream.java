@@ -1,5 +1,5 @@
 /*
- * ByteOutputDataStream.java  $Revision: 1.1 $ $Date: 2001/11/10 21:33:29 $
+ * ByteOutputDataStream.java  $Revision: 1.2 $ $Date: 2002/09/07 15:00:30 $
  *
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
@@ -30,10 +30,10 @@ import org.beepcore.beep.util.BufferSegment;
  * <code>ByteOutputDataStream</code> concurrently, data may be
  * inconsistent or lost.
  *
- * @see org.beepcore.beep.core.DataStream
+ * @see org.beepcore.beep.core.OutputDataStream
  *
  * @author Huston Franklin
- * @version $Revision: 1.1 $, $Date: 2001/11/10 21:33:29 $
+ * @version $Revision: 1.2 $, $Date: 2002/09/07 15:00:30 $
  */
 public class ByteOutputDataStream extends OutputDataStream {
 

@@ -1,8 +1,8 @@
 /*
- * StringOutputDataStream.java  $Revision: 1.1 $ $Date: 2001/11/10 21:33:29 $
+ * StringOutputDataStream.java  $Revision: 1.2 $ $Date: 2002/09/07 14:57:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -36,13 +36,13 @@ import org.beepcore.beep.util.BufferSegment;
  * a <code>StringOutputDataStream</code> concurrently, data may be
  * inconsistent or lost.
  *
- * @see org.beepcore.beep.core.DataStream
+ * @see org.beepcore.beep.core.OutputDataStream
  *
  * @author Eric Dixon
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/11/10 21:33:29 $
+ * @version $Revision: 1.2 $, $Date: 2002/09/07 14:57:37 $
  */
 public class StringOutputDataStream extends OutputDataStream {
     /**

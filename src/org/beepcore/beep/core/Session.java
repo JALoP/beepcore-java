@@ -1,8 +1,8 @@
 /*
- * Session.java  $Revision: 1.30 $ $Date: 2002/09/05 23:03:51 $
+ * Session.java  $Revision: 1.31 $ $Date: 2002/09/07 14:58:09 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  * Copyright (c) 2002 Kevin Kress.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
@@ -60,7 +60,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.30 $, $Date: 2002/09/05 23:03:51 $
+ * @version $Revision: 1.31 $, $Date: 2002/09/07 14:58:09 $
  *
  * @see Channel
  */
@@ -243,7 +243,7 @@ public abstract class Session {
      * adds the listener from the list of listeners to be notified
      * of future events.
      *
-     * @see removeChannelListener
+     * @see #removeChannelListener
      */
     public void addChannelListener(ChannelListener l)
     {
@@ -256,7 +256,7 @@ public abstract class Session {
      * adds the listener from the list of listeners to be notified
      * of future events.
      *
-     * @see removeSessionListener
+     * @see #removeSessionListener
      */
     public void addSessionListener(SessionListener l)
     {
@@ -398,7 +398,7 @@ public abstract class Session {
      * events which have already happened and are in the process of
      * being dispatched.
      *
-     * @see addChannelListener
+     * @see #addChannelListener
      */
     public void removeChannelListener(ChannelListener l)
     {
@@ -413,7 +413,7 @@ public abstract class Session {
      * events which have already happened and are in the process of
      * being dispatched.
      *
-     * @see addSessionListener
+     * @see #addSessionListener
      */
     public void removeSessionListener(SessionListener l)
     {
@@ -817,10 +817,6 @@ public abstract class Session {
      * This method restricts the bufferSize, per the beep spec, to be at most
      * two-thirds of the socket's receiveBufferSize.  If a size is requested
      * beyond that, an exception is thrown.
-     * @channel indicates the Channel this flow-control message is for.
-     * @ackno is the number of bytes we've received on this Channel.
-     * @newSize is the number of bytes we're able to read at this point in
-     *    time.
      *
      *
      * @param channel

@@ -1,7 +1,7 @@
 /*
- * InputDataStream.java  $Revision: 1.3 $ $Date: 2002/01/15 16:02:59 $
+ * InputDataStream.java  $Revision: 1.4 $ $Date: 2002/09/07 14:59:30 $
  *
- * Copyright (c) 2001 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @see org.beepcore.beep.util.BufferSegment
  *
  * @author Huston Franklin
- * @version $Revision: 1.3 $, $Date: 2002/01/15 16:02:59 $
+ * @version $Revision: 1.4 $, $Date: 2002/09/07 14:59:30 $
  */
 public class InputDataStream {
 
@@ -113,14 +113,16 @@ public class InputDataStream {
     }
 
     /**
-     * @todo doc
+     * Returns <code>true</code> if a <code>BufferSegment</code> is available
+     * to receive.
      */
     public boolean availableSegment() {
         return (this.buffers.isEmpty() == false);
     }
 
     /**
-     * @todo doc
+     * Indicates that the application is finished receiving data from this
+     * stream. If there is more data available the data will be discarded.
      */
     public void close() {
         this.closed = true;
@@ -130,7 +132,7 @@ public class InputDataStream {
     }
 
     /**
-     * @todo doc
+     * Returns an <code>InputStream</code> for reading the data in this stream.
      */
     public InputDataStreamAdapter getInputStream()
     {
@@ -142,7 +144,8 @@ public class InputDataStream {
     }
 
     /**
-     * @todo doc
+     * Returns the next <code>BufferSegment</code> in this stream.
+     *
      */
     public BufferSegment getNextSegment() {
         BufferSegment b;
@@ -162,7 +165,7 @@ public class InputDataStream {
 
     /**
      *
-     * @returns null if isComplete() is true.
+     * @return null if isComplete() is true.
      */
     public BufferSegment waitForNextSegment() throws InterruptedException {
         synchronized (buffers) {

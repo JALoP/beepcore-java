@@ -1,5 +1,5 @@
 /*
- * UserDatabase.java            $Revision: 1.2 $ $Date: 2001/11/08 05:51:35 $
+ * UserDatabase.java            $Revision: 1.3 $ $Date: 2002/09/07 15:09:38 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -32,7 +32,7 @@ import org.beepcore.beep.profile.sasl.otp.algorithm.sha1.SHA1;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:35 $
+ * @version $Revision: 1.3 $, $Date: 2002/09/07 15:09:38 $
  *
  */
 public interface UserDatabase 
@@ -41,7 +41,7 @@ public interface UserDatabase
      * Method getAlgorithmName returns the algorithm associated with this
      * particular user and OTP database.  
      *
-     * @returns String the algorithm employed by the user of this database
+     * @return String the algorithm employed by the user of this database
      * for SASL OTP authentication.
      *
      */
@@ -50,7 +50,7 @@ public interface UserDatabase
     /**
      * Method getLastHash
      *
-     * @returns byte[] the lastHash value generated the last time the
+     * @return byte[] the lastHash value generated the last time the
      * user of this database performed SASL OTP authentication.  The
      * hash value is represented in binary form.
      *
@@ -60,7 +60,7 @@ public interface UserDatabase
     /**
      * Method getLastHashAsString
      *
-     * @returns String the lastHash value generated the last time the
+     * @return String the lastHash value generated the last time the
      * user of this database performed SASL OTP authentication.  The
      * hash is represented in hexadecimal form.
      *
@@ -70,7 +70,7 @@ public interface UserDatabase
     /**
      * Method getSeed
      *
-     * @returns String the seed used by the 
+     * @return String the seed used by the 
      * user of this database for SASL OTP authentication.
      *
      */
@@ -79,7 +79,7 @@ public interface UserDatabase
     /**
      * Method getSequence
      *
-     * @returns int the sequence to be used by the 
+     * @return int the sequence to be used by the 
      * user of this database for SASL OTP authentication.
      *
      */
@@ -88,7 +88,7 @@ public interface UserDatabase
     /**
      * Method getAuthenticator
      *
-     * @returns String the user of this database.
+     * @return String the user of this database.
      *
      */
     public String getAuthenticator();
