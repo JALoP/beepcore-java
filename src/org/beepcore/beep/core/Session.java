@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.17 $ $Date: 2001/11/08 05:51:34 $
+ * Session.java  $Revision: 1.18 $ $Date: 2001/11/10 03:58:45 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -23,6 +23,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 
 import javax.xml.parsers.*;
@@ -51,7 +52,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.17 $, $Date: 2001/11/08 05:51:34 $
+ * @version $Revision: 1.18 $, $Date: 2001/11/10 03:58:45 $
  *
  * @see Channel
  */
@@ -145,7 +146,7 @@ public abstract class Session {
     private ProfileRegistry profileRegistry = null;
     private SessionCredential localCredential, peerCredential;
     private SessionTuningProperties tuningProperties = null;
-    private Collection peerSupportedProfiles;
+    private Collection peerSupportedProfiles = null;
     private boolean overflow;
     private boolean allowChannelWindowUpdates;
     private DocumentBuilder builder;    // generic XML parser
@@ -1541,10 +1542,11 @@ public abstract class Session {
                             // return;
                         }
 
-                        profileList.add(i, profile);
+                        profileList.add(i, uri);
                     }
 
-                    Session.this.peerSupportedProfiles = profileList;
+                    Session.this.peerSupportedProfiles =
+                        Collections.unmodifiableCollection(profileList);
                 }
 
                 changeState(Session.SESSION_STATE_GREETING_RECEIVED);
