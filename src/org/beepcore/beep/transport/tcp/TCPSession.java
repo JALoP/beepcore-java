@@ -1,6 +1,6 @@
 
 /*
- * TCPSession.java            $Revision: 1.2 $ $Date: 2001/04/02 22:33:27 $
+ * TCPSession.java            $Revision: 1.3 $ $Date: 2001/04/10 14:46:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import org.beepcore.beep.util.Log;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 22:33:27 $
+ * @version $Revision, $Date: 2001/04/10 14:46:06 $
  */
 public class TCPSession extends Session {
 
@@ -159,11 +159,13 @@ public class TCPSession extends Session {
         }
     }
 
+    // Implementation of method declared in Session
     protected void disableIO()
     {
         running = false;
     }
 
+    // Implementation of method declared in Session
     protected void enableIO()
     {
         running = false;
@@ -183,6 +185,7 @@ public class TCPSession extends Session {
         }
     }
 
+    // Implementation of method declared in Session
     protected int getMaxFrameSize()
     {
         /**
@@ -242,6 +245,7 @@ public class TCPSession extends Session {
         }
     }
 
+    // Implementation of method declared in Session
     protected Session reset(SessionCredential localCred,
                             SessionCredential peerCred, 
                             ProfileRegistry reg,
@@ -349,16 +353,6 @@ public class TCPSession extends Session {
     }
 
     // Lame hack for J++
-
-    /**
-     * Method modState
-     *
-     *
-     * @param i
-     *
-     * @return true if the state change was successful
-     *
-     */
     private boolean modState(int i) throws BEEPException
     {
         return super.changeState(i);
@@ -626,17 +620,6 @@ public class TCPSession extends Session {
 
     private class SessionThread implements Runnable {
 
-        /**
-         * Right now our threading scheme consists of one thread per session,
-         * to manage the I/O, and an additional shared pool of threads we use
-         * to call up into User space
-         *
-         * This method is only public because we inherit it from Runnable and
-         * cannot change the protection.  Please don't invoke it.  You will
-         * create race conditions and experience weirdness.
-         *
-         * @overrides Runnable.run
-         */
         public void run()
         {
             try {

@@ -1,6 +1,6 @@
 
 /*
- * AutomatedTCPSessionCreator.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:51 $
+ * AutomatedTCPSessionCreator.java            $Revision: 1.2 $ $Date: 2001/04/10 14:46:05 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -17,6 +17,8 @@
  */
 package org.beepcore.beep.transport.tcp;
 
+
+import java.io.IOException;
 
 import java.net.InetAddress;
 import java.net.Socket;
@@ -39,7 +41,7 @@ import org.beepcore.beep.core.ProfileRegistry;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:45:51 $
+ * @version $Revision, $Date: 2001/04/10 14:46:05 $
  */
 public class AutomatedTCPSessionCreator {
 
@@ -72,21 +74,22 @@ public class AutomatedTCPSessionCreator {
                                       ProfileRegistry registry)
             throws BEEPException
     {
+
+        // Connect and create TCPSession with the socket
+        Socket socket;
         try {
-
-            // Connect and create TCPSession with the socket
-            Socket socket = new Socket(host, port);
-
-            if (socket == null) {
-                throw new BEEPException(ERR_TCP_SOCKET_FAILURE);
-            }
-
-            TCPSession t = TCPSessionCreator.initiate(socket, registry);
-
-            return t;
-        } catch (Exception x) {
-            throw new BEEPException(ERR_CONNECT_FAILURE);
+            socket = new Socket(host, port);
+        } catch (IOException x) {
+            throw new BEEPException(x.getMessage());
         }
+
+        if (socket == null) {
+            throw new BEEPException(ERR_TCP_SOCKET_FAILURE);
+        }
+
+        TCPSession t = TCPSessionCreator.initiate(socket, registry);
+
+        return t;
     }
 
     /**
@@ -108,7 +111,7 @@ public class AutomatedTCPSessionCreator {
         try {
             return initiate(InetAddress.getByName(host), port, registry);
         } catch (UnknownHostException x) {
-            throw new BEEPException(ERR_CONNECT_FAILURE);
+            throw new BEEPException("Unable to connect, unkown host");
         }
     }
 
@@ -168,7 +171,7 @@ public class AutomatedTCPSessionCreator {
 
                 listenerSockets.put(Integer.toString(port), socket);
             } catch (Exception x) {
-                throw new BEEPException(ERR_BIND_FAILURE);
+                throw new BEEPException(x.getMessage());
             }
         }
 
@@ -178,7 +181,7 @@ public class AutomatedTCPSessionCreator {
 
             return TCPSessionCreator.listen(peer, registry);
         } catch (Exception e) {
-            throw new BEEPException(ERR_LISTEN_FAILURE);
+            throw new BEEPException(e.getMessage());
         }
     }
 
@@ -209,7 +212,7 @@ public class AutomatedTCPSessionCreator {
 
             return temp;
         } catch (UnknownHostException x) {
-            throw new BEEPException(ERR_LISTEN_FAILURE);
+            throw new BEEPException(x.getMessage());
         }
     }
 }
