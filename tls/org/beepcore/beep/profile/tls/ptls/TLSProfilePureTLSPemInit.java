@@ -1,5 +1,5 @@
 /*
- * TLSProfilePureTLSPemInit.java  $Revision: 1.4 $ $Date: 2001/11/09 18:41:23 $
+ * TLSProfilePureTLSPemInit.java  $Revision: 1.5 $ $Date: 2003/06/07 17:29:47 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -29,7 +29,6 @@ import java.util.*;
 
 import java.io.*;
 
-import COM.claymoresystems.ptls.*;
 import COM.claymoresystems.sslg.*;
 import COM.claymoresystems.cert.*;
 import COM.claymoresystems.crypto.*;
@@ -66,7 +65,14 @@ public class TLSProfilePureTLSPemInit extends TLSProfile {
     public static final String PROPERTY_TRUSTED_CERTS =
         "Trusted Certificates";
 
-    private TLSProfilePureTLS tlsp = new TLSProfilePureTLS();
+    private TLSProfilePureTLS tlsp = null;
+
+    /**
+     * Default constructor
+     */
+    public TLSProfilePureTLSPemInit(){
+        tlsp = new TLSProfilePureTLS();
+    }
 
     /**
      * init sets the criteria for which an TLS connection is made when
@@ -133,6 +139,8 @@ public class TLSProfilePureTLSPemInit extends TLSProfile {
             } else {
                 tlsp.setNeedPeerAuthentication(false);
             }
+        }else{
+            tlsp.setNeedPeerAuthentication(true);
         }
         // set the cipher suites
         if (config.getProperty(PROPERTY_CIPHER_SUITE) != null) {
