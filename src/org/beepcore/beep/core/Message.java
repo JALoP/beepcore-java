@@ -1,6 +1,5 @@
-
 /*
- * Message.java            $Revision: 1.1 $ $Date: 2001/04/02 08:56:06 $
+ * Message.java            $Revision: 1.2 $ $Date: 2001/04/16 17:07:08 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -33,7 +32,7 @@ import java.lang.IndexOutOfBoundsException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2001/04/02 08:56:06 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/16 17:07:08 $
  */
 public class Message {
 
@@ -177,90 +176,6 @@ public class Message {
     public int getMessageType()
     {
         return this.messageType;
-    }
-
-    /**
-     * Returns a MESSAGE_TYPE (int) corresponding to the given
-     * <code>String</code>.
-     * Returns -1 if <code>String</code> is not found.
-     *
-     * @param type Message type.
-     *
-     * @throws IndexOutOfBoundsException
-     */
-    static public int getMessageType(String type)
-            throws IndexOutOfBoundsException
-    {
-        return MessageType.getMessageType(type);
-    }
-
-    /**
-     * Returns a String corresponding to the given MESSAGE_TYPE (int).
-     *
-     * @param type Message type.
-     *
-     * @exception IndexOutOfBoundsException Throws IndexOutOfBoundsException to
-     * the next level.
-     */
-    static public String getMessageType(int type)
-            throws IndexOutOfBoundsException
-    {
-        return MessageType.getMessageType(type);
-    }
-
-    static class MessageType {
-
-        public static final String MESSAGE_TYPE_UNK = "UNK";
-        public static final String MESSAGE_TYPE_MSG = "MSG";
-        public static final String MESSAGE_TYPE_RPY = "RPY";
-        public static final String MESSAGE_TYPE_ERR = "ERR";
-        public static final String MESSAGE_TYPE_ANS = "ANS";
-        public static final String MESSAGE_TYPE_NUL = "NUL";
-
-        //    public static LinkedList types = new LinkedList();
-        public static String[] types = new String[Message.MESSAGE_TYPE_MAX];
-
-        /**
-         * Constructor MessageType
-         *
-         *
-         */
-        public MessageType() {}
-
-        static {
-            types[Message.MESSAGE_TYPE_UNK] = MessageType.MESSAGE_TYPE_UNK;
-            types[Message.MESSAGE_TYPE_ANS] = MessageType.MESSAGE_TYPE_ANS;
-            types[Message.MESSAGE_TYPE_MSG] = MessageType.MESSAGE_TYPE_MSG;
-            types[Message.MESSAGE_TYPE_ERR] = MessageType.MESSAGE_TYPE_ERR;
-            types[Message.MESSAGE_TYPE_RPY] = MessageType.MESSAGE_TYPE_RPY;
-            types[Message.MESSAGE_TYPE_NUL] = MessageType.MESSAGE_TYPE_NUL;
-        }
-
-        static int getMessageType(String type)
-                throws IndexOutOfBoundsException
-        {
-            int ret = 0;
-            int i = 0;
-
-            for (i = 0; i < MESSAGE_TYPE_MAX; i++) {
-                if (type.equals(types[i])) {
-                    ret = i;
-
-                    break;
-                }
-            }
-
-            Log.logEntry(Log.SEV_DEBUG_VERBOSE,
-                         "getMessageType=" + types[ret] + " (" + ret + ")");
-
-            return ret;
-        }
-
-        static String getMessageType(int type)
-                throws IndexOutOfBoundsException
-        {
-            return types[type];
-        }
     }
 
     boolean isNotified()
