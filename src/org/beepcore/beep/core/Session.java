@@ -1,5 +1,5 @@
 /*
- * Session.java  $Revision: 1.27 $ $Date: 2002/05/28 04:50:06 $
+ * Session.java  $Revision: 1.28 $ $Date: 2002/08/20 03:08:58 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001 Huston Franklin.  All rights reserved.
@@ -59,7 +59,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.27 $, $Date: 2002/05/28 04:50:06 $
+ * @version $Revision: 1.28 $, $Date: 2002/08/20 03:08:58 $
  *
  * @see Channel
  */
@@ -176,7 +176,7 @@ public abstract class Session {
         GreetingListener greetingListener = new GreetingListener();
 
         zero = new Channel(this, CHANNEL_ZERO, greetingListener);
-        zero.setMessageListener(new ChannelZeroListener());
+        zero.setMessageListener(new ChannelZeroListener(), false);
 
         channels.put(CHANNEL_ZERO, zero);
 
@@ -227,7 +227,7 @@ public abstract class Session {
         GreetingListener greetingListener = new GreetingListener();
 
         zero = new Channel(this, CHANNEL_ZERO, greetingListener);
-        zero.setMessageListener(new ChannelZeroListener());
+        zero.setMessageListener(new ChannelZeroListener(), false);
         channels.put(CHANNEL_ZERO, zero);
 
         // send greeting
@@ -524,7 +524,7 @@ public abstract class Session {
      * You should not see this.
      */
     Channel startChannelRequest(Collection profiles, MessageListener listener,
-                                boolean disableIO)
+                                boolean tuning)
             throws BEEPException, BEEPError
     {
 
@@ -566,15 +566,21 @@ public abstract class Session {
 
         // @todo handle the data element
         // Create a channel
-        Channel ch = new Channel(null, channelNumber, listener, this);
+        Channel ch = new Channel(null, channelNumber, listener, true, this);
 
         // Make a message
         OutputDataStream ds =
             new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
                                      StringUtil.stringBufferToAscii(startBuffer));
 
+        if (tuning) {
+            this.changeState(SESSION_STATE_TUNING_PENDING);
+            this.changeState(SESSION_STATE_TUNING);
+            this.zero.setState(Channel.STATE_TUNING);
+        }
+
         // Tell Channel Zero to start us up
-        StartReplyListener reply = new StartReplyListener(ch, disableIO);
+        StartReplyListener reply = new StartReplyListener(ch);
         synchronized (reply) {
             this.zero.sendMSG(ds, reply);
             try {
@@ -591,9 +597,13 @@ public abstract class Session {
             throw reply.getError();
         }
 
-        if (ch.getState() != Channel.STATE_OK) {
+        if (ch.getState() != Channel.STATE_ACTIVE) {
             throw new BEEPException("Error channel state (" +
                                     ch.getState() + ")");
+        }
+
+        if (tuning) {
+            ch.setState(Channel.STATE_TUNING);
         }
 
         fireChannelStarted(ch);
@@ -732,16 +742,6 @@ public abstract class Session {
      */
     protected void postFrame(Frame f) throws BEEPException {
         ops[state].postFrame(this, f);
-    }
-
-    /**
-     * Method prevents Channel's window from being updated.
-     *
-     *
-     */
-    protected void prohibitChannelWindowUpdates()
-    {
-        allowChannelWindowUpdates = false;
     }
 
     /**
@@ -963,7 +963,7 @@ public abstract class Session {
                                      StringUtil.stringBufferToAscii(sb));
 
         // Store the Channel
-        ch.setState(Channel.STATE_OK);
+        ch.setState(Channel.STATE_ACTIVE);
         channels.put(ch.getNumberAsString(), ch);
         ((Message)zero.getAppData()).sendRPY(ds);
     }
@@ -1220,7 +1220,7 @@ public abstract class Session {
                 continue;
             }
 
-            ch = new Channel(p.uri, channelNumber, null, this);
+            ch = new Channel(p.uri, channelNumber, this);
 
             try {
                 String encoding = p.base64Encoding ? "base64" : "none";
@@ -1531,13 +1531,11 @@ public abstract class Session {
     private class StartReplyListener implements ReplyListener {
 
         Channel channel;
-        boolean disableIO;
         BEEPError error;
 
-        StartReplyListener(Channel channel, boolean disableIO)
+        StartReplyListener(Channel channel)
         {
             this.channel = channel;
-            this.disableIO = disableIO;
             this.error = null;
         }
 
@@ -1552,10 +1550,6 @@ public abstract class Session {
         public void receiveRPY(Message message)
         {
             try {
-                if (disableIO) {
-                    Session.this.disableIO();
-                }
-
                 Element topElement = processMessage(message);
 
                 // is this RPY a <greeting>
@@ -1599,7 +1593,7 @@ public abstract class Session {
                         channel.setStartData(data);
 
                         // set the state
-                        channel.setState(Channel.STATE_OK);
+                        channel.setState(Channel.STATE_ACTIVE);
                         channels.put(channel.getNumberAsString(), channel);
 
                         /**
@@ -1610,13 +1604,6 @@ public abstract class Session {
                         // to start or close
                         synchronized (this) {
                             this.notify();
-                        }
-
-                        // I'm not sure why this is being done.
-                        if (TuningProfile.isTuningProfile(uri)) {
-                            Log.logEntry(Log.SEV_DEBUG, CORE,
-                                         "Disabling this I/O thread");
-                            Session.this.disableIO();
                         }
                     } catch (Exception x) {
                         throw new BEEPException(x.getMessage());
@@ -1741,7 +1728,7 @@ public abstract class Session {
             this.error = err;
 
             // set the state
-            channel.setState(Channel.STATE_OK);
+            channel.setState(Channel.STATE_ACTIVE);
             channels.remove(channel.getNumberAsString());
 
             // release the block waiting for the channel to start or close
