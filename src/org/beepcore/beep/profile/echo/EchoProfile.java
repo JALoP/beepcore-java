@@ -1,5 +1,5 @@
 /*
- * EchoProfile.java    $Revision: 1.2 $ $Date: 2001/04/02 21:39:00 $
+ * EchoProfile.java    $Revision: 1.3 $ $Date: 2001/04/13 04:16:42 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -31,7 +31,7 @@ import org.beepcore.beep.util.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/04/02 21:39:00 $
+ * @version $Revision: 1.3 $, $Date: 2001/04/13 04:16:42 $
  */
 public class EchoProfile
     extends ProfileImpl implements StartChannelListener, MessageListener
@@ -87,29 +87,8 @@ public class EchoProfile
     {
         Log.logEntry(Log.SEV_DEBUG, "Received MSG Callback [ECHO]");
 
-        // Generate a response
-        byte buff[] = null;
-        DataStream ds = message.getDataStream();
-
         try {
-            int length = ds.getInputStream().available();
-
-            buff = new byte[length];
-
-            int count = 0;
-
-            while (count < length) {
-                count += ds.getInputStream().read(buff, 0, length);
-            }
-
-        } catch (IOException e) {
-            throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
-                                "Error while reading message in Echo Profile");
-        }
-
-        Channel ch = message.getChannel();
-        try {
-            ch.sendRPY(ds);
+            message.getChannel().sendRPY(message.getDataStream());
         } catch (BEEPException e) {
             throw new BEEPError(BEEPError.CODE_REQUESTED_ACTION_ABORTED,
                                 "Error sending RPY");
