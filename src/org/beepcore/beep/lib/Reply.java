@@ -1,6 +1,6 @@
 
 /*
- * Reply.java            $Revision: 1.1 $ $Date: 2001/04/02 08:45:27 $
+ * Reply.java            $Revision: 1.2 $ $Date: 2001/04/09 13:34:50 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -46,7 +46,7 @@ import org.beepcore.beep.core.ReplyListener;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/02 08:45:27 $
+ * @version $Revision, $Date: 2001/04/09 13:34:50 $
  */
 public class Reply implements ReplyListener {
 
@@ -119,49 +119,25 @@ public class Reply implements ReplyListener {
         notify();
     }
 
-    /**
-     * Method receiveRPY
-     *
-     *
-     * @param message
-     *
-     */
+    // Implementation of method declared in ReplyListener
     public void receiveRPY(Message message)
     {
         setMessage(message);
     }
 
-    /**
-     * Method receiveERR
-     *
-     *
-     * @param message
-     *
-     */
+    // Implementation of method declared in ReplyListener
     public void receiveERR(Message message)
     {
         setMessage(message);
     }
 
-    /**
-     * Method receiveANS
-     *
-     *
-     * @param message
-     *
-     */
+    // Implementation of method declared in ReplyListener
     public void receiveANS(Message message)
     {
         setMessage(message);
     }
 
-    /**
-     * Method receiveNUL
-     *
-     *
-     * @param message
-     *
-     */
+    // Implementation of method declared in ReplyListener
     public void receiveNUL(Message message)
     {
         setMessage(message);
