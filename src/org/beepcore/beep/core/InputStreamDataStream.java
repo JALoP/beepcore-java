@@ -1,6 +1,5 @@
-
 /*
- * InputStreamDataStream.java            $Revision: 1.1 $ $Date: 2001/04/17 22:44:00 $
+ * InputStreamDataStream.java  $Revision: 1.2 $ $Date: 2001/04/18 10:00:06 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -39,7 +38,7 @@ import java.lang.SecurityException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/17 22:44:00 $
+ * @version $Revision: 1.2 $, $Date: 2001/04/18 10:00:06 $
  */
 public class InputStreamDataStream extends DataStream {
 
@@ -51,8 +50,6 @@ public class InputStreamDataStream extends DataStream {
      * of <code>DEFAULT_CONTENT_TRANSFER_ENCODING</code>.
      *
      * @param data  the stream to be opened for reading.
-     *
-     * @exception IOException if an I/O error occurs.
      */
     public InputStreamDataStream(InputStream data)
     {
@@ -68,8 +65,6 @@ public class InputStreamDataStream extends DataStream {
      *
      * @param contentType Content type of <code>stream</code>.
      * @param data  the stream to be opened for reading.
-     *
-     * @exception IOException if an I/O error occurs.
      */
     public InputStreamDataStream(String contentType, InputStream data)
     {
@@ -86,8 +81,6 @@ public class InputStreamDataStream extends DataStream {
      * @param transferEncoding Encoding Transfer encoding type of
      * <code>stream</code>.
      * @param data  the stream to be opened for reading.
-     *
-     * @exception IOException if an I/O error occurs.
      */
     public InputStreamDataStream(String contentType, String transferEncoding,
                                  InputStream data)
@@ -114,14 +107,14 @@ public class InputStreamDataStream extends DataStream {
      *
      * @return Number of bytes available.
      *
-     * @throws IOException
+     * @throws BEEPException
      */
     int available() throws BEEPException
     {
         try {
             return data.available();
         } catch (IOException e) {
-            throw new BEEPException("threw IOException");
+            throw new BEEPException(e.getMessage());
         }
     }
 
@@ -132,7 +125,7 @@ public class InputStreamDataStream extends DataStream {
      *
      * @return The next byte.
      *
-     * @exception IOException Throws <code>IOException</code>,
+     * @exception BEEPException Throws <code>BEEPException</code>,
      * if an I/O error occurs.
      */
     int read() throws BEEPException
@@ -140,7 +133,7 @@ public class InputStreamDataStream extends DataStream {
         try {
             return this.data.read();
         } catch (IOException e) {
-            throw new BEEPException("threw IOException");
+            throw new BEEPException(e.getMessage());
         }
     }
 
@@ -154,7 +147,7 @@ public class InputStreamDataStream extends DataStream {
      * @return The total number of bytes read into the buffer, or -1 if
      *    there is no more data because the end of the file has been reached.
      *
-     * @exception IOException Throws <code>IOException</code>,
+     * @exception BEEPException Throws <code>BEEPException</code>,
      * if an I/O error occurs.
      */
     int read(byte[] buf) throws BEEPException
@@ -162,7 +155,7 @@ public class InputStreamDataStream extends DataStream {
         try {
             return this.data.read(buf);
         } catch (IOException e) {
-            throw new BEEPException("threw IOException");
+            throw new BEEPException(e.getMessage());
         }
     }
 
@@ -176,7 +169,7 @@ public class InputStreamDataStream extends DataStream {
      * @param len The maximum number of bytes read.
      * @return The number of bytes read.  Returns -1 if no more can be
      *    read.
-     * @exception IOException Throws <code>IOException</code>,
+     * @exception BEEPException Throws <code>BEEPException</code>,
      * if an I/O error occurs.
      */
     int read(byte[] buf, int off, int len) throws BEEPException
@@ -184,7 +177,7 @@ public class InputStreamDataStream extends DataStream {
         try {
             return this.data.read(buf, off, len);
         } catch (IOException e) {
-            throw new BEEPException("threw IOException");
+            throw new BEEPException(e.getMessage());
         }
     }
 
@@ -194,7 +187,7 @@ public class InputStreamDataStream extends DataStream {
      * @param n Number of bytes to skip.
      * @return Number of bytes actually skipped.
      *
-     * @exception IOException Throws <code>IOException</code>,
+     * @exception BEEPException Throws <code>BEEPException</code>,
      * if an I/O error occurs.
      */
     long skip(long n) throws BEEPException
@@ -202,7 +195,7 @@ public class InputStreamDataStream extends DataStream {
         try {
             return this.data.skip(n);
         } catch (IOException e) {
-            throw new BEEPException("threw IOException");
+            throw new BEEPException(e.getMessage());
         }
     }
 
@@ -211,7 +204,7 @@ public class InputStreamDataStream extends DataStream {
         try {
             this.data.reset();
         } catch (IOException e) {
-            throw new BEEPException("threw IOException");
+            throw new BEEPException(e.getMessage());
         }
     }
 
@@ -230,7 +223,7 @@ public class InputStreamDataStream extends DataStream {
         try {
             this.data.close();
         } catch (IOException e) {
-            throw new BEEPException("threw IOException");
+            throw new BEEPException(e.getMessage());
         }
     }
 }
