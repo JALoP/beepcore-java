@@ -1,6 +1,6 @@
 
 /*
- * Reply.java            $Revision: 1.2 $ $Date: 2001/04/09 13:34:50 $
+ * Reply.java            $Revision: 1.3 $ $Date: 2001/04/16 20:04:34 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
-import org.beepcore.beep.core.BEEPException;
+import org.beepcore.beep.core.BEEPInterruptedException;
 import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.ReplyListener;
 
@@ -46,7 +46,7 @@ import org.beepcore.beep.core.ReplyListener;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision, $Date: 2001/04/09 13:34:50 $
+ * @version $Revision, $Date: 2001/04/16 20:04:34 $
  */
 public class Reply implements ReplyListener {
 
@@ -76,7 +76,7 @@ public class Reply implements ReplyListener {
      * <code>Message</code>s can be returned.
      *
      */
-    synchronized public Message getNextReply() throws BEEPException
+    synchronized public Message getNextReply() throws BEEPInterruptedException
     {
         if (this.complete) {
             throw new NoSuchElementException();
@@ -86,7 +86,7 @@ public class Reply implements ReplyListener {
             try {
                 this.wait();
             } catch (InterruptedException x) {
-                throw new BEEPException(x.getMessage());
+                throw new BEEPInterruptedException(x.getMessage());
             }
         }
 
@@ -108,12 +108,30 @@ public class Reply implements ReplyListener {
      * @see #getNextReply
      *
      */
-    synchronized public boolean hasNext()
+    synchronized public boolean hasNext() throws BEEPInterruptedException
     {
-        return !this.complete;
+        if (this.replies.size() != 0) {
+            return true;
+        }
+
+        if (this.complete) {
+            return false;
+        }
+
+        try {
+            this.wait();
+        } catch (InterruptedException x) {
+            throw new BEEPInterruptedException(x.getMessage());
+        }
+
+        if (complete) {
+            return false;
+        }
+
+        return true;
     }
 
-    synchronized private void setMessage(Message message)
+    private synchronized void setMessage(Message message)
     {
         this.replies.add(message);
         notify();
@@ -138,8 +156,9 @@ public class Reply implements ReplyListener {
     }
 
     // Implementation of method declared in ReplyListener
-    public void receiveNUL(Message message)
+    public synchronized void receiveNUL(Message message)
     {
-        setMessage(message);
+        this.complete = true;
+        notify();
     }
 }
