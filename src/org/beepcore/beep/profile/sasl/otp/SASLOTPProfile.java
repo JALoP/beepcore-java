@@ -1,7 +1,8 @@
 /*
- * SASLOTPProfile.java  $Revision: 1.11 $ $Date: 2003/06/10 18:59:24 $
+ * SASLOTPProfile.java  $Revision: 1.12 $ $Date: 2003/09/14 04:29:50 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -38,7 +39,7 @@ import org.beepcore.beep.profile.sasl.otp.database.*;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2003/06/10 18:59:24 $
+ * @version $Revision: 1.12 $, $Date: 2003/09/14 04:29:50 $
  *
  */
 public class SASLOTPProfile
@@ -183,6 +184,7 @@ public class SASLOTPProfile
             channel.getSession().terminate(x.getMessage());
             return;
         }
+        enableIO(channel.getSession());
         throw new TuningResetException("SASL ANON RESET");
     }
 
