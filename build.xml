@@ -127,6 +127,9 @@
         <jar jarfile="${release.dir}/${source.jar.name}"
 	     basedir="${build.dir}/src"/>
 
+	<copy file="lib/concurrent.jar"
+	      tofile="${release.dir}/lib/concurrent.jar"/>
+
 	<copy file="LICENSE.txt" tofile="${release.dir}/LICENSE.txt"/>
 	<copy file="README.txt" tofile="${release.dir}/README.txt"/>
 	<copy file="README_SASL.htm" tofile="${release.dir}/README_SASL.htm"/>
