@@ -1,5 +1,5 @@
 /*
- * ProfileConfiguration.java            $Revision: 1.4 $ $Date: 2002/08/27 16:43:12 $
+ * ProfileConfiguration.java            $Revision: 1.5 $ $Date: 2002/08/27 16:44:29 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin  All rights reserved.
@@ -60,7 +60,7 @@ public class ProfileConfiguration {
      *         if it is not found.
      */
     public String getProperty(String key, String defaultValue) {
-        return props.getProperty(key, String defaultValue);
+        return props.getProperty(key, defaultValue);
     }
 
     /**
