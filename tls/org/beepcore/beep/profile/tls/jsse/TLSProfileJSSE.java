@@ -1,5 +1,5 @@
 /*
- * TLSProfileJSSE.java  $Revision: 1.4 $ $Date: 2001/11/08 05:51:35 $
+ * TLSProfileJSSE.java  $Revision: 1.5 $ $Date: 2001/11/09 18:41:23 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  *
@@ -322,32 +322,26 @@ public class TLSProfileJSSE extends TLSProfile
         try {
 
             // initialize the key managers, trust managers, and
-            keyAlgorithm = config.getProperty(PROPERTY_KEY_MANAGER_ALGORITHM,
-                                              null);
-            keyProvider = config.getProperty(PROPERTY_KEY_MANAGER_PROVIDER,
-                                             null);
+            keyAlgorithm = config.getProperty(PROPERTY_KEY_MANAGER_ALGORITHM);
+            keyProvider = config.getProperty(PROPERTY_KEY_MANAGER_PROVIDER);
             trustAlgorithm =
-                config.getProperty(PROPERTY_TRUST_MANAGER_ALGORITHM, null);
+                config.getProperty(PROPERTY_TRUST_MANAGER_ALGORITHM);
             trustProvider =
-                config.getProperty(PROPERTY_TRUST_MANAGER_PROVIDER, null);
-            keyPassphrase = config.getProperty(PROPERTY_KEYSTORE_PASSPHRASE,
-                                               null);
-            keyStoreType = config.getProperty(PROPERTY_KEYSTORE_TYPE, null);
-            keyStoreName = config.getProperty(PROPERTY_KEYSTORE_NAME, null);
+                config.getProperty(PROPERTY_TRUST_MANAGER_PROVIDER);
+            keyPassphrase = config.getProperty(PROPERTY_KEYSTORE_PASSPHRASE);
+            keyStoreType = config.getProperty(PROPERTY_KEYSTORE_TYPE);
+            keyStoreName = config.getProperty(PROPERTY_KEYSTORE_NAME);
             keyStoreFormat = config.getProperty(PROPERTY_KEYSTORE_FORMAT,
                                                 "JKS");
-            keyStoreProvider = config.getProperty(PROPERTY_KEYSTORE_PROVIDER,
-                                                  null);
+            keyStoreProvider = config.getProperty(PROPERTY_KEYSTORE_PROVIDER);
             trustPassphrase =
-                config.getProperty(PROPERTY_TRUSTSTORE_PASSPHRASE, null);
-            trustStoreType = config.getProperty(PROPERTY_TRUSTSTORE_TYPE,
-                                                null);
-            trustStoreName = config.getProperty(PROPERTY_TRUSTSTORE_NAME,
-                                                null);
+                config.getProperty(PROPERTY_TRUSTSTORE_PASSPHRASE);
+            trustStoreType = config.getProperty(PROPERTY_TRUSTSTORE_TYPE);
+            trustStoreName = config.getProperty(PROPERTY_TRUSTSTORE_NAME);
             trustStoreFormat = config.getProperty(PROPERTY_TRUSTSTORE_FORMAT,
                                                   "JKS");
             trustStoreProvider =
-                config.getProperty(PROPERTY_TRUSTSTORE_PROVIDER, null);
+                config.getProperty(PROPERTY_TRUSTSTORE_PROVIDER);
 
             // determine if the client must authenticate or if the server can
             // 

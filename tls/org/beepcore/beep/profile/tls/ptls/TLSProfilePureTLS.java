@@ -1,7 +1,8 @@
 /*
- * TLSProfilePureTLS.java  $Revision: 1.4 $ $Date: 2001/11/08 05:51:35 $
+ * TLSProfilePureTLS.java  $Revision: 1.5 $ $Date: 2001/11/09 18:41:23 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -60,8 +61,9 @@ import java.io.IOException;
  * @see org.beepcore.beep.profile.tls.ptls.TLSProfilePureTLSHandshakeCompletedListener
  * @see java.util.List
  */
-public class TLSProfilePureTLS extends TLSProfile
-        implements StartChannelListener {
+public class TLSProfilePureTLS extends TuningProfile
+    implements StartChannelListener
+{
 
     // Constants
     public static final String PROCEED1 = "<proceed/>";
@@ -70,7 +72,8 @@ public class TLSProfilePureTLS extends TLSProfile
     public static final String READY2 = "<ready />";
 
     /**
-     * use this as the uri for the channel to open to encrypt a session using TLS.
+     * use this as the uri for the channel to open to encrypt a
+     * session using TLS.
      */
     public static final String URI = "http://iana.org/beep/TLS";
 
@@ -94,7 +97,8 @@ public class TLSProfilePureTLS extends TLSProfile
         "Authentication failed for this TLS negotiation";
 
     // property names
-    //      public static final String PROPERTY_PEER_AUTHENTICATION_REQUIRED = "Peer Authentication Required";
+    //      public static final String PROPERTY_PEER_AUTHENTICATION_REQUIRED =
+    //         "Peer Authentication Required";
     public static final String PROPERTY_CLIENT_AUTH_REQUIRED = 
         "Client Authenticaton Required";
     public static final String PROPERTY_CIPHER_SUITE = "Cipher Suite";
@@ -182,7 +186,8 @@ public class TLSProfilePureTLS extends TLSProfile
         policy = new SSLPolicyInt();
     }
 
-    public boolean advertiseProfile(Session session, SessionTuningProperties tuning)
+    public boolean advertiseProfile(Session session,
+                                    SessionTuningProperties tuning)
             throws BEEPException
     {
         return true;
@@ -197,17 +202,21 @@ public class TLSProfilePureTLS extends TLSProfile
      * request, irregardless of which actually started the session.<p>
      *
      * @param uri used to start a channel with TLS protection
-     * @param config used to specify the parameters for sessions protected
-     * by this profile's version of TLS.  In other words, if you want another
-     * set of paramters, you must either recall this method or create another
-     * <code>TLSProfilePureTLS</code> and call this method with a new configuration.
+     * @param config used to specify the parameters for sessions
+     * protected by this profile's version of TLS.  In other words, if
+     * you want another set of paramters, you must either recall this
+     * method or create another <code>TLSProfilePureTLS</code> and
+     * call this method with a new configuration.
+     *
      * The meaningful properties that can be set are:
      * <table>
      * <tr>
-     * <td><i>Cipher Suite</i></td><td><code>short []</code>  corresponding to the
-     * <a href="http://www.ietf.org/rfc/rfc2246.txt">TLS spec</a> ciphers (Appendix A).
-     * By default all the ciphers (except anonymous for now) are available.  Use this
-     * to restrict to a certain strength of cipher if you desire to do so.</td>
+     * <td><i>Cipher Suite</i></td><td><code>short []</code>
+     * corresponding to the <a
+     * href="http://www.ietf.org/rfc/rfc2246.txt">TLS spec</a> ciphers
+     * (Appendix A).  By default all the ciphers (except anonymous for
+     * now) are available.  Use this to restrict to a certain strength
+     * of cipher if you desire to do so.</td>
      * </tr>
      * <tr>
      * <td><i>Certificates</i></td><td>{@link List} that holds the X.509
@@ -225,11 +234,12 @@ public class TLSProfilePureTLS extends TLSProfile
      * </tr>
      * <tr>
      * <td><i>Trusted Certificates</i></td><td>{@link List} that holds
-     * all trusted (or root) certificates that we can verify a peer against.</td>
+     * all trusted (or root) certificates that we can verify a peer
+     * against.</td>
      * </tr>
      * </table>
      */
-    public StartChannelListener init(String uri, ProfileConfiguration config)
+    public StartChannelListener init(String uri, Hashtable config)
             throws BEEPException
     {
         boolean havePrivateKey = false;
@@ -280,7 +290,9 @@ public class TLSProfilePureTLS extends TLSProfile
                 || (config.get(PROPERTY_PRIVATE_KEY_ALGORITHM) == null)
                 || (config.get(PROPERTY_CERTIFICATES) == null)
                 || (config.get(PROPERTY_TRUSTED_CERTS) == null)) {
-            throw new BEEPException("Must have a private key and certificates with root certificates that match the key's algorithm");
+            throw new BEEPException("Must have a private key and " +
+                                    "certificates with root certificates " +
+                                    "that match the key's algorithm");
         }
 
         // store the private key
@@ -290,7 +302,8 @@ public class TLSProfilePureTLS extends TLSProfile
 
         // store the certificates
         if (!(config.get(PROPERTY_CERTIFICATES) instanceof List)) {
-            throw new BEEPException("X.509 Certificates should be in a List or subclass");
+            throw new BEEPException("X.509 Certificates should be in a List " +
+                                    "or subclass");
         }
 
         // iterate the list and put the certificates into the policy
@@ -331,7 +344,8 @@ public class TLSProfilePureTLS extends TLSProfile
                 PureTLSPackageBridge.addRootCertificate(context, c);
             }
         } catch (Exception e) {
-            throw new BEEPException("Trusted (root) certificates must be in DRE format contained in byte[]");
+            throw new BEEPException("Trusted (root) certificates must be in " +
+                                    "DRE format contained in byte[]");
         }
 
         // return ourselves as the start channel listener
@@ -487,11 +501,12 @@ public class TLSProfilePureTLS extends TLSProfile
     /**
      * Called when the underlying BEEP framework receives
      * a "close" element.<p>
-     *     As of now, it is not possible to close a TLS channel.  To cease using
-     *     TLS, the entire session must be closed.  This is done since opening
-     *     a TLS channel resets the entire session, effectively closing all the
-     *     previously open channels, including channel 0 (hence the greetings are
-     *     exchanged again).
+     *
+     * As of now, it is not possible to close a TLS channel.  To cease
+     * using TLS, the entire session must be closed.  This is done
+     * since opening a TLS channel resets the entire session,
+     * effectively closing all the previously open channels, including
+     * channel 0 (hence the greetings are exchanged again).
      *
      * @param channel <code>Channel</code> which received the close request.
      *
@@ -731,11 +746,13 @@ public class TLSProfilePureTLS extends TLSProfile
     }
 
     /**
-     * allows an initializer class to set the trusted certificates for the profile.
-     * The initializers are profile classes with a custom {@link init} method
-     * that takes the certificates (a {@link List} of byte[], each being
-     * the DER format for an X.509 certificate) from a given source, such as a
-     * file or database and calls this method.
+     * allows an initializer class to set the trusted certificates for
+     * the profile.  The initializers are profile classes with a
+     * custom {@link init} method that takes the certificates (a
+     * {@link List} of byte[], each being the DER format for an X.509
+     * certificate) from a given source, such as a file or database
+     * and calls this method.
+     *
      * @param certs
      */
     void setRootCerts(List certs) throws BEEPException

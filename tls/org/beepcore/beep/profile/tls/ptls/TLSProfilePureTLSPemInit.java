@@ -1,7 +1,8 @@
 /*
- * TLSProfilePureTLSPemInit.java  $Revision: 1.3 $ $Date: 2001/11/08 05:51:35 $
+ * TLSProfilePureTLSPemInit.java  $Revision: 1.4 $ $Date: 2001/11/09 18:41:23 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2001 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -20,6 +21,7 @@ package org.beepcore.beep.profile.tls.ptls;
 import org.beepcore.beep.core.*;
 import org.beepcore.beep.profile.*;
 import org.beepcore.beep.profile.tls.TLSProfile;
+import org.beepcore.beep.transport.tcp.TCPSession;
 
 import java.security.PrivateKey;
 
@@ -45,7 +47,7 @@ import COM.claymoresystems.crypto.*;
  * TLSProfilePureTLS} is designed to be flexible and not require any
  * specific configuration to encrypt a session with TLS.
  */
-public class TLSProfilePureTLSPemInit implements Profile {
+public class TLSProfilePureTLSPemInit extends TLSProfile {
 
     // property names
     //      public static final String PROPERTY_PEER_AUTHENTICATION_REQUIRED = "Peer Authentication Required";
@@ -64,6 +66,8 @@ public class TLSProfilePureTLSPemInit implements Profile {
     public static final String PROPERTY_TRUSTED_CERTS =
         "Trusted Certificates";
 
+    private TLSProfilePureTLS tlsp = new TLSProfilePureTLS();
+
     /**
      * init sets the criteria for which an TLS connection is made when
      * a TLS channel is started for a profile.  It should only be
@@ -73,60 +77,69 @@ public class TLSProfilePureTLSPemInit implements Profile {
      * request, irregardless of which actually started the session.<p>
      *
      * @param uri used to start a channel with TLS protection
-     * @param config used to specify the parameters for sessions protected
-     * by this profile's version of TLS.  In other words, if you want another
-     * set of paramters, you must either recall this method or create another
-     * <code>TLSProfilePureTLSPemInit</code> and call this method with a new
-     * configuration.  Note: All different parameters may be in the same PEM file.
+     * @param config used to specify the parameters for sessions
+     * protected by this profile's version of TLS.  In other words, if
+     * you want another set of paramters, you must either recall this
+     * method or create another <code>TLSProfilePureTLSPemInit</code>
+     * and call this method with a new configuration.  Note: All
+     * different parameters may be in the same PEM file.
+     *
      * The meaningful properties that can be set are:
+     *
      * <table>
      * <tr>
-     * <td><i>Cipher Suite</i></td><td>List of cipher names (comma separated)
-     * to accept.  Cipher names are formatted as per Appendix A in the TLS spec.
-     * By default all the ciphers (except anonymous for now) are available.  Use this
-     * to restrict to a certain strength of cipher if you desire to do so.</td>
+     * <td><i>Cipher Suite</i></td><td>List of cipher names (comma
+     * separated) to accept.  Cipher names are formatted as per
+     * Appendix A in the TLS spec.  By default all the ciphers (except
+     * anonymous for now) are available.  Use this to restrict to a
+     * certain strength of cipher if you desire to do so.</td>
      * </tr>
+     *
      * <tr>
-     * <td><i>Certificates</i></td><td>Name of the PEM file that contains the
-     * certificates to present.  These are in order from the user's certificate
-     * to the root certificate.</td>
+     * <td><i>Certificates</i></td><td>Name of the PEM file that
+     * contains the certificates to present.  These are in order from
+     * the user's certificate to the root certificate.</td>
      * </tr>
+     *
      * <tr>
      * <td><i>Private Key</i></td><td>Name of the PEM file that contains the
      * encrypted private key to use.</td>
      * </tr>
+     *
      * <tr>
-     * <td><i>Private Key Passphrase</i></td><td>{@link String} passphrase used to
-     * encrypt the private key in its file.</td>
+     * <td><i>Private Key Passphrase</i></td><td>{@link String}
+     * passphrase used to encrypt the private key in its file.</td>
      * </tr>
+     *
      * <tr>
-     * <td><i>Private Key Type</i></td><td>"RSA" or "DSA" are the two accepted private key formats.</td>
+     * <td><i>Private Key Type</i></td><td>"RSA" or "DSA" are the two
+     * accepted private key formats.</td>
      * </tr>
+     *
      * <tr>
-     * <td><i>Trusted Certificates</i></td><td>Name of the PEM file that contains
-     * the root certificates used to verify a peer's identity.</td>
+     * <td><i>Trusted Certificates</i></td><td>Name of the PEM file
+     * that contains the root certificates used to verify a peer's
+     * identity.</td>
      * </tr>
      * </table>
      */
     public StartChannelListener init(String uri, ProfileConfiguration config)
             throws BEEPException
     {
-        TLSProfilePureTLS tlsp = new TLSProfilePureTLS();
-
         // set whether or not peer must send a certificate
-        if (config.get(PROPERTY_CLIENT_AUTH_REQUIRED) != null) {
-            if (new Boolean((String) config.get(PROPERTY_CLIENT_AUTH_REQUIRED)).booleanValue() == true) {
+        if (config.getProperty(PROPERTY_CLIENT_AUTH_REQUIRED) != null) {
+            if (new Boolean(config.getProperty(PROPERTY_CLIENT_AUTH_REQUIRED)).booleanValue() == true) {
                 tlsp.setNeedPeerAuthentication(true);
             } else {
                 tlsp.setNeedPeerAuthentication(false);
             }
         }
         // set the cipher suites
-        if (config.get(PROPERTY_CIPHER_SUITE) != null) {
+        if (config.getProperty(PROPERTY_CIPHER_SUITE) != null) {
 
             // parse the cipher names
             int fromIndex = 0;
-            String cipherNames = (String) config.get(PROPERTY_CIPHER_SUITE);
+            String cipherNames = config.getProperty(PROPERTY_CIPHER_SUITE);
             short cipherTemp[] = new short[TLSProfilePureTLS.MAX_CIPHERS];
             int cipherCount = 0;
             int toIndex = cipherNames.indexOf(',', fromIndex);
@@ -171,11 +184,14 @@ public class TLSProfilePureTLSPemInit implements Profile {
         // for now, we don't support the anonymous cipher suites, meaning
         // the user must supply a private key, certificate(s), and trusted
         // certificate.
-        if ((config.get(PROPERTY_PRIVATE_KEY) == null)
-                || (config.get(PROPERTY_PRIVATE_KEY_TYPE) == null)
-                || (config.get(PROPERTY_CERTIFICATES) == null)
-                || (config.get(PROPERTY_TRUSTED_CERTS) == null)) {
-            throw new BEEPException("Must have a private key and certificates with root certificates that match the key's algorithm");
+        if ((config.getProperty(PROPERTY_PRIVATE_KEY) == null)
+                || (config.getProperty(PROPERTY_PRIVATE_KEY_TYPE) == null)
+                || (config.getProperty(PROPERTY_CERTIFICATES) == null)
+                || (config.getProperty(PROPERTY_TRUSTED_CERTS) == null))
+        {
+            throw new BEEPException("Must have a private key and certificates "
+                                    + "with root certificates that match the "
+                                    + "key's algorithm");
         }
 
         // set the private key to use in encrypting/decrypting either the
@@ -187,7 +203,7 @@ public class TLSProfilePureTLSPemInit implements Profile {
             // but this is the certificates that we present according
             // to the negotiated cipher suite.  We assume that the
             // peer has a root that is in common with us.
-            String certFile = (String) config.get(PROPERTY_CERTIFICATES);
+            String certFile = config.getProperty(PROPERTY_CERTIFICATES);
             BufferedReader certbr =
                 new BufferedReader(new FileReader(certFile));
             StringBuffer certType = new StringBuffer();
@@ -206,12 +222,12 @@ public class TLSProfilePureTLSPemInit implements Profile {
 
             tlsp.setCertChain(certs);
 
-            String keyFile = (String) config.get(PROPERTY_PRIVATE_KEY);
+            String keyFile = config.getProperty(PROPERTY_PRIVATE_KEY);
             BufferedReader keybr =
                 new BufferedReader(new FileReader(keyFile));
-            String keyType = (String) config.get(PROPERTY_PRIVATE_KEY_TYPE);
+            String keyType = config.getProperty(PROPERTY_PRIVATE_KEY_TYPE);
             String passphrase =
-                (String) config.get(PROPERTY_PRIVATE_KEY_PASSPHRASE);
+                config.getProperty(PROPERTY_PRIVATE_KEY_PASSPHRASE);
             StringBuffer actualKeyType = new StringBuffer();
 
             if (!WrappedObject.findObject(keybr, "PRIVATE KEY",
@@ -221,9 +237,10 @@ public class TLSProfilePureTLSPemInit implements Profile {
             }
 
             if (!actualKeyType.toString().equals(keyType)) {
-                throw new BEEPException("Private key types differ.  Looking for "
-                                        + keyType + " and found "
-                                        + actualKeyType.toString());
+                throw new BEEPException("Private key types differ.  " +
+                                        "Looking for " + keyType +
+                                        " and found " +
+                                        actualKeyType.toString());
             }
 
             PrivateKey key =
@@ -233,7 +250,7 @@ public class TLSProfilePureTLSPemInit implements Profile {
             tlsp.setPrivateKey(key);
 
             // verify that the object passed in is either a list or a String
-            certFile = (String) config.get(PROPERTY_TRUSTED_CERTS);
+            certFile = config.getProperty(PROPERTY_TRUSTED_CERTS);
             certbr = new BufferedReader(new FileReader(certFile));
             certType = new StringBuffer();
 
@@ -257,5 +274,9 @@ public class TLSProfilePureTLSPemInit implements Profile {
 
         // return the TLSProfilePureTLS as the start channel listener
         return tlsp;
+    }
+
+    public TCPSession startTLS(TCPSession session) throws BEEPException {
+        return tlsp.startTLS(session);
     }
 }
