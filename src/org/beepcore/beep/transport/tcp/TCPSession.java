@@ -1,8 +1,8 @@
 /*
- * TCPSession.java  $Revision: 1.31 $ $Date: 2003/05/27 21:38:01 $
+ * TCPSession.java  $Revision: 1.32 $ $Date: 2003/06/03 02:41:23 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.31 $, $Date: 2003/05/27 21:38:01 $
+ * @version $Revision: 1.32 $, $Date: 2003/06/03 02:41:23 $
  */
 public class TCPSession extends SessionImpl {
 
@@ -377,10 +377,6 @@ public class TCPSession extends SessionImpl {
                                                 int currentAvail)
             throws BEEPException
     {
-        // If IO is disabled don't send SEQ
-        if (running == false)
-            return false;
-
         StringBuffer sb = new StringBuffer(Frame.MAX_HEADER_SIZE);
 
         sb.append(MESSAGE_TYPE_SEQ);
@@ -448,7 +444,10 @@ public class TCPSession extends SessionImpl {
                     processSEQFrame(headerBuffer, amountRead, is);
                     continue;
                 } else {
-                    processCoreFrame(headerBuffer, amountRead, is);
+                    if (processCoreFrame(headerBuffer, amountRead, is) == false)
+                    {
+                        break;
+                    }
                 }
             }
         } catch (IOException e) {
@@ -470,8 +469,8 @@ public class TCPSession extends SessionImpl {
         }
     }
 
-    private void processCoreFrame(byte[] headerBuffer, int amountRead,
-                                  InputStream is)
+    private boolean processCoreFrame(byte[] headerBuffer, int amountRead,
+                                     InputStream is)
         throws SessionAbortedException, BEEPException, IOException
     {
         int headerLength = 0;
@@ -501,7 +500,7 @@ public class TCPSession extends SessionImpl {
 
                 // socket closed intentionally (session closing)
                 // so just return
-                return;
+                return false;
             }
 
             while (headerLength < amountRead) {
@@ -597,7 +596,8 @@ public class TCPSession extends SessionImpl {
         }
 
         f.addPayload(new BufferSegment(payload));
-        super.postFrame(f);
+
+        return super.postFrame(f);
     }
 
     private void processSEQFrame(byte[] headerBuffer, int amountRead,
