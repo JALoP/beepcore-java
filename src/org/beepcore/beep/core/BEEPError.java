@@ -1,8 +1,8 @@
 /*
- * BEEPError.java  $Revision: 1.9 $ $Date: 2003/11/18 14:03:07 $
+ * BEEPError.java  $Revision: 1.10 $ $Date: 2006/02/25 17:48:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2002,2004 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -18,15 +18,6 @@
 package org.beepcore.beep.core;
 
 
-import java.io.IOException;
-
-import javax.xml.parsers.*;
-
-import org.w3c.dom.*;
-
-import org.xml.sax.SAXException;
-
-
 /**
  * Class BEEPError
  *
@@ -35,7 +26,7 @@ import org.xml.sax.SAXException;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.9 $, $Date: 2003/11/18 14:03:07 $
+ * @version $Revision: 1.10 $, $Date: 2006/02/25 17:48:37 $
  */
 public class BEEPError extends BEEPException {
 
@@ -129,133 +120,6 @@ public class BEEPError extends BEEPException {
     public String getDiagnostic()
     {
         return this.getMessage();
-    }
-
-    /**
-     * Method createErrorMessage
-     *
-     *
-     * @return the XML error element that can be sent in a BEEP ERR message
-     *
-     */
-    public String createErrorMessage()
-    {
-        return createErrorMessage(this.code, this.getMessage(), this.xmlLang);
-    }
-
-    /**
-     * Creates a <code>String</code> for an error element that can be sent
-     * in a BEEP ERR message.
-     *
-     * @param code Error code.
-     * @param diagnostic Error diagnostic.
-     */
-    public static String createErrorMessage(int code, String diagnostic)
-    {
-        return createErrorMessage(code, diagnostic, null);
-    }
-
-    /**
-     * Creates a <code>String</code> for an error element that can be sent
-     * in a BEEP ERR message.
-     *
-     * @param code Error code.
-     * @param diagnostic Error diagnostic.
-     * @param xmlLang Language of the diagnostic message.
-     */
-    public static String createErrorMessage(int code, String diagnostic,
-                                     String xmlLang)
-    {
-        StringBuffer sb = new StringBuffer(128);
-
-        sb.append("<error code='");
-        sb.append(code);
-
-        if (xmlLang != null) {
-            sb.append("' xml:lang='");
-            sb.append(xmlLang);
-        }
-
-        if (diagnostic != null) {
-            sb.append("' >");
-            sb.append(diagnostic);
-            sb.append("</error>");
-        } else {
-            sb.append("' />");
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Method convertMessageERRToException
-     *
-     *
-     * @param message
-     *
-     * @return New <code>BEEPError</code> for the specified BEEP ERR message
-     *
-     * @throws BEEPException
-     *
-     */
-    protected static BEEPError convertMessageERRToException(Message message)
-            throws BEEPException
-    {
-        if (message.getMessageType() != Message.MESSAGE_TYPE_ERR) {
-            throw new IllegalArgumentException("messageType != ERR");
-        }
-
-        // parse the stream
-        Document doc = null;
-
-        try {
-            DocumentBuilder builder =
-                DocumentBuilderFactory.newInstance().newDocumentBuilder();
-
-            doc = builder.parse(message.getDataStream().getInputStream());
-        } catch (ParserConfigurationException e) {
-            throw new BEEPException("Invalid parser configuration");
-        } catch (SAXException e) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        } catch (IOException ioe) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        }
-
-        if (doc == null) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        }
-
-        Element topElement = doc.getDocumentElement();
-
-        if (topElement == null) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        }
-
-        // check for <error>
-        String elementName = topElement.getTagName();
-
-        if (elementName == null) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        } else if (!elementName.equals("error")) {
-            throw new BEEPException("Unknown operation element");
-        }
-
-        String code = topElement.getAttribute("code");
-
-        if (code == null) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        }
-
-        // this attribute is implied
-        String xmlLang = topElement.getAttribute("xml:lang");
-        Node dataNode = topElement.getFirstChild();
-        String data = null;
-
-        if (dataNode != null) {
-            data = dataNode.getNodeValue();
-        }
-
-        return new BEEPError(Integer.parseInt(code), data, xmlLang);
     }
 
     /** Success */

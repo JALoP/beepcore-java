@@ -1,7 +1,7 @@
 /*
- * MessageMSG.java  $Revision: 1.10 $ $Date: 2003/06/03 16:38:35 $
+ * MessageMSG.java  $Revision: 1.11 $ $Date: 2006/02/25 17:48:37 $
  *
- * Copyright (c) 2003 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2003-2004 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ package org.beepcore.beep.core;
  * This interface represents the operations available for messages of type MSG.
  *
  * @author Huston Franklin
- * @version $Revision: 1.10 $, $Date: 2003/06/03 16:38:35 $
+ * @version $Revision: 1.11 $, $Date: 2006/02/25 17:48:37 $
  *
  */
 public interface MessageMSG extends Message
@@ -71,6 +71,16 @@ public interface MessageMSG extends Message
      */
     public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
         throws BEEPException;
+
+    /**
+     * Sends an ERR reply to this MSG message.
+     *
+     * @param stream Payload to be sent.
+     *
+     * @see OutputDataStream
+     * @see MessageStatus
+     */
+    public MessageStatus sendERR(OutputDataStream stream) throws BEEPException;
 
     /**
      * Sends a reply of type NUL to this MSG message. This is sent as the

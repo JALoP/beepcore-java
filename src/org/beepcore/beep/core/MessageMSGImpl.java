@@ -1,8 +1,8 @@
 /*
- * MessageMSG.java  $Revision: 1.1 $ $Date: 2003/06/03 16:38:35 $
+ * MessageMSG.java  $Revision: 1.2 $ $Date: 2006/02/25 17:48:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2003 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2003-2004 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
  */
 package org.beepcore.beep.core;
 
+import org.beepcore.beep.core.serialize.ErrorElement;
+
 /**
  * Represents received BEEP MSG messages. Provides methods to reply to
  * the MSG.
@@ -25,7 +27,7 @@ package org.beepcore.beep.core;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.1 $, $Date: 2003/06/03 16:38:35 $
+ * @version $Revision: 1.2 $, $Date: 2006/02/25 17:48:37 $
  *
  */
 class MessageMSGImpl extends MessageImpl implements MessageMSG
@@ -78,8 +80,11 @@ class MessageMSGImpl extends MessageImpl implements MessageMSG
      */
     public MessageStatus sendERR(BEEPError error) throws BEEPException
     {
+        byte[] errorString =
+            channel.session.parser.serializeError(new ErrorElement(error.getCode(),
+                    error.getXMLLang(), error.getDiagnostic()));
         OutputDataStream stream =
-            new StringOutputDataStream(error.createErrorMessage());
+            new ByteOutputDataStream(errorString);
         MessageStatus m = new MessageStatus(this.channel,
                                             Message.MESSAGE_TYPE_ERR,
                                             this.msgno, stream);
@@ -102,11 +107,12 @@ class MessageMSGImpl extends MessageImpl implements MessageMSG
     public MessageStatus sendERR(int code, String diagnostic)
         throws BEEPException
     {
-        String error = BEEPError.createErrorMessage(code, diagnostic);
+        ErrorElement error = new ErrorElement(code, diagnostic);
+        byte[] errorString = channel.session.parser.serializeError(error);
         MessageStatus m = new MessageStatus(this.channel,
                                             Message.MESSAGE_TYPE_ERR,
                                             this.msgno,
-                                            new StringOutputDataStream(error));
+                                            new ByteOutputDataStream(errorString));
         this.channel.sendMessage(m);
         return m;
     }
@@ -128,11 +134,22 @@ class MessageMSGImpl extends MessageImpl implements MessageMSG
     public MessageStatus sendERR(int code, String diagnostic, String xmlLang)
         throws BEEPException
     {
-        String error = BEEPError.createErrorMessage(code, diagnostic, xmlLang);
+        ErrorElement error = new ErrorElement(code, xmlLang, diagnostic);
+        byte[] errorString = channel.session.parser.serializeError(error);
         MessageStatus m = new MessageStatus(this.channel,
                                             Message.MESSAGE_TYPE_ERR,
                                             this.msgno,
-                                            new StringOutputDataStream(error));
+                                            new ByteOutputDataStream(errorString));
+        this.channel.sendMessage(m);
+        return m;
+    }
+    
+    public MessageStatus sendERR(OutputDataStream stream) throws BEEPException
+    {
+        MessageStatus m = new MessageStatus(this.channel,
+                                            Message.MESSAGE_TYPE_ERR,
+                                            this.msgno,
+                                            stream);
         this.channel.sendMessage(m);
         return m;
     }

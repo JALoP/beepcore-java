@@ -1,5 +1,5 @@
 /*
- * ChannelImpl.java  $Revision: 1.11 $ $Date: 2004/01/01 19:12:51 $
+ * ChannelImpl.java  $Revision: 1.12 $ $Date: 2006/02/25 17:48:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
@@ -36,7 +36,7 @@ import org.beepcore.beep.util.BufferSegment;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.11 $, $Date: 2004/01/01 19:12:51 $
+ * @version $Revision: 1.12 $, $Date: 2006/02/25 17:48:37 $
  *
  */
 class ChannelImpl implements Channel, Runnable {
@@ -93,7 +93,7 @@ class ChannelImpl implements Channel, Runnable {
     private LinkedList pendingSendMessages;
 
     /** session this channel sends through. */
-    private SessionImpl session;
+    SessionImpl session;
 
     /** message that we are receiving frames */
     private LinkedList recvReplyQueue;

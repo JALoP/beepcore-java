@@ -1,7 +1,7 @@
 /*
- * StartChannelProfile.java  $Revision: 1.2 $ $Date: 2001/11/08 05:51:34 $
+ * StartChannelProfile.java  $Revision: 1.3 $ $Date: 2006/02/25 17:48:37 $
  *
- * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
+ * Copyright (c) 2004 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -16,23 +16,16 @@
  */
 package org.beepcore.beep.core;
 
+import org.beepcore.beep.core.serialize.ProfileElement;
+
 
 /**
  * Class StartChannelProfile
  *
- *
- * @author Eric Dixon
- * @author Huston Franklin
- * @author Jay Kint
- * @author Scott Pead
- * @version $Revision: 1.2 $, $Date: 2001/11/08 05:51:34 $
+ * @deprecated Use org.beepcore.beep.core.serialize.ProfileElement instead.
+ * @version $Revision: 1.3 $, $Date: 2006/02/25 17:48:37 $
  */
-public class StartChannelProfile {
-
-    String uri;
-    boolean base64Encoding;
-    String data;
-
+public class StartChannelProfile extends ProfileElement {
     /**
      * Constructor StartChannelProfile
      *
@@ -45,9 +38,7 @@ public class StartChannelProfile {
     public StartChannelProfile(String uri, boolean base64Encoding,
                                String data)
     {
-        this.uri = uri;
-        this.base64Encoding = base64Encoding;
-        this.data = data;
+        super(uri, base64Encoding, data);
     }
 
     /**
@@ -59,8 +50,6 @@ public class StartChannelProfile {
      */
     public StartChannelProfile(String uri)
     {
-        this.uri = uri;
-        this.base64Encoding = false;
-        this.data = null;
+        super(uri);
     }
 }

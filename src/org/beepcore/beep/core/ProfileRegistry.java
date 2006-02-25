@@ -1,8 +1,8 @@
 /*
- * ProfileRegistry.java  $Revision: 1.14 $ $Date: 2003/11/07 17:38:11 $
+ * ProfileRegistry.java  $Revision: 1.15 $ $Date: 2006/02/25 17:48:36 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001,2002 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001,2002,2004 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -21,8 +21,12 @@ package org.beepcore.beep.core;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Set;
 
 import org.beepcore.beep.util.StringUtil;
 
@@ -36,7 +40,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.14 $, $Date: 2003/11/07 17:38:11 $
+ * @version $Revision: 1.15 $, $Date: 2006/02/25 17:48:36 $
  */
 public class ProfileRegistry implements Cloneable {
 
@@ -212,91 +216,47 @@ public class ProfileRegistry implements Cloneable {
     {
         return this.localize;
     }
-
-    byte[] getGreeting(Session session) {
-        return getGreeting(session, null);
-    }
-
-    byte[] getGreeting(Session session, String features)
+    
+    public Collection getAdvertisedProfiles(Session session)
     {
-        int bufferSize = "<greeting></greeting>".length();
-        int profileCount = 0;
+        LinkedList advertise = new LinkedList();
+        
+        SessionTuningProperties sessionTuning =
+            session.getTuningProperties();
 
-        profileCount = profileListeners.size();
+        Set profiles = profileListeners.keySet();
 
-        Enumeration e = profileListeners.keys();
+        for (Iterator p = profileListeners.keySet().iterator(); p.hasNext();) {
+            String profileUri = (String) p.next();
+            InternalProfile profile =
+                (InternalProfile) profileListeners.get(profileUri);
+            boolean callAdvertise = false;
 
-        while (e.hasMoreElements()) {
-            bufferSize += ((String) e.nextElement()).length()
-                + "<profile>".length();
-        }
+            // check the standard tuning settings first
+            for (int i = 0;
+                    i < SessionTuningProperties.STANDARD_PROPERTIES.length;
+                    i++) {
 
-        bufferSize++;
-
-        StringBuffer sb = new StringBuffer(bufferSize);
-
-        // Create Greeting
-        // Wish I could reset these.
-        Enumeration f = profileListeners.keys();
-
-        sb.append("<greeting");
-
-        if ((localize != null)
-                &&!localize.equals(Constants.LOCALIZE_DEFAULT)) {
-            sb.append(" localize='");
-            sb.append(localize);
-            sb.append('\'');
-        }
-
-        if (features != null) {
-            sb.append(" features='");
-            sb.append(features);
-            sb.append('\'');
-        }
-
-        sb.append('>');
-
-        while (f.hasMoreElements()) {
-
-            // make sure this profile wants to be advertised
-            try {
-                String profileName = (String) f.nextElement();
-                InternalProfile profile =
-                    (InternalProfile) profileListeners.get(profileName);
-                boolean callAdvertise = false;
-                SessionTuningProperties sessionTuning =
-                    session.getTuningProperties();
-
-                // check the standard tuning settings first
-                for (int i = 0;
-                        i < SessionTuningProperties.STANDARD_PROPERTIES.length;
-                        i++) {
-
-                    if ((profile.tuning != null) && (sessionTuning != null) &&
-                        (profile.tuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i]) != null) &&
-                        (sessionTuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i]) != null))
-                    {
-                        callAdvertise = true;
-                    }
+                if ((profile.tuning != null) && (sessionTuning != null) &&
+                    (profile.tuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i]) != null) &&
+                    (sessionTuning.getProperty(SessionTuningProperties.STANDARD_PROPERTIES[i]) != null))
+                {
+                    callAdvertise = true;
                 }
+            }
 
+            try {
                 if ((profile.tuning == null) ||
                     (callAdvertise &&
                      profile.listener.advertiseProfile(session)))
                 {
-                    sb.append("<profile uri='");
-                    sb.append(profileName);
-                    sb.append("' />");
+                    advertise.add(profileUri);
                 }
-            } catch (BEEPException x) {
-                x.printStackTrace();
-
+            } catch (BEEPException e) {
                 continue;
             }
         }
-
-        sb.append("</greeting>");
-
-        return StringUtil.stringBufferToAscii(sb);
+        
+        return advertise;
     }
 }

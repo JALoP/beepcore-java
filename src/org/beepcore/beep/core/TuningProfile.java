@@ -1,5 +1,5 @@
 /*
- * TuningProfile.java  $Revision: 1.13 $ $Date: 2004/01/01 19:12:51 $
+ * TuningProfile.java  $Revision: 1.14 $ $Date: 2006/02/25 17:48:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
  * Copyright (c) 2002 Huston Franklin.  All rights reserved.
@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.beepcore.beep.core.serialize.ErrorElement;
 
 /**
  * TuningProfiles change the security of a Session, either by
@@ -112,12 +113,15 @@ public abstract class TuningProfile {
 
             // If we're here, the profile didn't succesfully send, so
             // send an error
-            BEEPError error = new BEEPError(451,
-                                            "UnknownError" + x.getMessage());
+            ErrorElement error =
+                new ErrorElement(451, "UnknownError " + x.getMessage());
+            String errorString =
+                ((ChannelImpl)channel).session.parser.createErrorMessage(error);
 
-            session.sendProfile(profile, error.createErrorMessage(),
+            session.sendProfile(profile, errorString,
                                 (ChannelImpl)channel);
-            abort(error, channel);
+            abort(new BEEPError(error.getCode(), error.getDiagnostic(), error.getXmlLang()),
+                  channel);
         }
     }
     

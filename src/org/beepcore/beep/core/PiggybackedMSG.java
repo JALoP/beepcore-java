@@ -1,7 +1,7 @@
 /*
- * RequestHandler.java  $Revision: 1.3 $ $Date: 2003/12/31 17:46:28 $
+ * RequestHandler.java  $Revision: 1.4 $ $Date: 2006/02/25 17:48:37 $
  *
- * Copyright (c) 2003 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2003-2004 Huston Franklin.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
  * "License"); You may not use this file except in compliance with the License.
@@ -25,10 +25,12 @@ import org.beepcore.beep.util.BufferSegment;
  * This class is used to wrap piggybacked data from the start channel request.
  *
  * @author Huston Franklin
- * @version $Revision: 1.3 $, $Date: 2003/12/31 17:46:28 $
+ * @version $Revision: 1.4 $, $Date: 2006/02/25 17:48:37 $
  */
 class PiggybackedMSG extends MessageMSGImpl implements MessageMSG {
 
+    private static final int MAX_PCDATA_SIZE = 4096;
+    
     PiggybackedMSG(ChannelImpl channel, byte[] data, boolean base64encoding)
     {
         super(channel, PIGGYBACKED_MSGNO, new InputDataStream());
@@ -73,11 +75,11 @@ class PiggybackedMSG extends MessageMSGImpl implements MessageMSG {
     {
         SessionImpl s = (SessionImpl)this.channel.getSession();
         ByteArrayOutputStream tmp =
-            new ByteArrayOutputStream(SessionImpl.MAX_PCDATA_SIZE);
+            new ByteArrayOutputStream(MAX_PCDATA_SIZE);
         String data;
 
         while (stream.availableSegment()) {
-            BufferSegment b = stream.getNextSegment(SessionImpl.MAX_PCDATA_SIZE);
+            BufferSegment b = stream.getNextSegment(MAX_PCDATA_SIZE);
 
             tmp.write(b.getData(), 0, b.getLength());
         }

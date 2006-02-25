@@ -1,8 +1,8 @@
 /*
- * SessionImpl.java  $Revision: 1.16 $ $Date: 2004/01/01 19:12:51 $
+ * SessionImpl.java  $Revision: 1.17 $ $Date: 2006/02/25 17:48:37 $
  *
  * Copyright (c) 2001 Invisible Worlds, Inc.  All rights reserved.
- * Copyright (c) 2001-2003 Huston Franklin.  All rights reserved.
+ * Copyright (c) 2001-2004 Huston Franklin.  All rights reserved.
  * Copyright (c) 2002 Kevin Kress.  All rights reserved.
  *
  * The contents of this file are subject to the Blocks Public License (the
@@ -29,14 +29,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.xml.parsers.*;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import org.w3c.dom.*;
-
-import org.xml.sax.SAXException;
 
 import sun.misc.BASE64Decoder;
 
@@ -45,6 +39,9 @@ import org.beepcore.beep.core.event.ChannelListener;
 import org.beepcore.beep.core.event.SessionEvent;
 import org.beepcore.beep.core.event.SessionResetEvent;
 import org.beepcore.beep.core.event.SessionListener;
+
+import org.beepcore.beep.core.serialize.*;
+
 import org.beepcore.beep.util.StringUtil;
 
 
@@ -65,7 +62,7 @@ import org.beepcore.beep.util.StringUtil;
  * @author Huston Franklin
  * @author Jay Kint
  * @author Scott Pead
- * @version $Revision: 1.16 $, $Date: 2004/01/01 19:12:51 $
+ * @version $Revision: 1.17 $, $Date: 2006/02/25 17:48:37 $
  *
  * @see Channel
  */
@@ -88,7 +85,6 @@ public abstract class SessionImpl implements Session {
     private static final int DEFAULT_POLL_INTERVAL = 500;
 
     /** @todo check this */
-    static final int MAX_PCDATA_SIZE = 4096;
     private static final int MAX_START_CHANNEL_WAIT = 60000;
     private static final int MAX_START_CHANNEL_INTERVAL = 100;
 
@@ -103,6 +99,8 @@ public abstract class SessionImpl implements Session {
 
     // Instance Data
     private Log log = LogFactory.getLog(this.getClass());
+    
+    ChannelZeroParser parser = new ChannelZeroParser();
 
     private int state;
     private long nextChannelNumber = 0;
@@ -121,7 +119,6 @@ public abstract class SessionImpl implements Session {
     private Collection peerSupportedProfiles = null;
     private boolean overflow;
     private boolean allowChannelWindowUpdates;
-    private DocumentBuilder builder;    // generic XML parser
     private String serverName;
     private boolean sentServerName = false;
 
@@ -156,12 +153,6 @@ public abstract class SessionImpl implements Session {
         tuningProperties = tuning;
         this.serverName = serverName;
 
-        try {
-            builder =
-                DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            throw new BEEPException("Invalid parser configuration");
-        }
     }
 
     /**
@@ -472,42 +463,15 @@ public abstract class SessionImpl implements Session {
 
         String channelNumber = getNextFreeChannelNumber();
 
-        // create the message in a buffer and send it
-        StringBuffer startBuffer = new StringBuffer();
-
-        startBuffer.append("<start number='");
-        startBuffer.append(channelNumber);
-        if (serverName != null && !sentServerName) {
-            startBuffer.append("' serverName='");
-            startBuffer.append(serverName);
+        StartElement start;
+        
+        if (sentServerName) {
+            start = new StartElement(Integer.parseInt(channelNumber), profiles);
+        } else {
+            start = new StartElement(Integer.parseInt(channelNumber),
+                                     serverName, profiles);
         }
-        startBuffer.append("'>");
-
-        Iterator i = profiles.iterator();
-
-        while (i.hasNext()) {
-            StartChannelProfile p = (StartChannelProfile) i.next();
-
-            // @todo maybe we should check these against peerSupportedProfiles
-            startBuffer.append("<profile uri='");
-            startBuffer.append(p.uri);
-            startBuffer.append("' ");
-
-            if (p.data == null) {
-                startBuffer.append(" />");
-            } else {
-                if (p.base64Encoding) {
-                    startBuffer.append("encoding='base64' ");
-                }
-
-                startBuffer.append("><![CDATA[");
-                startBuffer.append(p.data);
-                startBuffer.append("]]></profile>");
-            }
-        }
-
-        startBuffer.append("</start>");
-
+        
         // @todo handle the data element
         // Create a channel
         ChannelImpl ch = new ChannelImpl(null, channelNumber, handler, false,
@@ -516,7 +480,7 @@ public abstract class SessionImpl implements Session {
         // Make a message
         OutputDataStream ds =
             new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                     StringUtil.stringBufferToAscii(startBuffer));
+                                     parser.serializeStart(start));
 
         if (tuning) {
             this.changeState(SESSION_STATE_TUNING_PENDING);
@@ -897,24 +861,11 @@ public abstract class SessionImpl implements Session {
     void sendProfile(String uri, String datum, ChannelImpl ch)
             throws BEEPException
     {
-
-        // Send the profile
-        StringBuffer sb = new StringBuffer();
-
-        sb.append("<profile uri='");
-        sb.append(uri);
-
-        if (datum != null) {
-            sb.append("'><![CDATA[");
-            sb.append(datum);
-            sb.append("]]></profile>");
-        } else {
-            sb.append("' />");
-        }
+        ProfileElement p = new ProfileElement(uri, false, datum);
 
         OutputDataStream ds =
             new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                     StringUtil.stringBufferToAscii(sb));
+                                     parser.serializeProfile(p));
 
         // Store the Channel
         channels.put(ch.getNumberAsString(), ch);
@@ -1004,8 +955,8 @@ public abstract class SessionImpl implements Session {
      *
      * @throws BEEPException
      */
-    private void receiveCloseChannel(String channelNumber, String code,
-                                     String xmlLang, String data)
+    private void receiveCloseChannel(String channelNumber, int code,
+                                     String xmlLang, String diagnostic)
         throws BEEPError
     {
 
@@ -1204,22 +1155,22 @@ public abstract class SessionImpl implements Session {
         Iterator i = profiles.iterator();
 
         while (i.hasNext()) {
-            StartChannelProfile p = (StartChannelProfile) i.next();
+            ProfileElement p = (ProfileElement) i.next();
 
             scl =
                 profileRegistry.getStartChannelListener(this.tuningProperties,
-                                                        p.uri);
+                                                        p.getUri());
 
             if (scl == null) {
                 continue;
             }
 
-            ch = new ChannelImpl(p.uri, channelNumber, this);
+            ch = new ChannelImpl(p.getUri(), channelNumber, this);
 
             try {
-                String encoding = p.base64Encoding ? "base64" : "none";
+                String encoding = p.getBase64Encoding() ? "base64" : "none";
 
-                scl.startChannel(ch, encoding, p.data);
+                scl.startChannel(ch, encoding, p.getData());
             } catch (StartChannelException e) {
                 this.enableIO();
 
@@ -1232,11 +1183,11 @@ public abstract class SessionImpl implements Session {
                 return;
             }
 
-            if (p.data != null && ch.getStartData() == null) {
+            if (p.getData() != null && ch.getStartData() == null) {
                 byte[] data;
-                if (p.base64Encoding) {
+                if (p.getBase64Encoding()) {
                     try {
-                        data = new BASE64Decoder().decodeBuffer(p.data);
+                        data = new BASE64Decoder().decodeBuffer(p.getData());
                     } catch (IOException e) {
                         ch.abort();
                         this.enableIO();
@@ -1245,7 +1196,7 @@ public abstract class SessionImpl implements Session {
                     }
                 } else {
                     try {
-                        data = p.data.getBytes("UTF-8"); 
+                        data = p.getData().getBytes("UTF-8"); 
                     } catch (UnsupportedEncodingException e) {
                         terminate("UTF-8 not supported");
                         return;
@@ -1253,7 +1204,7 @@ public abstract class SessionImpl implements Session {
                 }
                 
                 PiggybackedMSG msg = new PiggybackedMSG(ch, data,
-                                                        p.base64Encoding);
+                                                        p.getBase64Encoding());
 
                 ch.setState(ChannelImpl.STATE_STARTING);
 
@@ -1266,7 +1217,7 @@ public abstract class SessionImpl implements Session {
                 }
             } else {
                 try {
-                    sendProfile(p.uri, ch.getStartData(), ch);
+                    sendProfile(p.getUri(), ch.getStartData(), ch);
                     ch.setState(ChannelImpl.STATE_ACTIVE);
                 } catch (BEEPException e) {
                     terminate("Error sending profile. " + e.getMessage());
@@ -1276,7 +1227,7 @@ public abstract class SessionImpl implements Session {
 
                 fireChannelStarted(ch);
 
-                if (p.data == null && ch.getState() != ChannelImpl.STATE_TUNING) {
+                if (p.getData() == null && ch.getState() != ChannelImpl.STATE_TUNING) {
                     this.enableIO();
                 }
             }
@@ -1293,47 +1244,18 @@ public abstract class SessionImpl implements Session {
         }
     }
 
-    private Element processMessage(Message message) throws BEEPException
-    {
-
-        // check the message content type
-        if (!message.getDataStream().getInputStream().getContentType().equals(MimeHeaders.BEEP_XML_CONTENT_TYPE)) {
-            throw new BEEPException("Invalid content type for this message");
-        }
-
-        // parse the stream
-        Document doc;
-
-        try {
-            doc = builder.parse(message.getDataStream().getInputStream());
-        } catch (SAXException se) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        } catch (IOException ioe) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        }
-
-        if (doc == null) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        }
-
-        Element topElement = doc.getDocumentElement();
-
-        if (topElement == null) {
-            throw new BEEPException(ERR_MALFORMED_XML_MSG);
-        }
-
-        return topElement;
-    }
-
     private void sendGreeting() throws BEEPException
     {
         log.debug("sendGreeting");
 
         // get the greeting from the session
-        byte[] greeting = SessionImpl.this.getProfileRegistry().getGreeting(this);
+        Collection profiles = getProfileRegistry().getAdvertisedProfiles(this);
+        GreetingElement greeting =
+            new GreetingElement(null, getProfileRegistry().getLocalization(),
+                                profiles);
         ByteOutputDataStream f =
             new ByteOutputDataStream(MimeHeaders.BEEP_XML_CONTENT_TYPE,
-                                     greeting);
+                                     parser.serializeGreeting(greeting));
 
         MessageMSG m = new MessageMSGImpl(this.zero, 0, null);
 
@@ -1357,132 +1279,27 @@ public abstract class SessionImpl implements Session {
 
         public void processMSG(MessageMSG message) throws BEEPError
         {
-            Element topElement;
+            ChannelIndication indication;
 
             try {
-                topElement = processMessage(message);
-            } catch (BEEPException e) {
-                throw new BEEPError(BEEPError.CODE_GENERAL_SYNTAX_ERROR,
-                                    ERR_MALFORMED_XML_MSG);
+                indication = parser.parseIndication(message.getDataStream());
+            } catch (BEEPError e) {
+                enableIO();
+                throw e;
             }
-
-            String elementName = topElement.getTagName();
-
-            if (elementName == null) {
-                throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                    ERR_MALFORMED_XML_MSG);
-            }
-
-            // is this MSG a <start>
-            if (elementName.equals("start")) {
-                log.debug("Received a start channel request");
-
-                String channelNumber = topElement.getAttribute("number");
-
-                if (channelNumber == null) {
-                    throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                        "Malformed <start>: no channel number");
-                }
-
-                // this attribute is implied
-                String serverName = topElement.getAttribute("serverName");
-                NodeList profiles =
-                    topElement.getElementsByTagName("profile");
-
-                if (profiles == null) {
-                    throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                        "Malformed <start>: no profiles");
-                }
-
-                LinkedList profileList = new LinkedList();
-
-                for (int i = 0; i < profiles.getLength(); i++) {
-                    Element profile = (Element) profiles.item(i);
-                    String uri = profile.getAttribute("uri");
-
-                    if (uri == null) {
-                        throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                            "no profiles in start");
-                    }
-
-                    String encoding = profile.getAttribute("encoding");
-                    boolean b64;
-
-                    if ((encoding == null) || encoding.equals("")) {
-                        b64 = false;
-                    } else if (encoding.equalsIgnoreCase("base64")) {
-                        b64 = true;
-                    } else if (encoding.equalsIgnoreCase("none")) {
-                        b64 = false;
-                    } else {
-                        throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                            "unkown encoding in start");
-                    }
-
-                    String data = null;
-                    Node dataNode = profile.getFirstChild();
-
-                    if (dataNode != null) {
-                        data = dataNode.getNodeValue();
-
-                        if (data.length() > MAX_PCDATA_SIZE) {
-                            throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                                "Element's PCDATA exceeds " +
-                                                "the maximum size");
-                        }
-                    }
-
-                    profileList.add(new StartChannelProfile(uri, b64, data));
-                }
-
+            
+            if (indication.getType() == ChannelIndication.START) {
+                StartElement start = (StartElement)indication;
                 SessionImpl.this.zero.setAppData(message);
-                SessionImpl.this.processStartChannel(channelNumber, profileList);
-            }
-
-            // is this MSG a <close>
-            else if (elementName.equals("close")) {
-                log.debug("Received a channel close request");
-                
-                try {
-                    String channelNumber = topElement.getAttribute("number");
-
-                    if (channelNumber == null) {
-                        throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                            "Malformed <close>: no channel number");
-                    }
-
-                    String code = topElement.getAttribute("code");
-
-                    if (code == null) {
-                        throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                            "Malformed <close>: no code attribute");
-                    }
-
-                    // this attribute is implied
-                    String xmlLang = topElement.getAttribute("xml:lang");
-                    String data = null;
-                    Node dataNode = topElement.getFirstChild();
-
-                    if (dataNode != null) {
-                        data = dataNode.getNodeValue();
-
-                        if (data.length() > MAX_PCDATA_SIZE) {
-                            throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                                "Element's PCDATA exceeds " +
-                                                "the maximum size");
-                        }
-                    }
-                    SessionImpl.this.zero.setAppData(message);
-                    SessionImpl.this.receiveCloseChannel(channelNumber, code,
-                                                         xmlLang, data);
-                } catch (BEEPError e) {
-                    enableIO();
-                    throw e;
-                }
-
+                SessionImpl.this.processStartChannel(Integer.toString(start.getChannelNumber()),
+                                                     start.getProfiles());
             } else {
-                throw new BEEPError(BEEPError.CODE_PARAMETER_ERROR,
-                                    ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
+                CloseElement close = (CloseElement)indication;
+                SessionImpl.this.zero.setAppData(message);
+                SessionImpl.this.receiveCloseChannel(Integer.toString(close.getChannelNumber()),
+                                                     close.getCode(),
+                                                     close.getXmlLang(),
+                                                     close.getDiagnostic());
             }
         }
     }
@@ -1491,70 +1308,21 @@ public abstract class SessionImpl implements Session {
 
         public void receiveRPY(Message message)
         {
+            log.debug("Received a greeting");
+
             try {
-                Element topElement = processMessage(message);
+                GreetingElement greeting =
+                    parser.parseGreetingConfirmation(message.getDataStream());
 
-                // is this RPY a <greeting>
-                String elementName = topElement.getTagName();
-
-                if (elementName == null) {
-                    throw new BEEPException(ERR_MALFORMED_XML_MSG);
-                } else if (!elementName.equals("greeting")) {
-                    throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
-                }
-
-                log.debug("Received a greeting");
-
-                // this attribute is implied
-                String features = topElement.getAttribute("features");
-
-                // This attribute has a default value
-                String localize = topElement.getAttribute("localize");
-
-                if (localize == null) {
-                    localize = Constants.LOCALIZE_DEFAULT;
-                }
-
-                // Read the profiles - note, the greeting is valid
-                // with 0 profiles
-                NodeList profiles =
-                    topElement.getElementsByTagName("profile");
-
-                if (profiles.getLength() > 0) {
-                    LinkedList profileList = new LinkedList();
-
-                    for (int i = 0; i < profiles.getLength(); i++) {
-                        Element profile = (Element) profiles.item(i);
-                        String uri = profile.getAttribute("uri");
-
-                        if (uri == null) {
-                            throw new BEEPException("Malformed profile");
-                        }
-
-                        String encoding = profile.getAttribute("encoding");
-
-                        // encoding is not allowed in greetings
-                        if (encoding != null) {
-
-                            // @todo check this
-                            // terminate("Invalid attribute 'encoding' in greeting.");
-                            // return;
-                        }
-
-                        profileList.add(i, uri);
-                    }
-
-                    SessionImpl.this.peerSupportedProfiles =
-                        Collections.unmodifiableCollection(profileList);
-                }
+                SessionImpl.this.peerSupportedProfiles = greeting.getProfiles();
 
                 changeState(Session.SESSION_STATE_ACTIVE);
-
-                synchronized (this) {
-                    this.notifyAll();
-                }
             } catch (BEEPException e) {
                 terminate("Problem with RPY: " + e.getMessage());
+            }
+
+            synchronized (this) {
+                this.notifyAll();
             }
         }
 
@@ -1595,70 +1363,31 @@ public abstract class SessionImpl implements Session {
 
         public void receiveRPY(Message message)
         {
+            ProfileElement profile;
             try {
-                Element topElement = processMessage(message);
-
-                // is this RPY a <greeting>
-                String elementName = topElement.getTagName();
-
-                if (elementName == null) {
-                    throw new BEEPException(ERR_MALFORMED_XML_MSG);
-
-                    // is this RPY a <profile>
-                } else if (elementName.equals("profile")) {
-                    try {
-                        String uri = topElement.getAttribute("uri");
-
-                        if (uri == null) {
-                            throw new BEEPException("Malformed profile");
-                        }
-
-                        String encoding =
-                            topElement.getAttribute("encoding");
-
-                        if (encoding == null) {
-                            encoding = Constants.ENCODING_NONE;
-                        }
-
-                        // see if there is data and then turn it into a message
-                        Node dataNode = topElement.getFirstChild();
-                        String data = null;
-
-                        if (dataNode != null) {
-                            data = dataNode.getNodeValue();
-
-                            if (data.length() > MAX_PCDATA_SIZE) {
-                                throw new BEEPException("Element's PCDATA " +
-                                                        "exceeds the " +
-                                                        "maximum size");
-                            }
-                        }
-
-                        channel.setEncoding(encoding);
-                        channel.setProfile(uri);
-                        channel.setStartData(data);
-
-                        // set the state
-                        channel.setState(ChannelImpl.STATE_ACTIVE);
-                        channels.put(channel.getNumberAsString(), channel);
-
-                        /**
-                         * @todo something with data
-                         */
-
-                        // release the block waiting for the channel
-                        // to start or close
-                        synchronized (this) {
-                            this.notify();
-                        }
-                    } catch (Exception x) {
-                        throw new BEEPException(x);
-                    }
-                } else {
-                    throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
-                }
+                profile =
+                    parser.parseStartConfirmation(message.getDataStream());
             } catch (BEEPException e) {
                 terminate("Problem with RPY: " + e.getMessage());
+                return;
+            }
+
+            channel.setEncoding(profile.getBase64Encoding() ? "base64" : "none");
+            channel.setProfile(profile.getUri());
+            channel.setStartData(profile.getData());
+
+            // set the state
+            channel.setState(ChannelImpl.STATE_ACTIVE);
+            channels.put(channel.getNumberAsString(), channel);
+
+            /**
+             * @todo something with data
+             */
+
+            // release the block waiting for the channel
+            // to start or close
+            synchronized (this) {
+                this.notify();
             }
         }
 
@@ -1667,7 +1396,10 @@ public abstract class SessionImpl implements Session {
             BEEPError err;
 
             try {
-                err = BEEPError.convertMessageERRToException(message);
+                ErrorElement error = parser.parseError(message.getDataStream());
+
+                err = new BEEPError(error.getCode(), error.getDiagnostic(),
+                        error.getXmlLang());
             } catch (BEEPException e) {
                 terminate(e.getMessage());
 
@@ -1721,33 +1453,22 @@ public abstract class SessionImpl implements Session {
         public void receiveRPY(Message message)
         {
             try {
-                Element topElement = processMessage(message);
-                String elementName = topElement.getTagName();
-
-                if (elementName == null) {
-                    throw new BEEPException(ERR_MALFORMED_XML_MSG);
-
-                    // is this RPY an <ok> (the positive response to a
-                    // channel close)
-                } else if (elementName.equals("ok")) {
+                parser.parseCloseConfirmation(message.getDataStream());
                     log.debug("Received an OK for channel close");
-
-                    // @todo we should fire an event instead.
-                    // set the state
-                    channel.setState(ChannelImpl.STATE_CLOSING);
-                    channels.remove(channel.getNumberAsString());
-                    channel.setState(ChannelImpl.STATE_CLOSED);
-
-                    // release the block waiting for the channel to
-                    // start or close
-                    synchronized (this) {
-                        this.notify();
-                    }
-                } else {
-                    throw new BEEPException(ERR_UNKNOWN_OPERATION_ELEMENT_MSG);
-                }
             } catch (BEEPException e) {
                 terminate("Problem with RPY: " + e.getMessage());
+            }
+
+            // @todo we should fire an event instead.
+            // set the state
+            channel.setState(ChannelImpl.STATE_CLOSING);
+            channels.remove(channel.getNumberAsString());
+            channel.setState(ChannelImpl.STATE_CLOSED);
+
+            // release the block waiting for the channel to
+            // start or close
+            synchronized (this) {
+                this.notify();
             }
         }
 
@@ -1756,7 +1477,10 @@ public abstract class SessionImpl implements Session {
             BEEPError err;
 
             try {
-                err = BEEPError.convertMessageERRToException(message);
+                ErrorElement error = parser.parseError(message.getDataStream());
+
+                err = new BEEPError(error.getCode(), error.getDiagnostic(),
+                        error.getXmlLang());
             } catch (BEEPException e) {
                 terminate(e.getMessage());
 
