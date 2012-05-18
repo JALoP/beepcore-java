@@ -3,12 +3,19 @@ debug=on
 optimize=on
 deprecation=off
 
+java_libs=../../../javalibs/
+
 concurrent.jar=${basedir}/lib/concurrent.jar
+xerces_root=${java_libs}/xerces-2_11_0/
 
-commons-logging.jar=${basedir}/lib/commons-logging.jar
+cl_version=1.1.1
+cl_base_name=commons-logging
+cl_root=${java_libs}/${cl_base_name}-${cl_version}
 
-xml-parser.jar=${basedir}/lib/xerces.jar
+# These should get moved into build.xml
+cl_apis_jar=${cl_root}/${cl_base_name}-api-${cl_version}.jar
+cl_jar=${cl_root}/${cl_base_name}-${cl_version}.jar
+cl_adapters_jar=${cl_root}/${cl_base_name}-adapters-${cl_version}.jar
+xerces_jar=${xerces_root}/xercesImpl.jar
 
-cryptix.jar=${basedir}/lib/cryptix32.jar
-cryptix-asn1.jar=${basedir}/lib/cryptix-asn1.jar
-puretls.jar=${basedir}/lib/puretls.jar
+junit_jar=${java_libs}/junit-4.10.jar
