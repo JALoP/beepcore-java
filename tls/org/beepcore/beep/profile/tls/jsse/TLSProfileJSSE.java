@@ -18,38 +18,51 @@
 package org.beepcore.beep.profile.tls.jsse;
 
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
-
-import java.util.*;
-
-import org.beepcore.beep.core.*;
-import org.beepcore.beep.profile.*;
-import org.beepcore.beep.profile.tls.TLSProfile;
-import org.beepcore.beep.transport.tcp.*;
-
-import com.sun.net.ssl.KeyManager;
-import com.sun.net.ssl.KeyManagerFactory;
-import com.sun.net.ssl.SSLContext;
-import com.sun.net.ssl.TrustManager;
-import com.sun.net.ssl.TrustManagerFactory;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.net.ssl.HandshakeCompletedEvent;
 import javax.net.ssl.HandshakeCompletedListener;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.beepcore.beep.core.BEEPError;
+import org.beepcore.beep.core.BEEPException;
+import org.beepcore.beep.core.Channel;
+import org.beepcore.beep.core.CloseChannelException;
+import org.beepcore.beep.core.InputDataStreamAdapter;
+import org.beepcore.beep.core.MessageMSG;
+import org.beepcore.beep.core.ProfileRegistry;
+import org.beepcore.beep.core.RequestHandler;
+import org.beepcore.beep.core.Session;
+import org.beepcore.beep.core.SessionCredential;
+import org.beepcore.beep.core.SessionTuningProperties;
+import org.beepcore.beep.core.StartChannelException;
+import org.beepcore.beep.core.StartChannelListener;
+import org.beepcore.beep.core.StringOutputDataStream;
+import org.beepcore.beep.profile.Profile;
+import org.beepcore.beep.profile.ProfileConfiguration;
+import org.beepcore.beep.profile.tls.TLSProfile;
+import org.beepcore.beep.transport.tcp.TCPSession;
 
 
 /**
