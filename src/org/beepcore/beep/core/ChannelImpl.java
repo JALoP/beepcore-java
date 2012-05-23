@@ -20,7 +20,7 @@ package org.beepcore.beep.core;
 
 import java.util.*;
 
-import edu.oswego.cs.dl.util.concurrent.PooledExecutor;
+import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
