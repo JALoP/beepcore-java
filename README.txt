@@ -21,6 +21,15 @@ others.
 
 The profile TLS package requires the JSSE library.
 
+The EDU.oswego.cs.dl.util.concurrent package, a build can be obtained 
+from https://github.com/downloads/jalop-tresys/beepcore-java/concurrent.jar
+
+Apache commons logging, available at http://commons.apache.org/logging/
+At the time of writing, beepcore-java was working 1.1.1.
+
+To run the tests, you will junit, available at http://www.junit.org/
+At the time of writing, beepcore-java was working using junit 4.10.
+
 Build
 -----
 
@@ -28,6 +37,15 @@ To build the library we are using ANT (http://jakarta.apache.org/ant/)
 with the build.xml file in the root of the tree. The build.xml file is
 lacking all of the dependencies, these will be added in the near
 future.
+
+You will need to provide a build.properties file to specify where various
+libraries are located. A sample is provided (build.properties.sample).
+The required keys are:
+junit_jar         # The path to the junit jar, only needed if you are running the tests
+cl_apis_jar       # The path to the Apache Commons Logging APIS jar
+cl_jar            # The path to the Apache Commons Logging jar
+cl_adapters_jar   # The path to the Apache Commons Logging adapters jar
+xerces_root       # The path to where you've extracted the xerces release
 
 Known Issues
 ------------
