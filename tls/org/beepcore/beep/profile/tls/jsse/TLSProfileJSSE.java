@@ -122,6 +122,7 @@ public class TLSProfileJSSE extends TLSProfile
     static final String PROPERTY_CLIENT_AUTHENTICATION =
         "Initiator Authentication Required";
     static final String PROPERTY_SERVER_ANONYMOUS = "Listener Anonymous";
+    static final String PROPERTY_SSL_PROTOCOLS = "Allowed SSL Protocols";
 
     // properties set from the configuration
     static boolean needClientAuth = false;
@@ -153,6 +154,7 @@ public class TLSProfileJSSE extends TLSProfile
     boolean waitingForHandshake = false;
     boolean abortSession = false;
     String uri = TLSProfile.URI;
+    private String[] sslProtocols;
     static List handshakeListeners = null;
 
     class TLSHandshake implements HandshakeCompletedListener {
@@ -381,6 +383,12 @@ public class TLSProfileJSSE extends TLSProfile
      * <td>Trust Store Provider</td><td>provider for the trust stores.  See
      *     {@link java.security.KeyStore#getInstance}</td>
      * </tr><tr>
+     * <td>Allowed SSL Protocols</td><td>Comma separated list of algorithms 
+     * that may be used for SSL/TLS negotiations. By default, this will be 
+     * whatever the {@link SSLSocket} implementation supports.
+     * @see SSLSocket#getSupportedProtocols()
+     * @see SSLSocket#setEnabledProtocols(String[])
+     * </tr><tr>
      * </table>
      * @throws BEEPException For any error in the profile configuration, a
      * negative response in the form of a BEEP error will be sent back to the
@@ -402,6 +410,7 @@ public class TLSProfileJSSE extends TLSProfile
         TrustManager[] tm = null;
         KeyStore ts = null;
         SSLContext ctx;
+        this.sslProtocols = null;
 
         // set the URI of this instance of the profile
         this.uri = uri;
@@ -417,7 +426,10 @@ public class TLSProfileJSSE extends TLSProfile
         }
 
         try {
-
+            String protocols = config.getProperty(PROPERTY_SSL_PROTOCOLS);
+            if (protocols != null) {
+                this.sslProtocols = protocols.split(",");
+            }
             // initialize the key managers, trust managers, and
             keyAlgorithm = config.getProperty(PROPERTY_KEY_MANAGER_ALGORITHM);
             keyProvider = config.getProperty(PROPERTY_KEY_MANAGER_PROVIDER);
@@ -606,6 +618,9 @@ public class TLSProfileJSSE extends TLSProfile
             newSocket.setUseClientMode(false);
             newSocket.setNeedClientAuth(needClientAuth);
             newSocket.setEnabledCipherSuites(newSocket.getSupportedCipherSuites());
+            if (sslProtocols != null) {
+                newSocket.setEnabledProtocols(sslProtocols);
+            }
 
             newSocket.startHandshake();
         } catch (IOException e) {
@@ -694,7 +709,10 @@ public class TLSProfileJSSE extends TLSProfile
             newSocket.setUseClientMode(true);
             newSocket.setNeedClientAuth(needClientAuth);
             newSocket.setEnabledCipherSuites(newSocket.getSupportedCipherSuites());
-
+            if (this.sslProtocols != null) {
+                newSocket.setEnabledProtocols(sslProtocols);
+            }
+            
             // set up so the handshake listeners will be called
             l.session = session;
 
