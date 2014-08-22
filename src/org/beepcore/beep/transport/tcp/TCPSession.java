@@ -14,6 +14,27 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
+ * Source code in 3rd-party is licensed and owned by their respective
+ * copyright holders.
+ *
+ * All other source code is copyright Tresys Technology and licensed as below.
+ *
+ * Copyright (c) 2014 Tresys Technology LLC, Columbia, Maryland, USA
+ *
+ * This software was developed by Tresys Technology LLC
+ * with U.S. Government sponsorship.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.beepcore.beep.transport.tcp;
 
@@ -427,6 +448,7 @@ public class TCPSession extends SessionImpl {
                 }
 
                 int amountRead;
+                headerBuffer = new byte[Frame.MAX_HEADER_SIZE];
 
                 try {
                     do {
@@ -538,8 +560,14 @@ public class TCPSession extends SessionImpl {
 
             /* 2 = 1 for the min token size and 1 is for the separator ' '
              * or "\r\n"
+             * amountToRead = (tokenCount * 2) + Frame.TRAILER.length();
              */
-            amountToRead = (tokenCount * 2) + Frame.TRAILER.length();
+            /* TLH: changed amountToRead for header to be 1 byte at a time
+             * Temporary fix. Found issues when using tokenCount * 2,
+             * where 1st byte of ANS was accidentally read from NUL header
+             * causing Malformed BEEP Header exception
+             */
+            amountToRead = 1;
         }
 
         if (log.isTraceEnabled()) {
