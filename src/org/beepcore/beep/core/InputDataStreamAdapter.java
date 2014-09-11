@@ -285,6 +285,11 @@ public class InputDataStreamAdapter extends java.io.InputStream {
             return;
         }
 
+        if (b == COLON) {
+	    state = STATE_PARSING_NAME_TERMINATOR;
+	    return;
+        }
+
         if (b == CR) {
             state = STATE_PARSING_HEADERS_TERMINATOR;
             return;
