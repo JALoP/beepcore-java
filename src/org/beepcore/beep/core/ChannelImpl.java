@@ -706,6 +706,8 @@ class ChannelImpl implements Channel, Runnable {
         validateFrame(frame);
 
         recvSequence += frame.getSize();
+        if (recvSequence >= frame.MAX_SEQUENCE_NUMBER)
+            recvSequence = (recvSequence - 1) % frame.MAX_SEQUENCE_NUMBER;
 
         // subtract this from the amount available in the buffer
         recvWindowUsed += frame.getSize();
@@ -841,7 +843,8 @@ class ChannelImpl implements Channel, Runnable {
                 }
 
                 // update the sequence and peer window size
-                sentSequence += size;
+                //sentSequence += size;
+                sentSequence = (sentSequence + size) % Frame.MAX_SEQUENCE_NUMBER;
                 peerWindowSize -= size;
             }
         } while (ds.availableSegment() == true || ds.isComplete() == false);
@@ -949,7 +952,11 @@ class ChannelImpl implements Channel, Runnable {
                       + sentSequence + " peerWindowSize = " + peerWindowSize);
         }
 
-        peerWindowSize = size - (int) (sentSequence - lastSeq);
+        // Handle case where sentSequence wraps around Frame.MAX_SEQUENCE_NUMBER
+        if (sentSequence > lastSeq)
+            peerWindowSize = size - (int) (sentSequence - lastSeq);
+        else
+            peerWindowSize = size - (int) (Frame.MAX_SEQUENCE_NUMBER + sentSequence - lastSeq);
 
         log.debug("Channel.updatePeerReceiveBufferSize: New window size = "
                   + peerWindowSize);
