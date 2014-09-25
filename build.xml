@@ -4,7 +4,7 @@
   <property file="build.properties"/>
   <property name="name" value="beepcore"/>
   <property name="Name" value="BEEP Core"/>
-  <property name="version" value="0.9.13"/>
+  <property name="version" value="0.9.14"/>
   <property name="release.name" value="${name}-${version}"/>
   <property name="debug" value="on"/>
   <property name="optimize" value="on"/>
