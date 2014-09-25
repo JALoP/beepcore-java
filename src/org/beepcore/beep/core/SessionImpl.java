@@ -34,6 +34,8 @@ import org.apache.commons.logging.LogFactory;
 
 import sun.misc.BASE64Decoder;
 
+import org.beepcore.beep.profile.tls.TLSProfile;
+
 import org.beepcore.beep.core.event.ChannelEvent;
 import org.beepcore.beep.core.event.ChannelListener;
 import org.beepcore.beep.core.event.SessionEvent;
@@ -121,6 +123,7 @@ public abstract class SessionImpl implements Session {
     private boolean allowChannelWindowUpdates;
     private String serverName;
     private boolean sentServerName = false;
+    private boolean requiresTLS = false;
 
     /**
      * Default Session Constructor.  A relationship between peers - a session -
@@ -382,6 +385,11 @@ public abstract class SessionImpl implements Session {
     public boolean isInitiator()
     {
         return ((nextChannelNumber % 2) == 1);
+    }
+
+    public void requiresTLS(boolean TLS)
+    {
+        this.requiresTLS = TLS;
     }
 
     /**
@@ -1165,6 +1173,15 @@ public abstract class SessionImpl implements Session {
                 continue;
             }
 
+            // If TLS is required, don't start channel for other profiles
+            if (this.requiresTLS && !p.getUri().equals(TLSProfile.URI)) {
+                continue;
+            } else {
+		// subsequent profiles for start will not be TLSProfile.URI
+		// so don't need to check again for connection
+                this.requiresTLS = false;
+            }
+
             ch = new ChannelImpl(p.getUri(), channelNumber, this);
 
             try {
@@ -1238,7 +1255,11 @@ public abstract class SessionImpl implements Session {
         this.enableIO();
 
         try {
-            ((MessageMSG)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, "all requested profiles are unsupported");
+            if (this.requiresTLS) {
+                ((MessageMSG)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, "profile not accepted due to an insecure connection");
+            } else {
+                ((MessageMSG)zero.getAppData()).sendERR(BEEPError.CODE_REQUESTED_ACTION_NOT_TAKEN2, "all requested profiles are unsupported");
+            }
         } catch (Exception x) {
             terminate("Error sending error. " + x.getMessage());
         }
