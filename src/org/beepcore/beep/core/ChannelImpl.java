@@ -1070,7 +1070,7 @@ class ChannelImpl implements Channel, Runnable {
                       " recvWindowSize = " + recvWindowSize);
         }
 
-        if (state == ChannelImpl.STATE_ACTIVE) {
+        if (state == ChannelImpl.STATE_ACTIVE && recvWindowFreed >= recvWindowSize / 2) {
             try {
                 sendWindowUpdate();
             } catch (BEEPException e) {
