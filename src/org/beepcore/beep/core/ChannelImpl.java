@@ -48,6 +48,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.beepcore.beep.util.BufferSegment;
 
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ChannelImpl is a conduit for a certain kind of traffic over a session,
@@ -124,15 +125,16 @@ class ChannelImpl implements Channel, Runnable {
     private Frame previousFrame;
 
     /** size of the peer's receive buffer */
-    private int peerWindowSize;
+    private AtomicInteger peerWindowSize;
 
     /** size of the receive buffer */
-    private int recvWindowSize;
+    private AtomicInteger recvWindowSize;
 
     /** amount of the buffer in use */
-    private int recvWindowUsed;
+    private AtomicInteger recvWindowUsed;
 
-    private int recvWindowFreed;
+
+    private AtomicInteger recvWindowFreed;
 
     private Object applicationData = null;
 
@@ -165,10 +167,10 @@ class ChannelImpl implements Channel, Runnable {
         recvMSGQueue = new LinkedList();
         recvReplyQueue = new LinkedList();
         state = STATE_INITIALIZED;
-        recvWindowUsed = 0;
-        recvWindowFreed = 0;
-        recvWindowSize = DEFAULT_WINDOW_SIZE;
-        peerWindowSize = DEFAULT_WINDOW_SIZE;
+        recvWindowUsed = new AtomicInteger(0);
+        recvWindowFreed = new AtomicInteger(0);
+        recvWindowSize = new AtomicInteger(DEFAULT_WINDOW_SIZE);
+        peerWindowSize = new AtomicInteger(DEFAULT_WINDOW_SIZE);
     }
 
     ChannelImpl(String profile, String number, SessionImpl session)
@@ -236,7 +238,7 @@ class ChannelImpl implements Channel, Runnable {
      */
     public synchronized int getBufferSize()
     {
-        return recvWindowSize;
+        return recvWindowSize.intValue();
     }
 
     /**
@@ -280,13 +282,13 @@ class ChannelImpl implements Channel, Runnable {
 
             // make sure we aren't setting the size less than what is currently
             // in the buffer right now.
-            if (size < recvWindowUsed) {
+            if (size < recvWindowUsed.intValue()) {
                 throw new BEEPException("New size is less than what is " +
                     "currently in use.");
             }
 
             // set the new size and copy the buffer
-            recvWindowSize = size;
+            recvWindowSize.set(size);
 
             if (log.isDebugEnabled()) {
                 log.debug("Buffer size for channel " + number + " set to "
@@ -705,17 +707,23 @@ class ChannelImpl implements Channel, Runnable {
 
         validateFrame(frame);
 
-        recvSequence += frame.getSize();
-        if (recvSequence >= frame.MAX_SEQUENCE_NUMBER)
-            recvSequence = (recvSequence - 1) % frame.MAX_SEQUENCE_NUMBER;
+	synchronized(session) {
 
-        // subtract this from the amount available in the buffer
-        recvWindowUsed += frame.getSize();
+		recvSequence += frame.getSize();
+		if (recvSequence > frame.MAX_SEQUENCE_NUMBER)
+		    recvSequence = (recvSequence - 1) % frame.MAX_SEQUENCE_NUMBER;
 
-        // make sure we didn't overflow the buffer
-        if (recvWindowUsed > recvWindowSize) {
-            throw new BEEPException("Channel window overflow");
-        }
+		//log.debug("recvWindowUsed was " + recvWindowUsed + " and we are about to add " + frame.getSize() + " to it.");
+
+		// subtract this from the amount available in the buffer
+		recvWindowUsed.getAndAdd(frame.getSize());
+
+		// make sure we didn't overflow the buffer
+		if (recvWindowUsed.intValue() > recvWindowSize.intValue()) {
+		    throw new BEEPException("Channel window overflow");
+		}
+
+	}
 
         receiveFrame(frame);
 
@@ -762,7 +770,7 @@ class ChannelImpl implements Channel, Runnable {
                 status = (MessageStatus) pendingSendMessages.removeFirst();
             }
 
-            if (this.recvWindowFreed != 0) {
+            if (this.recvWindowFreed.intValue() != 0) {
                 sendWindowUpdate();
             }
             
@@ -795,12 +803,14 @@ class ChannelImpl implements Channel, Runnable {
                                   sentSequence, 0, status.getAnsno());
 
                 // make sure the other peer can accept something
-                if (peerWindowSize == 0) {
+                if (peerWindowSize.intValue() == 0) {
                     return;
                 }
 
                 int maxToSend =
-                    Math.min(sessionBufferSize, peerWindowSize);
+                    Math.min(sessionBufferSize, peerWindowSize.intValue());
+
+		//log.debug("Calculated maxToSend = " + maxToSend);
 
                 int size = 0;
                 while (size < maxToSend) {
@@ -824,6 +834,7 @@ class ChannelImpl implements Channel, Runnable {
 
                     size += b.getLength();
                 }
+		//log.debug("Frame: " + sentSequence + " Actually sending: " + size);
 
                 if (ds.isComplete() && ds.availableSegment() == false) {
                     frame.setLast();
@@ -844,8 +855,12 @@ class ChannelImpl implements Channel, Runnable {
 
                 // update the sequence and peer window size
                 //sentSequence += size;
-                sentSequence = (sentSequence + size) % Frame.MAX_SEQUENCE_NUMBER;
-                peerWindowSize -= size;
+                if ((sentSequence + size) > Frame.MAX_SEQUENCE_NUMBER) {
+                	sentSequence = (sentSequence + size - 1) % Frame.MAX_SEQUENCE_NUMBER;
+		} else {
+			sentSequence = sentSequence + size;
+		}
+                peerWindowSize.getAndAdd(-1 * size);
             }
         } while (ds.availableSegment() == true || ds.isComplete() == false);
 
@@ -896,14 +911,16 @@ class ChannelImpl implements Channel, Runnable {
 
     private void sendWindowUpdate() throws BEEPException
     {
-        if (session.updateMyReceiveBufferSize(this, recvSequence,
-                                              recvWindowSize -
-                                              (recvWindowUsed -
-                                               recvWindowFreed)))
-        {
-            recvWindowUsed -= recvWindowFreed;
-            recvWindowFreed = 0;
-        }
+	synchronized(session) {
+		if (session.updateMyReceiveBufferSize(this, recvSequence,
+						      recvWindowSize.intValue() -
+						      (recvWindowUsed.intValue() -
+						       recvWindowFreed.intValue())))
+		{
+		    recvWindowUsed.getAndAdd(-1 * recvWindowFreed.intValue());
+		    recvWindowFreed.set(0);
+		}
+	}
     }
 
     /**
@@ -944,7 +961,7 @@ class ChannelImpl implements Channel, Runnable {
 
     synchronized void updatePeerReceiveBufferSize(long lastSeq, int size)
     {
-        int previousPeerWindowSize = peerWindowSize;
+        int previousPeerWindowSize = peerWindowSize.intValue();
 
         if (log.isDebugEnabled()) {
             log.debug("Channel.updatePeerReceiveBufferSize: size = " + size
@@ -953,15 +970,15 @@ class ChannelImpl implements Channel, Runnable {
         }
 
         // Handle case where sentSequence wraps around Frame.MAX_SEQUENCE_NUMBER
-        if (sentSequence > lastSeq)
-            peerWindowSize = size - (int) (sentSequence - lastSeq);
+        if (sentSequence >= lastSeq)
+            peerWindowSize.set(size - (int) (sentSequence - lastSeq));
         else
-            peerWindowSize = size - (int) (Frame.MAX_SEQUENCE_NUMBER + sentSequence - lastSeq);
+            peerWindowSize.set(size - (int) (Frame.MAX_SEQUENCE_NUMBER + sentSequence - lastSeq));
 
         log.debug("Channel.updatePeerReceiveBufferSize: New window size = "
                   + peerWindowSize);
 
-        if ((previousPeerWindowSize == 0) && (peerWindowSize > 0)) {
+        if ((previousPeerWindowSize == 0) && (peerWindowSize.intValue() > 0)) {
             try {
                 sendQueuedMessages();
             } catch (BEEPException e) {
@@ -1069,7 +1086,7 @@ class ChannelImpl implements Channel, Runnable {
             log.trace("Freed up " + size + " bytes on channel " + number);
         }
 
-        recvWindowFreed += size;
+        recvWindowFreed.getAndAdd(size);
 
         if (log.isTraceEnabled()) {
             log.trace("recvWindowUsed = " + recvWindowUsed +
@@ -1077,7 +1094,7 @@ class ChannelImpl implements Channel, Runnable {
                       " recvWindowSize = " + recvWindowSize);
         }
 
-        if (state == ChannelImpl.STATE_ACTIVE && recvWindowFreed >= recvWindowSize / 2) {
+        if (state == ChannelImpl.STATE_ACTIVE && recvWindowFreed.intValue() >= recvWindowSize.intValue() / 2) {
             try {
                 sendWindowUpdate();
             } catch (BEEPException e) {
@@ -1102,7 +1119,7 @@ class ChannelImpl implements Channel, Runnable {
      */
     synchronized int getAvailableWindow()
     {
-        return (recvWindowSize - recvWindowUsed);
+        return (recvWindowSize.intValue() - recvWindowUsed.intValue());
     }
 
     /**

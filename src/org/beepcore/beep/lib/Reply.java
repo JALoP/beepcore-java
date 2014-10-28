@@ -27,7 +27,6 @@ import org.beepcore.beep.core.BEEPInterruptedException;
 import org.beepcore.beep.core.Message;
 import org.beepcore.beep.core.ReplyListener;
 
-
 /**
  * Provides a synchronous abstraction for receiving BEEP reply messages.
  * The caller may block using <code>getNextReply</code> when as it waits
