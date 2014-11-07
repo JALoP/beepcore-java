@@ -396,18 +396,17 @@ class ChannelImpl implements Channel, Runnable {
 
             // message 0 was the greeting, it was already sent, inc the counter
             ++lastMessageSent;
-        }
 
-        // put this in the list of messages waiting
-        // may want to put an expiration or something in here so they
-        // don't just stay around taking up space.
-        // @todo it's a synchronized list, you don't have to sync
-        synchronized (sentMSGQueue) {
-            sentMSGQueue.add(status);
+            // put this in the list of messages waiting
+            // may want to put an expiration or something in here so they
+            // don't just stay around taking up space.
+            // @todo it's a synchronized list, you don't have to sync
+            synchronized (sentMSGQueue) {
+                sentMSGQueue.add(status);
+            }
+            // send it on the session
+            sendToPeer(status);
         }
-
-        // send it on the session
-        sendToPeer(status);
 
         return status;
     }
@@ -638,7 +637,6 @@ class ChannelImpl implements Channel, Runnable {
                         recvReplyQueue.add(m);
                     }
                 } else {
-
                     // @todo sanity check: make sure this is the
                     // right Message
                     m = (MessageImpl) recvReplyQueue.getFirst();
@@ -820,7 +818,6 @@ class ChannelImpl implements Channel, Runnable {
                                 // More BufferSegments are expected...
                                 return;
                             }
-
                             frame.addPayload(zeroLengthSegment);
                         }
 
