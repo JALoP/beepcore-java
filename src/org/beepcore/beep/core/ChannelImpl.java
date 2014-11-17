@@ -664,13 +664,19 @@ class ChannelImpl implements Channel, Runnable {
         if (frame.isLast()) {
             m.getDataStream().setComplete();
         }
+        // Do not notify listener if this is not the last frame for RPY or ERR messages
+        else if (frame.getMessageType() != Message.MESSAGE_TYPE_ANS){
+            if (log.isDebugEnabled()) {
+                log.debug("Partial message received for messageType/msgno:" + frame.getMessageType() + "/" + m.getMsgno());
+            }
+            return;
+        }
 
-        // notify message listener if this message has not been notified before
+        // notify ANS message listener if this message has not been notified before
         synchronized (m) {
             if (m.isNotified()) {
                 return;
             }
-
             m.setNotified();
         }
 

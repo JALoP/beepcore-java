@@ -1,3 +1,9 @@
+This project was forked from the beepcore-java project originally hosted on 
+sourceforge at: http://sourceforge.net/projects/beepcore-java/
+
+This fork was created to support the JALoP java library implementation and is not 
+generally maintained beyond what is required to support the JALoP project.
+
 beepcore-java 0.9 release
 ---------------------
 
