@@ -81,21 +81,20 @@ public class InputDataStream {
 
     void add(BufferSegment segment)
     {
-        if( this.closed) {
-            if (this.channel != null) {
-                this.channel.freeReceiveBufferBytes(segment.getLength());
+        synchronized(this.buffers) {
+            if(this.closed) {
+                if (this.channel != null) {
+                    this.channel.freeReceiveBufferBytes(segment.getLength());
+                }
+                return;
             }
-            return;
-        }
-
-        synchronized (this.buffers) {
             this.buffers.addLast(segment);
             this.buffers.notify();
+            this.availableBytes += segment.getLength();
         }
-        this.availableBytes += segment.getLength();
     }
 
-    public int available()
+    synchronized public int available()
     {
         return this.availableBytes;
 //         int bytesAvailable = 0;
@@ -114,7 +113,7 @@ public class InputDataStream {
      * Returns <code>true</code> if a <code>BufferSegment</code> is available
      * to receive.
      */
-    public boolean availableSegment() {
+    synchronized public boolean availableSegment() {
         return (this.buffers.isEmpty() == false);
     }
 
@@ -122,7 +121,7 @@ public class InputDataStream {
      * Indicates that the application is finished receiving data from this
      * stream. If there is more data available the data will be discarded.
      */
-    public void close() {
+    synchronized public void close() {
         this.closed = true;
         while (this.availableSegment()) {
             this.getNextSegment();
@@ -132,7 +131,7 @@ public class InputDataStream {
     /**
      * Returns an <code>InputStream</code> for reading the data in this stream.
      */
-    public InputDataStreamAdapter getInputStream()
+    synchronized public InputDataStreamAdapter getInputStream()
     {
         if (stream == null) {
             stream = new InputDataStreamAdapter(this);
@@ -145,7 +144,7 @@ public class InputDataStream {
      * Returns the next <code>BufferSegment</code> in this stream.
      *
      */
-    public BufferSegment getNextSegment() {
+    synchronized public BufferSegment getNextSegment() {
         BufferSegment b;
 
         synchronized (buffers) {
@@ -165,8 +164,7 @@ public class InputDataStream {
      *
      * @return null if isComplete() is true.
      */
-    public BufferSegment waitForNextSegment() throws InterruptedException {
-        synchronized (buffers) {
+    synchronized public BufferSegment waitForNextSegment() throws InterruptedException {
             while (availableSegment() == false) {
                 if (isComplete() == true) {
                     return null;
@@ -174,7 +172,6 @@ public class InputDataStream {
                 buffers.wait();
             }
             return getNextSegment();
-        }
     }
 
     public boolean isClosed() {
@@ -186,13 +183,13 @@ public class InputDataStream {
      * those currently available on this stream.  Returns
      * <code>false</code> if more bytes are expected.
      */
-    public boolean isComplete() {
+    synchronized public boolean isComplete() {
         return this.complete;
     }
 
     void setComplete() {
-        this.complete = true;
         synchronized (this.buffers) {
+            this.complete = true;
             this.buffers.notify();
         }
     }

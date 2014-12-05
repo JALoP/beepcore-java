@@ -591,11 +591,11 @@ class ChannelImpl implements Channel, Runnable {
             return;
         }
 
-        // is this an ANS message?
-        if (frame.getMessageType() == Message.MESSAGE_TYPE_ANS) {
+        synchronized (recvReplyQueue) {
+            // is this an ANS message?
+            if (frame.getMessageType() == Message.MESSAGE_TYPE_ANS) {
 
-            // see if this answer number has already come in
-            synchronized (recvReplyQueue) {
+                // see if this answer number has already come in
                 Iterator i = recvReplyQueue.iterator();
 
                 m = null;
@@ -625,9 +625,7 @@ class ChannelImpl implements Channel, Runnable {
                     // remove the found ANS from the recvReplyQueue
                     i.remove();
                 }
-            }
-        } else {    // ERR or RPY
-            synchronized (recvReplyQueue) {
+            } else {    // ERR or RPY
                 if (recvReplyQueue.size() == 0) {
                     m = new MessageImpl(this, frame.getMsgno(),
                                         new InputDataStream(this),
@@ -654,23 +652,23 @@ class ChannelImpl implements Channel, Runnable {
                     }
                 }
             }
-        }
 
-        Iterator i = frame.getPayload();
-        while (i.hasNext()) {
-            m.getDataStream().add((BufferSegment)i.next());
-        }
-
-        if (frame.isLast()) {
-            m.getDataStream().setComplete();
-        }
-        // Do not notify listener if this is not the last frame for RPY or ERR messages
-        else if (frame.getMessageType() != Message.MESSAGE_TYPE_ANS){
-            if (log.isDebugEnabled()) {
-                log.debug("Partial message received for messageType/msgno:" + frame.getMessageType() + "/" + m.getMsgno());
+            Iterator i = frame.getPayload();
+            while (i.hasNext()) {
+                m.getDataStream().add((BufferSegment)i.next());
             }
-            return;
-        }
+
+            if (frame.isLast()) {
+                m.getDataStream().setComplete();
+            }
+            // Do not notify listener if this is not the last frame for RPY or ERR messages
+            else if (frame.getMessageType() != Message.MESSAGE_TYPE_ANS){
+                if (log.isDebugEnabled()) {
+                    log.debug("Partial message received for messageType/msgno:" + frame.getMessageType() + "/" + m.getMsgno());
+                }
+                return;
+            }
+        } // end sync
 
         // notify ANS message listener if this message has not been notified before
         synchronized (m) {
