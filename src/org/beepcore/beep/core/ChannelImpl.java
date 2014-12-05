@@ -824,6 +824,7 @@ class ChannelImpl implements Channel, Runnable {
                                 // More BufferSegments are expected...
                                 return;
                             }
+
                             frame.addPayload(zeroLengthSegment);
                         }
 

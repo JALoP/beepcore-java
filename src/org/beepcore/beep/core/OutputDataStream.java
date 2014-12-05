@@ -37,7 +37,6 @@
  */
 package org.beepcore.beep.core;
 
-
 import java.util.LinkedList;
 
 import org.beepcore.beep.util.BufferSegment;
@@ -88,7 +87,10 @@ public class OutputDataStream {
     }
 
     public void add(BufferSegment segment) {
-        this.buffers.addLast(segment);
+        synchronized(this) {
+            this.buffers.addLast(segment);
+        }
+        // Need to release lock before calling sendQueuedMessages, which is why entire method is not synchronized
         if (channel != null) {
             try {
                 channel.sendQueuedMessages();
@@ -109,12 +111,15 @@ public class OutputDataStream {
      * those currently available on this stream.  Returns
      * <code>false</code> if more bytes are expected.
      */
-    public boolean isComplete() {
+    synchronized public boolean isComplete() {
         return this.complete;
     }
 
     public void setComplete() {
-        this.complete = true;
+        synchronized(this) {
+            this.complete = true;
+        }
+        // Need to release lock before calling sendQueuedMessages, which is why entire method is not synchronized
         if (channel != null) {
             try {
                 channel.sendQueuedMessages();
@@ -123,7 +128,7 @@ public class OutputDataStream {
         }
     }
 
-    boolean availableSegment() {
+    synchronized boolean availableSegment() {
         return (buffers.isEmpty() == false);
     }
 
@@ -132,11 +137,11 @@ public class OutputDataStream {
      *
      * @return the number of <code>BufferSegment</code>s in the buffers LinkedList.
      */
-    public int getNumSegments() {
+    synchronized public int getNumSegments() {
         return this.buffers.size();
     }
 
-    protected BufferSegment getNextSegment(int maxLength) {
+    synchronized protected BufferSegment getNextSegment(int maxLength) {
         if (this.headersSent == false) {
             if (this.mimeHeaders != null) {
                 this.buffers.addFirst(mimeHeaders.getBufferSegment());
@@ -158,14 +163,13 @@ public class OutputDataStream {
                 return b;
             }
         }
-
         buffers.removeFirst();
         curOffset = 0;
 
         return b;
     }
     
-    void setChannel(ChannelImpl channel) {
+    synchronized void setChannel(ChannelImpl channel) {
         this.channel = channel;
     }
 

@@ -62,7 +62,7 @@ lacking all of the dependencies.
 Modify the version line under beepcore in the build.properties file to have the desired target version for the beepcore release.
     name=beepcore
     Name=BEEP Core
-    version=0.9.15
+    version=0.9.18
 
 Build the library:
 	ant clean 
@@ -80,7 +80,7 @@ To use the new beepcore version with jjnl:
     # Edit the jjnl build information to point to the new version of beepcore
     # Command run from beepcore-java root with jjnl as a peer directory
         vi ../jjnl/jnl_parent/pom.xml
-           <beepcore.version>0.9.15</beepcore.version>
+           <beepcore.version>0.9.18</beepcore.version>
 
     # To install the jar files for use with maven directly from the beepcore build directory
         cd build/beepcore-${bc_ver}/lib
