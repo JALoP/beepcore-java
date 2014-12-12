@@ -965,20 +965,19 @@ class ChannelImpl implements Channel, Runnable {
     {
         int previousPeerWindowSize = peerWindowSize.intValue();
 
+        // Handle case where sentSequence wraps around Frame.MAX_SEQUENCE_NUMBER
+        if (sentSequence >= lastSeq) {
+            peerWindowSize.set(size - (int) (sentSequence - lastSeq));
+        } else {
+            peerWindowSize.set(size - (int) (Frame.MAX_SEQUENCE_NUMBER + sentSequence - lastSeq + 1));
+        }
+
         if (log.isDebugEnabled()) {
             log.debug("Channel.updatePeerReceiveBufferSize: size = " + size
                       + " lastSeq = " + lastSeq + " sentSequence = "
-                      + sentSequence + " peerWindowSize = " + peerWindowSize);
+                      + sentSequence + " previousPeerWindowSize = " + previousPeerWindowSize
+                      + " peerWindowSize = " + peerWindowSize);
         }
-
-        // Handle case where sentSequence wraps around Frame.MAX_SEQUENCE_NUMBER
-        if (sentSequence >= lastSeq)
-            peerWindowSize.set(size - (int) (sentSequence - lastSeq));
-        else
-            peerWindowSize.set(size - (int) (Frame.MAX_SEQUENCE_NUMBER + sentSequence - lastSeq));
-
-        log.debug("Channel.updatePeerReceiveBufferSize: New window size = "
-                  + peerWindowSize);
 
         if ((previousPeerWindowSize == 0) && (peerWindowSize.intValue() > 0)) {
             try {

@@ -592,13 +592,13 @@ public abstract class SessionImpl implements Session {
             throws BEEPException
     {
         Frame f = Frame.parseHeader(this, header, headerLength);
-
+        int windowSize = ((ChannelImpl)f.getChannel()).getAvailableWindow();
+        int frameSize = f.getSize();
         // The window size and frame size have nothing in common.
-        if (f.getSize() > ((ChannelImpl)f.getChannel()).getAvailableWindow()) {
+        if (frameSize > windowSize) {
             throw new BEEPException("Payload size is greater than channel "
-                                    + "window size.  Payload size is: " + f.getSize()
-				    + " and channel window size is: "
-				    + ((ChannelImpl)f.getChannel()).getAvailableWindow());
+                                    + "window size.  Payload size is: " + frameSize
+				    + " and channel window size is: " + windowSize);
         }
 
         return f;
