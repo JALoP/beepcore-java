@@ -89,8 +89,8 @@ public class InputDataStream {
                 return;
             }
             this.buffers.addLast(segment);
-            this.buffers.notify();
             this.availableBytes += segment.getLength();
+            this.buffers.notify();
         }
     }
 
