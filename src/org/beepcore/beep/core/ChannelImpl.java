@@ -582,8 +582,7 @@ class ChannelImpl implements Channel, Runnable {
 
             mstatus.setMessageStatus(MessageStatus.MESSAGE_STATUS_RECEIVED_REPLY);
             if (log.isDebugEnabled()) {
-                log.debug("Notifying reply listener =>" + replyListener +
-                          "for NUL message");
+                log.debug("Notifying reply listener for channel " + this.getNumber() + " => " + replyListener + " for NUL message");
             }
 
             replyListener.receiveNUL(m);
@@ -661,26 +660,22 @@ class ChannelImpl implements Channel, Runnable {
             if (frame.isLast()) {
                 m.getDataStream().setComplete();
             }
-            // Do not notify listener if this is not the last frame for RPY or ERR messages
-            else if (frame.getMessageType() != Message.MESSAGE_TYPE_ANS){
-                if (log.isDebugEnabled()) {
-                    log.debug("Partial message received for messageType/msgno:" + frame.getMessageType() + "/" + m.getMsgno());
+
+            // notify ANS message listener if this message has not been notified before
+            if (frame.getMessageType() == Message.MESSAGE_TYPE_ANS) {
+                synchronized (m) {
+                    if (m.isNotified()) {
+                        return;
+                    }
+                    m.setNotified();
                 }
-                return;
             }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Notifying reply listener for channel " + this.getNumber() + ", msgno " + m.getMsgno() + ", isLast " + m.getDataStream().isComplete() + " => " + replyListener);
+            }
+
         } // end sync
-
-        // notify ANS message listener if this message has not been notified before
-        synchronized (m) {
-            if (m.isNotified()) {
-                return;
-            }
-            m.setNotified();
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("Notifying reply listener.=>" + replyListener);
-        }
 
         if (m.messageType == Message.MESSAGE_TYPE_RPY) {
             replyListener.receiveRPY(m);
@@ -762,29 +757,31 @@ class ChannelImpl implements Channel, Runnable {
 
     synchronized void sendQueuedMessages() throws BEEPException
     {
-        while (true) {
-            MessageStatus status;
+        synchronized(this) {
+            while (true) {
+                MessageStatus status;
 
-            synchronized (pendingSendMessages) {
-                if (pendingSendMessages.isEmpty()) {
+                synchronized (pendingSendMessages) {
+                    if (pendingSendMessages.isEmpty()) {
+                        return;
+                    }
+                    status = (MessageStatus) pendingSendMessages.removeFirst();
+                }
+
+                if (this.recvWindowFreed.intValue() != 0) {
+                    sendWindowUpdate();
+                }
+                
+                sendFrames(status);
+
+                if (status.getMessageStatus() !=
+                    MessageStatus.MESSAGE_STATUS_SENT)
+                {
+                    synchronized (pendingSendMessages) {
+                        pendingSendMessages.addFirst(status);
+                    }
                     return;
                 }
-                status = (MessageStatus) pendingSendMessages.removeFirst();
-            }
-
-            if (this.recvWindowFreed.intValue() != 0) {
-                sendWindowUpdate();
-            }
-            
-            sendFrames(status);
-
-            if (status.getMessageStatus() !=
-                MessageStatus.MESSAGE_STATUS_SENT)
-            {
-                synchronized (pendingSendMessages) {
-                    pendingSendMessages.addFirst(status);
-                }
-                return;
             }
         }
     }
@@ -963,26 +960,28 @@ class ChannelImpl implements Channel, Runnable {
 
     synchronized void updatePeerReceiveBufferSize(long lastSeq, int size)
     {
-        int previousPeerWindowSize = peerWindowSize.intValue();
+        synchronized(this){
+            int previousPeerWindowSize = peerWindowSize.intValue();
 
-        // Handle case where sentSequence wraps around Frame.MAX_SEQUENCE_NUMBER
-        if (sentSequence >= lastSeq) {
-            peerWindowSize.set(size - (int) (sentSequence - lastSeq));
-        } else {
-            peerWindowSize.set(size - (int) (Frame.MAX_SEQUENCE_NUMBER + sentSequence - lastSeq + 1));
-        }
+            // Handle case where sentSequence wraps around Frame.MAX_SEQUENCE_NUMBER
+            if (sentSequence >= lastSeq) {
+                peerWindowSize.set(size - (int) (sentSequence - lastSeq));
+            } else {
+                peerWindowSize.set(size - (int) (Frame.MAX_SEQUENCE_NUMBER + sentSequence - lastSeq + 1));
+            }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Channel.updatePeerReceiveBufferSize: size = " + size
-                      + " lastSeq = " + lastSeq + " sentSequence = "
-                      + sentSequence + " previousPeerWindowSize = " + previousPeerWindowSize
-                      + " peerWindowSize = " + peerWindowSize);
-        }
+            if (log.isDebugEnabled()) {
+                log.debug("updatePeerReceiveBufferSize: channel " + this.getNumber() + ", size " + size
+                          + ", lastSeq " + lastSeq + ", sentSequence "
+                          + sentSequence + ", previousPeerWindowSize " + previousPeerWindowSize
+                          + ", peerWindowSize " + peerWindowSize);
+            }
 
-        if ((previousPeerWindowSize == 0) && (peerWindowSize.intValue() > 0)) {
-            try {
-                sendQueuedMessages();
-            } catch (BEEPException e) {
+            if ((previousPeerWindowSize == 0) && (peerWindowSize.intValue() > 0)) {
+                try {
+                    sendQueuedMessages();
+                } catch (BEEPException e) {
+                }
             }
         }
     }
@@ -1083,25 +1082,27 @@ class ChannelImpl implements Channel, Runnable {
     
     synchronized void freeReceiveBufferBytes(int size)
     {
-        if (log.isTraceEnabled()) {
-            log.trace("Freed up " + size + " bytes on channel " + number);
-        }
+        synchronized(this){
+            if (log.isTraceEnabled()) {
+                log.trace("Freed up " + size + " bytes on channel " + number);
+            }
 
-        recvWindowFreed.getAndAdd(size);
+            recvWindowFreed.getAndAdd(size);
 
-        if (log.isTraceEnabled()) {
-            log.trace("recvWindowUsed = " + recvWindowUsed +
-                      " recvWindowFreed = " + recvWindowFreed +
-                      " recvWindowSize = " + recvWindowSize);
-        }
+            if (log.isTraceEnabled()) {
+                log.trace("recvWindowUsed = " + recvWindowUsed +
+                          " recvWindowFreed = " + recvWindowFreed +
+                          " recvWindowSize = " + recvWindowSize);
+            }
 
-        if (state == ChannelImpl.STATE_ACTIVE && recvWindowFreed.intValue() >= recvWindowSize.intValue() / 2) {
-            try {
-                sendWindowUpdate();
-            } catch (BEEPException e) {
+            if (state == ChannelImpl.STATE_ACTIVE && recvWindowFreed.intValue() >= recvWindowSize.intValue() / 2) {
+                try {
+                    sendWindowUpdate();
+                } catch (BEEPException e) {
 
-                // do nothing
-                log.fatal("Error updating receive buffer size", e);
+                    // do nothing
+                    log.fatal("Error updating receive buffer size", e);
+                }
             }
         }
     }

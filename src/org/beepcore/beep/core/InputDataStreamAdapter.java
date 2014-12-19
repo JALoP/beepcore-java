@@ -48,6 +48,10 @@ public class InputDataStreamAdapter extends java.io.InputStream {
         }
         return (this.curBuf.getLength() - this.pos) + this.ids.available();
     }
+    public boolean isComplete()
+    {
+        return ids.isComplete();
+    }
 
     public void close()
     {
@@ -129,7 +133,6 @@ public class InputDataStreamAdapter extends java.io.InputStream {
         return read(b, 0, b.length);
     }
 
-
     public int read(byte[] b, int off, int len) throws IOException
     {
         if (off == -1 || len == -1 || off + len > b.length)
@@ -152,6 +155,14 @@ public class InputDataStreamAdapter extends java.io.InputStream {
         }
 
         return bytesRead;
+    }
+
+    // Added separate read method to return byte[] buffer as a String to allow for unit test mocking
+    public String readMessage() throws IOException
+    {
+        final byte[] b = new byte[this.available()];
+        read(b, 0, b.length);
+        return new String(b);
     }
 
     public long skip(long n) throws IOException

@@ -716,6 +716,7 @@ public class TCPSession extends SessionImpl {
         if (header.hasMoreTokens()) {
             throw new BEEPException("Malformed BEEP Header");
         }
+        log.debug("Read: SEQ " + channelNum + " " + ackNum + " " + window);
 
         // update the channel with the new receive window size
         this.updatePeerReceiveBufferSize(channelNum, ackNum, window);
